@@ -2,8 +2,8 @@ import os, sys
 import optparse
 import logging
 from holland.core.plugin import iter_entry_points, get_distribution
-from holland.core.util.bootstrap import bootstrap
-from holland.core.command import run
+from holland.cli.bootstrap import bootstrap
+from holland.cli.command import run
 from holland.core.config.checks import is_logging_level
 
 HOLLAND_VERSION = get_distribution('holland').version

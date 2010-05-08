@@ -10,7 +10,7 @@ import logging
 import warnings
 from holland.core.plugin import add_plugin_dir
 from holland.core.config import hollandcfg, setup_config as _setup_config
-from holland.core.log import setup_console_logging, setup_file_logging, clear_root_handlers
+from holland.cli.log import setup_console_logging, setup_file_logging, clear_root_handlers
 from holland.core.spool import spool
 
 LOGGER = logging.getLogger(__name__)
