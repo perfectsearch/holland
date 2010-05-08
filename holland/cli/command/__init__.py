@@ -1,7 +1,7 @@
 import os
 import sys
 import logging
-from holland.cli.base import Command, option, StopOptionProcessing
+from holland.cli.command.base import Command, option, StopOptionProcessing
 from holland.core.plugin import get_commands
 
 __all__ = [
