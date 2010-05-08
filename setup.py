@@ -37,5 +37,5 @@ setup(name="holland",
       purge = holland.cli.command.builtin.purge:Purge
       #restore = holland.cli.command.builtin.restore:Restore
       """,
-      namespace_packages=['holland', 'holland.backup', 'holland.lib', 'holland.cli.command.builtin'],
+      namespace_packages=['holland', 'holland.backup', 'holland.lib', 'holland.commands'],
       )
