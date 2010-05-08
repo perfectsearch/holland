@@ -29,13 +29,13 @@ setup(name="holland",
 
       # Holland subcommands
       [holland.commands]
-      help = holland.commands.help:Help
-      listplugins = holland.commands.list_plugins:ListPlugins
-      listbackups = holland.commands.list_backups:ListBackups
-      backup = holland.commands.backup:Backup
-      mk-config = holland.commands.mk_config:MkConfig
-      purge = holland.commands.purge:Purge
-      #restore = holland.commands.restore:Restore
+      help = holland.cli.commands.builtin.help:Help
+      listplugins = holland.cli.command.builtin.list_plugins:ListPlugins
+      listbackups = holland.cli.command.builtin.list_backups:ListBackups
+      backup = holland.cli.command.builtin.backup:Backup
+      mk-config = holland.cli.command.builtin.mk_config:MkConfig
+      purge = holland.cli.command.builtin.purge:Purge
+      #restore = holland.cli.command.builtin.restore:Restore
       """,
-      namespace_packages=['holland', 'holland.backup', 'holland.lib', 'holland.commands'],
+      namespace_packages=['holland', 'holland.backup', 'holland.lib', 'holland.cli.command.builtin'],
       )
