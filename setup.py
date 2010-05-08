@@ -29,7 +29,7 @@ setup(name="holland",
 
       # Holland subcommands
       [holland.commands]
-      help = holland.cli.commands.builtin.help:Help
+      help = holland.cli.command.builtin.help:Help
       listplugins = holland.cli.command.builtin.list_plugins:ListPlugins
       listbackups = holland.cli.command.builtin.list_backups:ListBackups
       backup = holland.cli.command.builtin.backup:Backup
