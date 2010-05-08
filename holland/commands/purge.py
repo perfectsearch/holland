@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 import readline
-from holland.core.command import Command, option
+from holland.cli.command import Command, option
 from holland.core.config import hollandcfg
 from holland.core.spool import spool
 

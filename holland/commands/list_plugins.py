@@ -1,6 +1,6 @@
 import os
 import textwrap
-from holland.core.command import Command
+from holland.cli.command import Command
 from holland.core.plugin import iter_plugins
 
 class ListPlugins(Command):

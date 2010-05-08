@@ -1,5 +1,5 @@
 import logging
-from holland.core.command import Command, option
+from holland.cli.command import Command, option
 from holland.core.plugin import load_first_entrypoint
 from holland.core.spool import spool
 

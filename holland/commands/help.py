@@ -3,9 +3,9 @@ import sys
 # for python2.3 support
 if sys.version_info[:2] < (2, 4):
     from sets import Set as set
-from holland.core.command.command import Command, option
+from holland.cli.command import Command, option
 from holland.core.plugin import get_commands
-from holland.core.cmdshell import parser
+from holland.cli.script import parser
 
 class Help(Command):
     """${cmd_usage}

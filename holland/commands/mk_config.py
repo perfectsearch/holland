@@ -9,7 +9,7 @@ import logging
 import subprocess
 from StringIO import StringIO
 
-from holland.core.command import Command, option
+from holland.cli.command import Command, option
 from holland.core.plugin import load_first_entrypoint, PluginLoadError
 from holland.core.config.configobj import ConfigObj, flatten_errors, ParseError
 from holland.core.config import hollandcfg

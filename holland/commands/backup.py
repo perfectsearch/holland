@@ -3,7 +3,7 @@ import time
 import errno
 import fcntl
 import logging
-from holland.core.command import Command, option
+from holland.cli.command import Command, option
 from holland.core.backup import backup
 from holland.core.exceptions import BackupError
 from holland.core.config import hollandcfg
