@@ -12,7 +12,6 @@ Table of Contents
    overview
    config        
    faq
-   api
 
 Indices and tables
 ------------------
