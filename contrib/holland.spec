@@ -16,7 +16,7 @@
 
 Name:           holland
 Version:        %{holland_version}
-Release:        1%{?dist}
+Release:        3%{?dist}
 Summary:        Pluggable Backup Framework
 
 Group:          Applications/Archiving
@@ -298,7 +298,7 @@ exit 0
 
 
 %changelog
-* Sat May 8 2010 Andrew Garner <andrew.garner@rackspace.com> - 0.9.9-1
+* Sat May 8 2010 Andrew Garner <andrew.garner@rackspace.com> - 0.9.9-3
 - Major spec cleanup
 
 * Wed Apr 14 2010 Andrew Garner <andrew.garner@rackspace.com> - 0.9.9-2
