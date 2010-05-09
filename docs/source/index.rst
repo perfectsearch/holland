@@ -11,7 +11,6 @@ Table of Contents
    commands
    overview
    config        
-   faq
 
 Indices and tables
 ------------------
