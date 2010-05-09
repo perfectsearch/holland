@@ -195,14 +195,8 @@ EOF
 %doc docs config 
 %dir %{python_sitelib}/holland
 %{python_sitelib}/holland/core/
+%{python_sitelib}/holland/cli/
 %dir %{python_sitelib}/holland/commands/
-%{python_sitelib}/holland/commands/backup.py*
-%{python_sitelib}/holland/commands/list_backups.py*
-%{python_sitelib}/holland/commands/list_plugins.py*
-%{python_sitelib}/holland/commands/purge.py*
-%{python_sitelib}/holland/commands/restore.py*
-%{python_sitelib}/holland/commands/mk_config.py*
-%{python_sitelib}/holland/commands/help.py*
 %dir %{python_sitelib}/holland/restore/
 %{python_sitelib}/holland/restore/__init__.py*
 
