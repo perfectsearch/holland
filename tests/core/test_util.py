@@ -67,8 +67,9 @@ def test_run_command():
 # path tests
 
 def test_relpath():
-    assert_equals(path.relpath("/mnt/mysql-lvm", "/mnt/mysql-lvm"), "")
-    assert_equals(path.relpath("/mnt/mysql-lvm", "/mnt/mysql-lvm/data"),
+    assert_equals(path.relpath("/var/lib/mysql", "/"), "var/lib/mysql")
+    assert_equals(path.relpath("/mnt/mysql-lvm", "/mnt/mysql-lvm"), ".")
+    assert_equals(path.relpath("/mnt/mysql-lvm/data", "/mnt/mysql-lvm"),
                   "data")
 
 #XXX: linux specific
