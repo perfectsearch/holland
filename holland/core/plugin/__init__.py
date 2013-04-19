@@ -9,7 +9,7 @@
 """
 
 from holland.core.plugin.base import BasePlugin, ConfigurablePlugin
-from holland.core.plugin.manager import AbstractPluginManager, \
+from holland.core.plugin.loader import AbstractPluginManager, \
                                         EntrypointPluginManager
 from holland.core.plugin.error import PluginError
 
