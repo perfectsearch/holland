@@ -14,7 +14,7 @@ import pkg_resources
 from holland.core.plugin.util import import_module
 from holland.core.plugin.error import PluginError, PluginLoadError, \
                                       PluginNotFoundError
-from holland.core.plugin.base import BasePlugin
+from holland.core.plugin.interface import BasePlugin
 
 LOG = logging.getLogger(__name__)
 

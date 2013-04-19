@@ -8,7 +8,7 @@
     :license: BSD, see LICENSE.rst for details
 """
 
-from holland.core.plugin.base import BasePlugin, ConfigurablePlugin
+from holland.core.plugin.interface import BasePlugin, ConfigurablePlugin
 from holland.core.plugin.loader import AbstractPluginManager, \
                                         EntrypointPluginManager
 from holland.core.plugin.error import PluginError

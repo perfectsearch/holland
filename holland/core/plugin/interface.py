@@ -1,6 +1,6 @@
 """
-    holland.core.plugin.base
-    ~~~~~~~~~~~~~~~~~~~~~~~~
+    holland.core.plugin.interface
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Base plugin classes for Holland
 
