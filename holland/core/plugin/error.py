@@ -1,11 +1,11 @@
 """
-    holland.core.plugin.error
-    ~~~~~~~~~~~~~~~~~~~~~~~~~
+holland.core.plugin.error
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Standard exceptions raised by the Holland plugin API
+Standard exceptions raised by the Holland plugin API
 
-    :copyright: 2008-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
+:copyright: 2008-2013 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
 """
 
 class PluginError(Exception):

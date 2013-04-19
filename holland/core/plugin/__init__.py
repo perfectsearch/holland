@@ -1,11 +1,11 @@
 """
-    holland.core.plugin
-    ~~~~~~~~~~~~~~~~~~~
+holland.core.plugin
+~~~~~~~~~~~~~~~~~~~
 
-    Holland Plugin API
+Holland Plugin API
 
-    :copyright: 2008-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
+:copyright: 2008-2013 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
 """
 
 from holland.core.plugin.interface import BasePlugin, ConfigurablePlugin

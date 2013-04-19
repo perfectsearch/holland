@@ -1,11 +1,11 @@
 """
-    holland.core.plugin.manager
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+holland.core.plugin.loader
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Plugin manager API responsible for loading plugins
+Plugin manager API responsible for loading plugins
 
-    :copyright: 2008-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
+:copyright: 2008-2011 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
 """
 
 import pkgutil

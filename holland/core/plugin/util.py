@@ -1,11 +1,11 @@
 """
-    holland.core.plugin.util
-    ~~~~~~~~~~~~~~~~~~~~~~~~
+holland.core.plugin.util
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Utility methods used by the holland plugin api
+Utility methods used by the holland plugin api
 
-    :copyright: 2008-2011 Rackspace US, Inc.
-    :license: BSD, PSF see LICENSE.rst for details
+:copyright: 2008-2013 Rackspace US, Inc.
+:license: BSD, PSF see LICENSE.rst for details
 """
 
 # Backport of importlib.import_module from 3.x.
