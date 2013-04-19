@@ -9,14 +9,14 @@ Holland Plugin API
 """
 
 from holland.core.plugin.interface import BasePlugin, ConfigurablePlugin
-from holland.core.plugin.loader import AbstractPluginManager, \
-                                        EntrypointPluginManager
+from holland.core.plugin.loader import AbstractPluginLoader, \
+                                        EntrypointPluginLoader
 from holland.core.plugin.error import PluginError
 
-#: The default PluginManager.  This defaults to an instance of
-#: ``EntrypointPluginManager`` which looks up plugins based on
+#: The default PluginLoader.  This defaults to an instance of
+#: ``EntrypointPluginLoader`` which looks up plugins based on
 #: setuptools entrypoints
-default_pluginmgr = EntrypointPluginManager()
+default_pluginmgr = EntrypointPluginLoader()
 
 #: Convenience method to iterate over a plugin group on the default
 #: plugin manager
@@ -28,8 +28,8 @@ load_plugin = default_pluginmgr.load
 __all__ = [
     'BasePlugin',
     'ConfigurablePlugin',
-    'AbstractPluginManager',
-    'EntrypointPluginManager',
+    'AbstractPluginLoader',
+    'EntrypointPluginLoader',
     'PluginError',
     'default_pluginmgr',
     'iterate_plugins',

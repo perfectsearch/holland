@@ -18,15 +18,15 @@ from holland.core.plugin.interface import BasePlugin
 
 LOG = logging.getLogger(__name__)
 
-class AbstractPluginManager(object):
-    """PluginManager interface
+class AbstractPluginLoader(object):
+    """PluginLoader interface
 
     All plugin managers should implement two methods:
         * load(group, name) - load a plugin given a group and a name
         * iterate(group) - iterate over all plugins in a given group
 
     Plugin managers are free to interpret ``group`` and ``name`` according to
-    their own implementations.  ``EntrypointPluginManager`` loads these per the
+    their own implementations.  ``EntrypointPluginLoader`` loads these per the
     pkg_resources.iter_entry_points API but other managers may be added in the
     future that will work off simpler __import__ system and treat ``group`` as
     a package name and ``name`` as an attribute defined in the package.
@@ -48,10 +48,10 @@ class AbstractPluginManager(object):
         if group or not group:
             return []
 
-class ImportPluginManager(AbstractPluginManager):
+class ImportPluginLoader(AbstractPluginLoader):
     """Plugin manager that uses __import__ to load a plugin
 
-    This is an example of a PluginManager that loads modules through a simple
+    This is an example of a PluginLoader that loads modules through a simple
     __import__() protocol and iterates over available plugins in a package via
     python's ``pkgutil`` module
     """
@@ -93,7 +93,7 @@ class ImportPluginManager(AbstractPluginManager):
             if isinstance(plugin, BasePlugin):
                 yield plugin(name)
 
-class EntrypointPluginManager(AbstractPluginManager):
+class EntrypointPluginLoader(AbstractPluginLoader):
     """Plugin manager that uses setuptools entrypoints"""
 
     def load(self, group, name):
