@@ -11,6 +11,8 @@ Plugin manager API responsible for loading plugins
 import pkgutil
 import logging
 import pkg_resources
+from functools import wraps
+from holland.core.util.datastructures import OrderedDict
 from holland.core.plugin.util import import_module
 from holland.core.plugin.error import PluginError, PluginLoadError, \
                                       PluginNotFoundError
@@ -47,6 +49,36 @@ class AbstractPluginLoader(object):
         """
         if group or not group:
             return []
+
+class RegistryPluginLoader(AbstractPluginLoader):
+    """Plugin manager that loads plugins from an internal registry
+
+    :attr registry: dict of dicts mapping (group, name) tuples to
+                    plugin classes
+    """
+    def __init__(self):
+        self.register = OrderedDict()
+
+    def register(self, group, name):
+        """Class decorator to register a class with a DictPluginLoader instance
+
+        @registry.register('plugin_group', 'plugin_name')
+        class MyPlugin:
+            ...
+
+
+        >>> register.load_plugin('plugin_group', 'plugin_name')
+        MyPlugin()
+
+        :attr group:  group name to register plugin under
+        :attr name: plugin name to register plugin under
+        """
+        @wraps(register)
+        def wrapper(cls):
+            group_dict = self.registry.setdefault(group, OrderedDict())
+            group_dict[name] = cls
+            return cls
+        return wrapper
 
 class ImportPluginLoader(AbstractPluginLoader):
     """Plugin manager that uses __import__ to load a plugin
@@ -170,3 +202,29 @@ class EntrypointVersionConflictError(PluginError):
     def __str__(self):
         return ("Version Conflict while loading plugin package. "
                 "Requested %s Found %s" % (self.req, self.dist))
+
+class ChainedPluginLoader(AbstractPluginLoader):
+    """Chain multiple plugin loaders together
+
+    This plugin loader is composed of one or more other concrete loaders
+    and will delegate methods to each registered loader in order.
+
+    :attr loaders: list of loader instances
+    """
+
+    def __init__(self, *loaders):
+        self.loaders = loaders
+
+    def load(self, group, name):
+        for loader in self.loaders:
+            try:
+                return loader.load(group, name)
+            except PluginLoadError:
+                continue
+        raise PluginNotFoundError("No plugin found named '%s' in group '%s'" %
+                                    (name, group))
+
+    def iter(self, group):
+        for loader in self.loaders:
+            for plugin in loader.iter(group):
+                yield plugin
