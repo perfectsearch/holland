@@ -9,29 +9,34 @@ Holland Plugin API
 """
 
 from holland.core.plugin.interface import BasePlugin, ConfigurablePlugin
-from holland.core.plugin.loader import AbstractPluginLoader, \
-                                        EntrypointPluginLoader
 from holland.core.plugin.error import PluginError
+from . import loader
+
+#: global plugin registyr - used by various builtin plugin
+#: classes in holland.core
+plugin_registry = loader.RegistryPluginLoader()
 
 #: The default PluginLoader.  This defaults to an instance of
-#: ``EntrypointPluginLoader`` which looks up plugins based on
-#: setuptools entrypoints
-default_pluginmgr = EntrypointPluginLoader()
+#: ``ChainedPluginLoader`` which looks up plugins from the
+#: global holland.core plugin registry and then tries to lookup
+#: from setuptools' entrypoints
+default_plugin_loader = loader.ChainedPluginLoader(
+        plugin_registry,
+        loader.EntrypointPluginLoader()
+)
 
 #: Convenience method to iterate over a plugin group on the default
-#: plugin manager
-iterate_plugins = default_pluginmgr.iterate
+#: plugin loader
+iterate_plugins = default_plugin_loader.iterate
 
-#: Convenience method to load a plugin via the default plugin manager
-load_plugin = default_pluginmgr.load
+#: Convenience method to load a plugin via the default plugin loader 
+load_plugin = default_plugin_loader.load
 
 __all__ = [
     'BasePlugin',
     'ConfigurablePlugin',
-    'AbstractPluginLoader',
-    'EntrypointPluginLoader',
     'PluginError',
-    'default_pluginmgr',
+    'plugin_registry',
     'iterate_plugins',
     'load_plugin',
 ]
