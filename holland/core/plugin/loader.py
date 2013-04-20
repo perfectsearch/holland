@@ -57,7 +57,7 @@ class RegistryPluginLoader(AbstractPluginLoader):
                     plugin classes
     """
     def __init__(self):
-        self.register = OrderedDict()
+        self.registry = OrderedDict()
 
     def register(self, group, name):
         """Class decorator to register a class with a DictPluginLoader instance
@@ -79,6 +79,16 @@ class RegistryPluginLoader(AbstractPluginLoader):
             group_dict[name] = cls
             return cls
         return wrapper
+
+    def load(self, group, name):
+        try:
+            plugin_group = self.registry[group]
+        except KeyError:
+            raise PluginNotFoundError(group, name=None)
+        try:
+            return plugin_group[name]
+        except KeyError:
+            raise PluginNotFoundError(group, name)
 
 class ImportPluginLoader(AbstractPluginLoader):
     """Plugin manager that uses __import__ to load a plugin
@@ -161,8 +171,10 @@ class EntrypointPluginLoader(AbstractPluginLoader):
         """Iterate over an entrypoint group and yield the loaded entrypoint
         object
         """
+        LOG.info("Iterating over group=%r", group)
         for plugin in pkg_resources.iter_entry_points(group):
             try:
+                LOG.info("Found plugin name=%r. Attempting load", name)
                 yield plugin.load()(plugin.name)
             except (SystemExit, KeyboardInterrupt):
                 raise
@@ -221,10 +233,14 @@ class ChainedPluginLoader(AbstractPluginLoader):
                 return loader.load(group, name)
             except PluginLoadError:
                 continue
-        raise PluginNotFoundError("No plugin found named '%s' in group '%s'" %
-                                    (name, group))
+        raise PluginNotFoundError(group, name)
 
     def iter(self, group):
         for loader in self.loaders:
-            for plugin in loader.iter(group):
-                yield plugin
+            LOG.info("Loading from loader=%r", loader)
+            try:
+                for plugin in loader.iterate(group):
+                    LOG.info("yielding plugin=%r", plugin)
+                    yield plugin
+            except PluginLoadError:
+                continue

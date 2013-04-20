@@ -37,7 +37,6 @@ distribution = Distribution('pkg',
                             metadata=MockMetadata('pkg'))
 working_set.add(distribution)
 
-
 def test_load_plugin():
     plugin = load_plugin('holland.plugin', 'foo')
     assert_equals(plugin.name, 'foo')

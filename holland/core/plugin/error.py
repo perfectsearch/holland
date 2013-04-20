@@ -27,7 +27,7 @@ class PluginLoadError(PluginError):
         self.name = name
         self.exc = exc
 
-class PluginNotFoundError(PluginError):
+class PluginNotFoundError(PluginLoadError):
     """Failure to find a plugin
 
     This error is raised by a PluginManager when a plugin could not
