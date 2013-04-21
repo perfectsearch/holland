@@ -174,16 +174,16 @@ class EntrypointPluginLoader(AbstractPluginLoader):
         LOG.info("Iterating over group=%r", group)
         for plugin in pkg_resources.iter_entry_points(group):
             try:
-                LOG.info("Found plugin name=%r. Attempting load", name)
                 yield plugin.load()(plugin.name)
             except (SystemExit, KeyboardInterrupt):
                 raise
             except:
-                LOG.error("Failed to load plugin %r from group %s",
-                          plugin, group, exc_info=True)
+                # skip broken plugins during iterate
+                LOG.debug("Skipping broken plugin '%s'",
+                          plugin.name, exc_info=True)
 
 # specific to entrypoint plugins
-class EntrypointDependencyError(PluginError):
+class EntrypointDependencyError(PluginLoadError):
     """An entrypoint or its python egg distribution requires some dependency
     that could not be found by setuptools/pkg_resources
 
@@ -200,7 +200,7 @@ class EntrypointDependencyError(PluginError):
         return "Could not find dependency '%s' for plugin %s in group %s" % \
                (self.req, self.name, self.group)
 
-class EntrypointVersionConflictError(PluginError):
+class EntrypointVersionConflictError(PluginLoadError):
     """Raises when multiple egg distributions provide the same requirement but
     have different versions.
     """
@@ -231,11 +231,11 @@ class ChainedPluginLoader(AbstractPluginLoader):
         for loader in self.loaders:
             try:
                 return loader.load(group, name)
-            except PluginLoadError:
+            except PluginLoadError, exc:
                 continue
         raise PluginNotFoundError(group, name)
 
-    def iter(self, group):
+    def iterate(self, group):
         for loader in self.loaders:
             LOG.info("Loading from loader=%r", loader)
             try:
