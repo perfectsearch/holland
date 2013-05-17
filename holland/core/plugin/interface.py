@@ -32,6 +32,9 @@ class BasePlugin(object):
     #: name of this plugin
     name = None
 
+    #: namespace this plugin is registered under - a simple string
+    plugin_namespace = None
+
     #: aliases for this plugin
     aliases = ()
 
