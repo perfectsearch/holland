@@ -35,6 +35,22 @@ class BasePlugin(object):
     #: aliases for this plugin
     aliases = ()
 
+    #: author of this plugin
+    author = None
+
+    #: single-line summary description of this plugin
+    summary = None
+    
+    #: multi-line description of this plugin
+    description = None
+
+    #: version of this plugin
+    version = '0.0.0'
+
+    #: holland version this plugin is targetted for
+    # This is used for api compatibility checking
+    api_version = '1.1.0'
+
     def __init__(self, name):
         self.name = name
 
@@ -44,12 +60,12 @@ class BasePlugin(object):
         :returns: dict of plugin metadata attributes
         """
         return dict(
-            name='base-plugin',
-            author='Holland',
-            summary='<no summary>',
-            description='<no description>',
-            version='0.0',
-            api_version='1.1'
+            name=self.name,
+            author=self.author,
+            summary=self.summary,
+            description=self.description,
+            version=self.version,
+            api_version=self.api_version
         )
 
 class ConfigurablePlugin(BasePlugin):
