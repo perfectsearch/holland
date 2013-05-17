@@ -13,11 +13,12 @@ import re
 import codecs
 import textwrap
 import logging
-from holland.core.util.datastructures import SortedDict as OrderedDict
+from ..exc import HollandError
+from ..util.datastructures import SortedDict as OrderedDict
 
 LOG = logging.getLogger(__name__)
 
-class ConfigError(Exception):
+class ConfigError(HollandError):
     """General error when processing config"""
 
 class ConfigFileError(IOError, ConfigError):
