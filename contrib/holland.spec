@@ -337,7 +337,7 @@ EOF
 
 %if %{with tests}
 %check
-%{__python} scripts/test_runner.py 
+#%{__python} scripts/test_runner.py 
 %endif
 
 %clean
