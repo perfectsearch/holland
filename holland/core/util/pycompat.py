@@ -273,7 +273,7 @@ def namedtuple(typename, field_names, verbose=False, rename=False, doc=None):
 
             _fields = %(fields)s
 
-            #@classmethod
+            @classmethod
             def _make(cls, iterable):
                 result = tuple.__new__(cls, iterable)
                 if len(result) > %(field_count)d:
@@ -281,7 +281,6 @@ def namedtuple(typename, field_names, verbose=False, rename=False, doc=None):
                         'expected %(field_count)d arguments, got %%d' %% len(result)
                     )
                 return result
-            _make = classmethod(_make)
 
             def __new__(cls, %(fieldnames)s):
                 return tuple.__new__(cls, (%(fieldnames)s))

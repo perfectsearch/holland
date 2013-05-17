@@ -106,7 +106,7 @@ class BackupPlugin(ConfigurablePlugin):
         snapshot.
         """
 
-    #@classmethod
+    @classmethod
     def configspec(cls):
         """Provide standard backup configspec
 
@@ -136,7 +136,6 @@ class BackupPlugin(ConfigurablePlugin):
         backup-failure-hook     = string(default=None)
         hooks                   = list(default=list())
         """)
-    configspec = classmethod(configspec)
 
 class NoopBackupPlugin(BackupPlugin):
     """Backup plugin implementation that does nothing

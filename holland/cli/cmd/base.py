@@ -46,13 +46,12 @@ class BaseCommand(BasePlugin):
         self.parent = None
         self.config = None
 
-    #@classmethod
+    @classmethod
     def debug(cls, fmt, *args, **kwargs):
         """Writing a debugging message to the log"""
         LOG.debug(fmt, *args, **kwargs)
-    debug = classmethod(debug)
 
-    #@classmethod
+    @classmethod
     def stderr(cls, fmt, *args):
         """Write a message to stderr
 
@@ -63,9 +62,8 @@ class BaseCommand(BasePlugin):
         :param args: message arguments
         """
         print >> sys.stderr, fmt % args
-    stderr = classmethod(stderr)
 
-    #@classmethod
+    @classmethod
     def stdout(cls, fmt, *args):
         """Write a message to stdout
 
@@ -73,7 +71,6 @@ class BaseCommand(BasePlugin):
         at INFO verbosity
         """
         print >> sys.stdout, fmt % args
-    stdout = classmethod(stdout)
 
     def setup(self, parent):
         """Link this command with its parent command

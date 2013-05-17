@@ -95,11 +95,10 @@ class NormalizedVersion(object):
         self.is_final = True  # by default, consider a version as final.
         self._parse(s, error_on_huge_major_num)
 
-    #@classmethod
+    @classmethod
     def from_parts(cls, version, prerelease=_FINAL_MARKER,
                    devpost=_FINAL_MARKER):
         return cls(cls.parts_to_str((version, prerelease, devpost)))
-    from_parts = classmethod(from_parts)
 
     def _parse(self, s, error_on_huge_major_num=True):
         """Parses a string version into parts."""
@@ -176,7 +175,7 @@ class NormalizedVersion(object):
     def __str__(self):
         return self.parts_to_str(self.parts)
 
-    #@classmethod
+    @classmethod
     def parts_to_str(cls, parts):
         """Transforms a version expressed in tuple into its string
         representation."""
@@ -196,7 +195,6 @@ class NormalizedVersion(object):
                 s += str(postdev[i])
                 i += 1
         return s
-    parts_to_str = classmethod(parts_to_str)
 
     def __repr__(self):
         return "%s('%s')" % (self.__class__.__name__, self)

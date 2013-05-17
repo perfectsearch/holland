@@ -66,7 +66,7 @@ class Config(OrderedDict):
         super(Config, self).__init__(*args, **kwargs)
         self.source = {}
 
-    #@classmethod
+    @classmethod
     def from_iterable(cls, iterable):
         """Parse a sequence of lines and return a ``Config`` instance.
 
@@ -124,9 +124,8 @@ class Config(OrderedDict):
                                      lineno,
                                      line))
         return cfg
-    from_iterable = classmethod(from_iterable)
 
-    #@classmethod
+    @classmethod
     def from_string(cls, configstr):
         """Parse a string and generate a config instance
 
@@ -139,9 +138,8 @@ class Config(OrderedDict):
         :returns: ``Config`` (or subclass)
         """
         return cls.from_iterable(textwrap.dedent(configstr).splitlines(True))
-    from_string = classmethod(from_string)
 
-    #@classmethod
+    @classmethod
     def read(cls, filenames, encoding='utf8'):
         """Read and parse a list of filenames.
 
@@ -162,7 +160,6 @@ class Config(OrderedDict):
             main.merge(cfg)
             main.path = path
         return main
-    read = classmethod(read)
 
     def merge(self, src_config):
         """Merge another config instance with this one.

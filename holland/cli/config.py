@@ -70,11 +70,10 @@ class GlobalHollandConfig(Config):
         BackupPlugin.configspec().validate(cfg, ignore_unknown_sections=True)
         return cfg
 
-    #@classmethod
+    @classmethod
     def configspec(cls):
         """The holland.conf configspec"""
         return cli_configspec
-    configspec = classmethod(configspec)
 
 def load_global_config(path):
     """Conditionally load the global holland.conf

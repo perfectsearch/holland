@@ -123,7 +123,7 @@ class CheckParser(object):
         (space_re, None)
     ])
 
-    #@classmethod
+    @classmethod
     def tokenize(cls, check):
         """Tokenize a check into its constituent parts.
 
@@ -141,9 +141,8 @@ class CheckParser(object):
                                   (offset, check, " "*offset + "^"))
 
         return tokens
-    tokenize = classmethod(tokenize)
 
-    #@classmethod
+    @classmethod
     def parse(cls, check):
         """Parse a check
 
@@ -173,9 +172,8 @@ class CheckParser(object):
         args, kwargs = cls._parse_argument_list(lexer)
 
         return method.value, args, kwargs
-    parse = classmethod(parse)
 
-    #@classmethod
+    @classmethod
     def _parse_argument_list(cls, lexer):
         """Parse a list of arguments starting immediately after the open '('"""
         args = []
@@ -202,9 +200,8 @@ class CheckParser(object):
             raise CheckParseError("Expected check expression to end with ')' "
                              "but got %r" % token)
         return tuple(args), kwargs
-    _parse_argument_list = classmethod(_parse_argument_list)
 
-    #@classmethod
+    @classmethod
     def _parse_expression(cls, lexer, token):
         """Parse a single expression
 
@@ -220,9 +217,8 @@ class CheckParser(object):
             return token.value
         else:
             return cls._parse_list_expr(lexer)
-    _parse_expression = classmethod(_parse_expression)
 
-    #@classmethod
+    @classmethod
     def _parse_list_expr(cls, lexer):
         """Parse a list expression
 
@@ -241,7 +237,6 @@ class CheckParser(object):
             raise CheckError("list expressions may not contain keyword "
                              "arguments")
         return list(args)
-    _parse_list_expr = classmethod(_parse_list_expr)
 
 class Check(tuple):
     """Represents a parse Check string
@@ -273,14 +268,13 @@ class Check(tuple):
     default = property(lambda self: self[3])
     aliasof = property(lambda self: self[4])
 
-    #@classmethod
+    @classmethod
     def parse(cls, check):
         """Parse a check and return a new Check instance"""
         name, args, kwargs = CheckParser.parse(check)
         default = kwargs.pop('default', missing)
         aliasof = kwargs.pop('aliasof', missing)
         return cls((name, args, kwargs, default, aliasof))
-    parse = classmethod(parse)
 
     def __repr__(self):
         return "Check(name=%r, args=%r, kwargs=%r, default=%r, aliasof=%r)" % \

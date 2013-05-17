@@ -55,7 +55,7 @@ class NewPlugin(BackupPlugin):
         this may be called to allow the plugin to free that resource.
         """
 
-    #@classmethod
+    @classmethod
     def configspec(cls):
         """Provide a specification for the configuration this plugin supports
 
@@ -67,9 +67,8 @@ class NewPlugin(BackupPlugin):
         return Configspec.from_string(
             CONFIGSPEC
         )
-    configspec = classmethod(configspec)
 
-    #@classmethod
+    @classmethod
     def plugin_info(cls):
         return dict(
             name='${plugin}',
@@ -78,4 +77,3 @@ class NewPlugin(BackupPlugin):
             version='${version}',
             api_version='${api_version}'
         )
-    plugin_info = classmethod(plugin_info)
