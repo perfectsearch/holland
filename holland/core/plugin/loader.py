@@ -1,32 +1,34 @@
 """
-    holland.core.plugin.manager
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+holland.core.plugin.loader
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Plugin manager API responsible for loading plugins
+Plugin manager API responsible for loading plugins
 
-    :copyright: 2008-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
+:copyright: 2008-2011 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
 """
 
 import pkgutil
 import logging
 import pkg_resources
+from functools import wraps
+from holland.core.util.datastructures import OrderedDict
 from holland.core.plugin.util import import_module
 from holland.core.plugin.error import PluginError, PluginLoadError, \
                                       PluginNotFoundError
-from holland.core.plugin.base import BasePlugin
+from holland.core.plugin.interface import BasePlugin
 
 LOG = logging.getLogger(__name__)
 
-class AbstractPluginManager(object):
-    """PluginManager interface
+class AbstractPluginLoader(object):
+    """PluginLoader interface
 
     All plugin managers should implement two methods:
         * load(group, name) - load a plugin given a group and a name
         * iterate(group) - iterate over all plugins in a given group
 
     Plugin managers are free to interpret ``group`` and ``name`` according to
-    their own implementations.  ``EntrypointPluginManager`` loads these per the
+    their own implementations.  ``EntrypointPluginLoader`` loads these per the
     pkg_resources.iter_entry_points API but other managers may be added in the
     future that will work off simpler __import__ system and treat ``group`` as
     a package name and ``name`` as an attribute defined in the package.
@@ -48,10 +50,50 @@ class AbstractPluginManager(object):
         if group or not group:
             return []
 
-class ImportPluginManager(AbstractPluginManager):
+class RegistryPluginLoader(AbstractPluginLoader):
+    """Plugin manager that loads plugins from an internal registry
+
+    :attr registry: dict of dicts mapping (group, name) tuples to
+                    plugin classes
+    """
+    def __init__(self):
+        self.registry = OrderedDict()
+
+    def register(self, group, name):
+        """Class decorator to register a class with a DictPluginLoader instance
+
+        @registry.register('plugin_group', 'plugin_name')
+        class MyPlugin:
+            ...
+
+
+        >>> register.load_plugin('plugin_group', 'plugin_name')
+        MyPlugin()
+
+        :attr group:  group name to register plugin under
+        :attr name: plugin name to register plugin under
+        """
+        @wraps(register)
+        def wrapper(cls):
+            group_dict = self.registry.setdefault(group, OrderedDict())
+            group_dict[name] = cls
+            return cls
+        return wrapper
+
+    def load(self, group, name):
+        try:
+            plugin_group = self.registry[group]
+        except KeyError:
+            raise PluginNotFoundError(group, name=None)
+        try:
+            return plugin_group[name]
+        except KeyError:
+            raise PluginNotFoundError(group, name)
+
+class ImportPluginLoader(AbstractPluginLoader):
     """Plugin manager that uses __import__ to load a plugin
 
-    This is an example of a PluginManager that loads modules through a simple
+    This is an example of a PluginLoader that loads modules through a simple
     __import__() protocol and iterates over available plugins in a package via
     python's ``pkgutil`` module
     """
@@ -93,7 +135,7 @@ class ImportPluginManager(AbstractPluginManager):
             if isinstance(plugin, BasePlugin):
                 yield plugin(name)
 
-class EntrypointPluginManager(AbstractPluginManager):
+class EntrypointPluginLoader(AbstractPluginLoader):
     """Plugin manager that uses setuptools entrypoints"""
 
     def load(self, group, name):
@@ -129,17 +171,19 @@ class EntrypointPluginManager(AbstractPluginManager):
         """Iterate over an entrypoint group and yield the loaded entrypoint
         object
         """
+        LOG.info("Iterating over group=%r", group)
         for plugin in pkg_resources.iter_entry_points(group):
             try:
                 yield plugin.load()(plugin.name)
             except (SystemExit, KeyboardInterrupt):
                 raise
             except:
-                LOG.error("Failed to load plugin %r from group %s",
-                          plugin, group, exc_info=True)
+                # skip broken plugins during iterate
+                LOG.debug("Skipping broken plugin '%s'",
+                          plugin.name, exc_info=True)
 
 # specific to entrypoint plugins
-class EntrypointDependencyError(PluginError):
+class EntrypointDependencyError(PluginLoadError):
     """An entrypoint or its python egg distribution requires some dependency
     that could not be found by setuptools/pkg_resources
 
@@ -156,7 +200,7 @@ class EntrypointDependencyError(PluginError):
         return "Could not find dependency '%s' for plugin %s in group %s" % \
                (self.req, self.name, self.group)
 
-class EntrypointVersionConflictError(PluginError):
+class EntrypointVersionConflictError(PluginLoadError):
     """Raises when multiple egg distributions provide the same requirement but
     have different versions.
     """
@@ -170,3 +214,33 @@ class EntrypointVersionConflictError(PluginError):
     def __str__(self):
         return ("Version Conflict while loading plugin package. "
                 "Requested %s Found %s" % (self.req, self.dist))
+
+class ChainedPluginLoader(AbstractPluginLoader):
+    """Chain multiple plugin loaders together
+
+    This plugin loader is composed of one or more other concrete loaders
+    and will delegate methods to each registered loader in order.
+
+    :attr loaders: list of loader instances
+    """
+
+    def __init__(self, *loaders):
+        self.loaders = loaders
+
+    def load(self, group, name):
+        for loader in self.loaders:
+            try:
+                return loader.load(group, name)
+            except PluginLoadError, exc:
+                continue
+        raise PluginNotFoundError(group, name)
+
+    def iterate(self, group):
+        for loader in self.loaders:
+            LOG.info("Loading from loader=%r", loader)
+            try:
+                for plugin in loader.iterate(group):
+                    LOG.info("yielding plugin=%r", plugin)
+                    yield plugin
+            except PluginLoadError:
+                continue

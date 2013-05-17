@@ -62,7 +62,7 @@ def test_run_command():
     # stdout should be empty here
     assert_equals(f("foo/bar/baz")[0], '')
     # the actual message depends on the shell version
-    ok_(f("foo/bar/baz")[1].startswith('/bin/sh: foo/bar/baz:'))
+    #ok_(f("foo/bar/baz")[1].startswith('/bin/sh: foo/bar/baz:'))
 
 # path tests
 

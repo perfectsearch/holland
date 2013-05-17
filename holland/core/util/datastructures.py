@@ -239,6 +239,8 @@ class SortedDict(dict):
         super(SortedDict, self).clear()
         self.keyOrder = []
 
+OrderedDict = SortedDict
+
 class MultiValueDictKeyError(KeyError):
     pass
 

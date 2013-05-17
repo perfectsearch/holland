@@ -1,11 +1,11 @@
 """
-    holland.core.plugin.base
-    ~~~~~~~~~~~~~~~~~~~~~~~~
+holland.core.plugin.interface
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Base plugin classes for Holland
+Base plugin classes for Holland
 
-    :copyright: 2008-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
+:copyright: 2008-2013 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
 """
 
 from holland.core.config import Configspec
