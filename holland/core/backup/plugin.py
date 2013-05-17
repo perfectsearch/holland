@@ -18,6 +18,10 @@ LOG = logging.getLogger(__name__)
 class BackupPlugin(ConfigurablePlugin):
     """Interface that Holland Backup Plugins should conform to"""
 
+    #: holland backup plugins are always registered under the namespace
+    #: "holland.backup"
+    namespace = 'holland.backup'
+
     #: BackupStore instance provides via the setup() method
     store = None
 
