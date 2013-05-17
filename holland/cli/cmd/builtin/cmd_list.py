@@ -75,12 +75,12 @@ class ListPlugins(ArgparseCommand):
                                plugin, exc_info=True)
                     continue
                 wrap = textwrap.wrap
-                summary = wrap(info.get('summary', ''),
+                summary = wrap(info.get('summary') or '',
                                initial_indent=' '*28,
                                subsequent_indent=' '*28,
                                width=79)
                 self.stdout("%-12s %-14s %s", group,
-                            plugin.name,
+                            plugin.name or '',
                             '\n'.join(summary).lstrip())
         return 0
 
