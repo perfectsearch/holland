@@ -45,6 +45,7 @@ class TestRunner(object):
         self.coverage = coverage
         self.report = report
         self.quiet = quiet
+        self.errors = []
 
     def _setup_python_path(self, paths):
         python_path = []
@@ -103,6 +104,7 @@ class TestRunner(object):
                                                close_fds=True)
             if ret != 0:
                 logging.warning(" * Test exited with failure status %d", ret)
+                self.errors.append(path)
 
             if self.report:
                 #os.rename(os.path.join(path, '.coverage'),
@@ -219,6 +221,10 @@ def main(args=None):
                         report=opts.report,
                         quiet=opts.quiet)
     runner.run(paths)
+    if runner.errors:
+        logging.info("%d tests failed", len(runner.errors))
+        for path in runner.errors:
+            logging.info("  Failed: %s", path)
     return 0
 
 if __name__ == '__main__':
