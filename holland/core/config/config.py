@@ -52,9 +52,6 @@ class Config(OrderedDict):
     cont_cre        = re.compile(r'\s+(?P<value>.+?)$')
     include_cre     = re.compile(r'%include (?P<name>.+?)\s*$')
 
-    #: name of the section.  The root config will always have the name 'root'
-    name = 'root'
-
     #: path where this configuration was loaded from or None if not loaded from
     #  a file
     path = None
@@ -68,7 +65,6 @@ class Config(OrderedDict):
     def __init__(self, *args, **kwargs):
         super(Config, self).__init__(*args, **kwargs)
         self.source = {}
-        self.name = 'root'
 
     #@classmethod
     def from_iterable(cls, iterable):
