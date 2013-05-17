@@ -80,6 +80,14 @@ class RegistryPluginLoader(AbstractPluginLoader):
         return wrapper
 
     def load(self, namespace, name):
+        """Load a plugin from this loader's registry
+
+        :param namespace: namespace to load from
+        :param name: name of a plugin to load
+        :returns: BasePlugin instance
+        :raises: PluginError if a plugin could not be loaded
+        """
+
         try:
             plugin_namespace = self.registry[namespace]
         except KeyError:
@@ -88,6 +96,16 @@ class RegistryPluginLoader(AbstractPluginLoader):
             return plugin_namespace[name]
         except KeyError:
             raise PluginNotFoundError(namespace, name)
+
+    def iterate(self, namespace):
+        """Iterate over plugins in this registry's namespace
+
+        :param namespace: namespace to iterate over
+        :yields: BasePlugin instances
+        """
+        namespace_dict = self.registry.get(namespace, OrderedDict())
+        for name, plugin_cls in namespace_dict.iteritems():
+            yield plugin_cls(name)
 
 class ImportPluginLoader(AbstractPluginLoader):
     """Plugin manager that uses __import__ to load a plugin
