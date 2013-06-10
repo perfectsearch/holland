@@ -24,15 +24,11 @@
 
 %bcond_without  tests
 %bcond_with     sphinxdocs
-%bcond_without  pgdump
-%bcond_without  sqlite
-%bcond_without  xtrabackup
-%bcond_without  script
-%bcond_with     delphini
+%bcond_without  pgsql
 
 Name:           holland
 Version:        %{holland_version}
-Release:        4%{?dist}
+Release:        6%{?dist}
 Summary:        Pluggable Backup Framework
 Group:          Applications/Archiving
 License:        BSD 
@@ -49,117 +45,75 @@ BuildRequires:  python-sphinx >= 1.0
 BuildRequires:  python-nose
 %endif
 Requires:       python-setuptools
+Provides:       holland-common = %{version}-%{release}
+Obsoletes:      holland-common < 2.0
 
 %description
 A pluggable backup framework which focuses on, but is not limited to, highly
 configurable database backups.
 
-%package common
-Summary:        Common library functionality for Holland Plugins
-License:        GPLv2
-Group:          Applications/Archiving
-Requires:       %{name} = %{version}-%{release} MySQL-python
-
-%description common
-Library for common functionality used by holland plugins
-
-
-%package mysqldump
-Summary: Logical mysqldump backup plugin for Holland
+%package mysql
+Summary: Backup support for MySQL based databases
 License: GPLv2
 Group: Development/Libraries
-Requires: %{name} = %{version}-%{release} %{name}-common = %{version}-%{release}
+Provides: holland-mysqldump = %{version}-%{release}
+Provides: holland-xtrabackup = %{version}-%{release}
+Obsoletes: holland-mysqldump < 2.0
+Obsoletes: holland-xtrabackup < 2.0
+Requires: %{name} = %{version}-%{release}
+Requires: MySQL-python
 
-%description mysqldump
-This plugin allows holland to perform logical backups of a MySQL database
-using the mysqldump command.
+%description mysql
+Provides plugins for backing MySQL databases.
+This package includes the following plugins:
+    * mysqldump
+    * xtrabackup
+    * delphini
 
+%package lvm
+Summary:  Backup support for LVM logical volumes
+License:  GPLv2
+Group:    Development/Libraries
+Requires: %{name} = %{version}-%{release}
+Requires: lvm2 util-linux
 
-%package mysqllvm
-Summary: Holland LVM snapshot backup plugin for MySQL 
-License: GPLv2
-Group: Development/Libraries
-Requires: %{name} = %{version}-%{release} %{name}-common = %{version}-%{release}
-Provides: %{name}-lvm = %{version}-%{release}
-Obsoletes: %{name}-lvm < 0.9.8
-Requires: lvm2 MySQL-python tar
+%description lvm
+Provides support for querying and accessing LVM metadata
 
-%description mysqllvm
+%package mysql-lvm
+Summary:  Backup support for MySQL based databases running on LVM
+License:  GPLv2
+Group:    Development/Libraries
+Provides: holland-mysqllvm = %{version}-%{release}
+Obsoletes: holland-mysqllvm < 2.0
+Requires: %{name} = %{version}-%{release}
+Requires: holland-lvm = %{version}-%{release}
+Requires: holland-mysql = %{version}-%{release}
+Requires: tar
+
+%description mysql-lvm
 This plugin allows holland to perform LVM snapshot backups of a MySQL database
 and to generate a tar archive of the raw data directory.
 
 
-%if %{with pgdump}
-%package    pgdump
-Summary: Holland LVM snapshot backup plugin for MySQL 
-License: GPLv2
-Group: Development/Libraries
+%if %{with pgsql}
+%package  pgsql
+Summary:  Postgres backup plugins for holland
+License:  GPLv2
+Group:    Development/Libraries
 Provides: %{name}-pgdump = %{version}-%{release}
-Requires:   %{name} = %{version}-%{release} %{name}-common = %{version}-%{release}
-Requires:   python-psycopg2
+Obsoletes: holland-pgdump < 2.0
+Requires: %{name} = %{version}-%{release}
+Requires: python-psycopg2
 
-%description pgdump
+%description pgsql
 This plugin allows holland to backup Postgres databases via the pg_dump command.
-%endif
-
-%if %{with sqlite}
-%package sqlite
-Summary: SQLite Backup Provider Plugin for Holland
-Group: Development/Libraries
-Requires: %{name} = %{version}-%{release}
-Requires: %{name}-common = %{version}-%{release}
-
-%description sqlite 
-SQLite Backup Provider Plugin for Holland
-%endif
-
-%if %{with xtrabackup}
-%package xtrabackup
-Summary: Xtrabackup plugin for Holland
-License: GPLv2
-Group: Development/Libraries
-Requires: %{name} = %{version}-%{release}
-Requires: %{name}-common = %{version}-%{release}
-Requires: xtrabackup >= 1.2
-
-%description xtrabackup
-This package provides a Holland plugin for the Percona Xtrabackup 
-backup tool for InnoDB and XtraDB engines for MySQL
-%endif
-
-%if %{with script}
-%package script
-Summary: Shell script plugin for Holland
-License: GPLv2
-Group: Development/Libraries
-Requires: %{name} = %{version}-%{release}
-Requires: %{name}-common = %{version}-%{release}
-
-%description script
-This package provides a Holland plugin that performs backups by
-running a user supplied shell script command.
-%endif
-
-%if %{with delphini}
-%package delphini
-Summary: MySQL-Cluster plugin for Holland
-License: GPLv2
-Group: Development/Libraries
-Requires: %{name} = %{version}-%{release}
-Requires: %{name}-common = %{version}-%{release}
-
-%description delphini
-This package provides a Holland plugin for MySQL-Cluster
-in order to aggregate native backups from multiple data nodes.
 %endif
 
 %prep
 %setup -q
 mv plugins/README README.plugins
 mv config/providers/README README.providers 
-
-# cleanup, will be removed upstream at some point
-rm plugins/ACTIVE
 
 %build
 %{__python} setup.py build
@@ -173,62 +127,27 @@ rm -f build/html/.buildinfo
 popd
 %endif
 
-# library : holland.lib.mysql
-cd plugins/holland.lib.mysql
+# holland-mysql
+cd plugins/mysql
 %{__python} setup.py build
 cd -
 
-# library: holland.lib.lvm
-cd plugins/holland.lib.lvm
+# holland-lvm
+cd plugins/lvm
 %{__python} setup.py build
 cd -
 
-# plugin : holland.backup.mysqldump
-cd plugins/holland.backup.mysqldump
+# holland-mysql-lvm
+cd plugins/mysql-lvm
 %{__python} setup.py build
 cd -
 
-# plugin : holland.backup.mysql_lvm
-cd plugins/holland.backup.mysql_lvm
-%{__python} setup.py build
-cd -
-
-%if %{with pgdump}
-cd plugins/holland.backup.pgdump
+%if %{with pgsql}
+# holland-pgsql
+cd plugins/pgsql
 %{__python} setup.py build
 cd -
 %endif
-
-# plugin : holland.backup.random
-cd plugins/holland.backup.random
-%{__python} setup.py build
-cd -
-
-%if %{with sqlite}
-# plugin : holland.backup.sqlite
-cd plugins/holland.backup.sqlite
-%{__python} setup.py build
-cd -
-%endif
-
-%if %{with xtrabackup}
-cd plugins/holland.backup.xtrabackup
-%{__python} setup.py build
-cd -
-%endif
-
-%if %{with script}
-cd plugins/holland.backup.script
-%{__python} setup.py build
-cd -
-%endif
-
-%if %{with delphini}
-cd plugins/holland.backup.delphini
-%{__python} setup.py build
-cd -
-%endif
-
 
 %install
 rm -rf %{buildroot}
@@ -248,66 +167,29 @@ install -m 0644 docs/build/man/holland.1 %{buildroot}%{_mandir}/man1
 %endif
 %{__mkdir_p} %{buildroot}%{python_sitelib}/holland/{lib,backup,commands,restore}
 
-# library : holland.lib.mysql
-cd plugins/holland.lib.mysql
+# holland-mysql
+cd plugins/mysql
+%{__python} setup.py install -O1 --skip-build --root %{buildroot}
+cd -
+#install -m 0640 config/providers/mysqldump.conf %{buildroot}%{_sysconfdir}/holland/providers/
+
+# holland-lvm
+cd plugins/lvm
 %{__python} setup.py install -O1 --skip-build --root %{buildroot}
 cd -
 
-# library: holland.lib.lvm
-cd plugins/holland.lib.lvm
+# holland-mysql-lvm
+cd plugins/mysql-lvm
 %{__python} setup.py install -O1 --skip-build --root %{buildroot}
 cd -
+#install -m 0640 config/providers/mysql-lvm.conf %{buildroot}%{_sysconfdir}/holland/providers/
 
-# plugin : holland.backup.mysqldump
-cd plugins/holland.backup.mysqldump
+# holland-pgsql
+%if %{with pgsql}
+cd plugins/pgsql
 %{__python} setup.py install -O1 --skip-build --root %{buildroot}
 cd -
-install -m 0640 config/providers/mysqldump.conf %{buildroot}%{_sysconfdir}/holland/providers/
-
-# plugin : holland.backup.mysql_lvm
-cd plugins/holland.backup.mysql_lvm
-%{__python} setup.py install -O1 --skip-build --root %{buildroot}
-cd -
-install -m 0640 config/providers/mysql-lvm.conf %{buildroot}%{_sysconfdir}/holland/providers/
-
-# plugin : holland.backup.pgdump
-%if %{with pgdump}
-cd plugins/holland.backup.pgdump
-%{__python} setup.py install -O1 --skip-build --root %{buildroot}
-cd -
-install -m 0640 config/providers/pgdump.conf %{buildroot}%{_sysconfdir}/holland/providers/
-%endif
-
-%if %{with sqlite}
-# plugin : holland.backup.sqlite
-cd plugins/holland.backup.sqlite
-%{__python} setup.py install -O1 --skip-build --root %{buildroot}
-cd -
-install -m 0640 config/providers/sqlite.conf %{buildroot}%{_sysconfdir}/holland/providers/
-%endif
-
-%if %{with xtrabackup}
-# plugin : holland.backup.xtrabackup
-cd plugins/holland.backup.xtrabackup
-%{__python} setup.py install -O1 --skip-build --root %{buildroot}
-cd -
-install -m 0640 config/providers/xtrabackup.conf %{buildroot}%{_sysconfdir}/holland/providers/
-%endif
-
-%if %{with script}
-# plugin : holland.backup.script
-cd plugins/holland.backup.script
-%{__python} setup.py install -O1 --skip-build --root %{buildroot}
-cd -
-install -m 0640 config/providers/script.conf %{buildroot}%{_sysconfdir}/holland/providers/
-%endif
-
-%if %{with delphini}
-# plugin : holland.backup.delphini
-cd plugins/holland.backup.delphini
-%{__python} setup.py install -O1 --skip-build --root %{buildroot}
-cd -
-install -m 0640 config/providers/delphini.conf %{buildroot}%{_sysconfdir}/holland/providers/
+#install -m 0640 config/providers/pgdump.conf %{buildroot}%{_sysconfdir}/holland/providers/
 %endif
 
 # ensure we have no .pth files
@@ -335,7 +217,6 @@ rm -rf %{buildroot}
 
 
 %files
-%defattr(-,root,root,-)
 %doc CHANGES.txt README.rst README.plugins README.providers 
 %doc INSTALL LICENSE config/backupsets/examples/ 
 %if %{with sphinxdocs}
@@ -368,78 +249,46 @@ rm -rf %{buildroot}
 %dir %{python_sitelib}/holland/restore/
 %dir %{python_sitelib}/holland/lib/
 
-%files common
-%defattr(-,root,root,-)
-%{python_sitelib}/%{name}/lib/mysql/
-%{python_sitelib}/holland.lib.mysql-*.egg-info
+%files mysql
+%doc plugins/mysql/{README,LICENSE}
+# libraries
+%{python_sitelib}/holland/mysql/client
+%{python_sitelib}/holland/mysql/cli.py*
+%{python_sitelib}/holland/mysql/find.py*
+%{python_sitelib}/holland/mysql/__init__.py*
+%{python_sitelib}/holland/mysql/option
+%{python_sitelib}/holland/mysql/schema
+# backup plugins
+%{python_sitelib}/holland/mysql/delphini
+%{python_sitelib}/holland/mysql/mysqldump
+%{python_sitelib}/holland/mysql/xtrabackup
 
-%files mysqldump
-%defattr(-,root,root,-)
-%doc plugins/holland.backup.mysqldump/{README,LICENSE}
-%{python_sitelib}/holland/backup/mysqldump/
-# XXX: hooks for testing 1.1a1
-%{python_sitelib}/holland/lib/mysqldump/
-%{python_sitelib}/holland.backup.mysqldump-*.egg-info
-%config(noreplace) %{_sysconfdir}/holland/providers/mysqldump.conf
+%{python_sitelib}/holland.mysql-*.egg-info
 
-%files mysqllvm
-%defattr(-,root,root,-)
-%doc plugins/holland.backup.mysql_lvm/{README,LICENSE}
-%{python_sitelib}/holland/backup/mysql*_lvm/
-%{python_sitelib}/holland.backup.mysql*_lvm-*.egg-info
-%{python_sitelib}/%{name}/lib/lvm/
-%{python_sitelib}/holland.lib.lvm-*.egg-info
-%config(noreplace) %{_sysconfdir}/holland/providers/mysql-lvm.conf
+%files lvm
+%doc plugins/lvm/{README,LICENSE}
+%{python_sitelib}/holland/lvm
+%{python_sitelib}/holland.lvm-*.egg-info
 
-%if %{with pgdump}
-%files pgdump
-%defattr(-,root,root,-)
-%doc plugins/holland.backup.pgdump/{README,LICENSE}
-%{python_sitelib}/holland.backup.pgdump-*.egg-info
-%{python_sitelib}/holland/backup/pgdump/
-%config(noreplace) %{_sysconfdir}/holland/providers/pgdump.conf
+%files mysql-lvm
+%doc plugins/mysql-lvm/{README,LICENSE}
+%{python_sitelib}/holland/mysql/lvm
+%{python_sitelib}/holland.mysql.lvm-*.egg-info
+
+%if %{with pgsql}
+%files pgsql
+%doc plugins/pgsql/{README,LICENSE}
+%{python_sitelib}/holland.pgsql-*.egg-info
+%{python_sitelib}/holland/pgsql
 %endif
-
-%if %{with sqlite}
-%files sqlite 
-%defattr(-,root,root,-)
-%doc plugins/holland.backup.sqlite/{README,LICENSE}
-%{python_sitelib}/holland/backup/sqlite.py*
-%{python_sitelib}/holland.backup.sqlite-*.egg-info
-%config(noreplace) %{_sysconfdir}/holland/providers/sqlite.conf
-%endif
-
-%if %{with xtrabackup}
-%files xtrabackup
-%defattr(-,root,root,-)
-%doc plugins/holland.backup.xtrabackup/{README,LICENSE}
-%{python_sitelib}/holland/backup/xtrabackup/
-%{python_sitelib}/holland.backup.xtrabackup-*.egg-info
-%config(noreplace) %{_sysconfdir}/holland/providers/xtrabackup.conf
-%endif
-
-%if %{with script}
-%files script
-%defattr(-,root,root,-)
-%doc plugins/holland.backup.script/{README,LICENSE}
-%{python_sitelib}/holland/backup/script/
-%{python_sitelib}/holland.backup.script*.egg-info
-%config(noreplace) %{_sysconfdir}/holland/providers/script.conf
-%endif
-
-%if %{with delphini}
-%files delphini
-%defattr(-,root,root,-)
-%doc plugins/holland.backup.delphini/{README,LICENSE}
-%{python_sitelib}/holland/backup/delphini/
-%{python_sitelib}/holland.backup.delphini*.egg-info
-%config(noreplace) %{_sysconfdir}/holland/providers/delphini.conf
-%endif
-
 
 %changelog
-* Mon June 10 2013 Andrew Garner <andrew.garner@rackspace.com> - 1.1.0-6
+* Mon Jun 10 2013 Andrew Garner <andrew.garner@rackspace.com> - 1.1.0-6
 - holland.lib.common removed by upstream
+- moved mysql libraries and plugins under a single holland-mysql subpackage
+- moved pgsql plugins under a single holland-pgsql subpackage
+- moved holland.lib.lvm into holland-lvm package
+- moved hollad.backup.mysql_lvm into holland-mysql-lvm package
 
 * Thu May 18 2011 Andrew Garner <andrew.garner@rackspace.com> - 1.1.0-5
 - holland/lib/multidict.py holland/lib/safefilename.py has been
