@@ -3,7 +3,7 @@ import sys, os
 
 version = '1.1.0'
 
-setup(name='holland-pgsql',
+setup(name='holland.pgsql',
       version=version,
       description="Postgres backup support for holland",
       long_description="""\

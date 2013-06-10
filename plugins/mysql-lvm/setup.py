@@ -3,7 +3,7 @@ import sys, os
 
 version = '1.1.0'
 
-setup(name='holland-mysql-lvm',
+setup(name='holland.mysql.lvm',
       version=version,
       description="MySQL LVM snapshot support for holland",
       long_description="""\

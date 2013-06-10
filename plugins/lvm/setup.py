@@ -3,7 +3,7 @@ import sys, os
 
 version = '1.1.0'
 
-setup(name='holland-lvm',
+setup(name='holland.lvm',
       version=version,
       description="LVM snapshot backup support for holland",
       long_description="""\
