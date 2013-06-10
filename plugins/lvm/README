@@ -1,0 +1,14 @@
+holland-lvm
+===========
+
+This package provides an API to access Logical Volume Managemer (LVM) objects.
+
+The current modules in holland.lib.lvm as of this writing are:
+
+* holland.lvm.command  - Low-level API that accesses LVM commands directly
+* holland.lvm.base     - Base object classes to access LVM volumes through
+                             an object-oriented API
+* holland.lvm.snapshot - Snapshot support to walk through the lifecycle of
+                             a standard LVM snapshot and perform pluggable 
+                             callback actions at each step
+* holland.lvm.util     - Utility methods used by holland.lvm

@@ -4,14 +4,13 @@ import shutil
 import tempfile
 import subprocess
 from nose.tools import *
-from holland.lib.lvm.raw import *
+from holland.lvm.raw import *
 from tests.constants import *
 
 __test__ = False
 
 def setup():
     """Setup a simple LVM device to use"""
-
     if not __test__:
         return
     os.environ['PATH'] = '/sbin:/usr/sbin:' + os.environ['PATH']
@@ -25,7 +24,7 @@ def setup():
                     (TEST_VG, LOOP_DEV), shell=True)
     subprocess.call("lvcreate -L%dK -n %s %s" %
                     ((IMG_SIZE / 2) / 1024, TEST_LV, TEST_VG), shell=True)
-    subprocess.call("mkfs.xfs /dev/%s/%s" % 
+    subprocess.call("mkfs.ext3 /dev/%s/%s" % 
                     (TEST_VG, TEST_LV), shell=True)
     subprocess.call("mount /dev/%s/%s %s" %
                     (TEST_VG, TEST_LV, MNT_DIR), shell=True)
@@ -40,7 +39,6 @@ def setup():
 
 def teardown():
     """Remove the previously setup LVM"""
-
     if not __test__:
         return
     subprocess.call("umount %s" % MNT_DIR, shell=True)

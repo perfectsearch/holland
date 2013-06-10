@@ -3,8 +3,8 @@
 import sys
 import signal
 import logging
-from holland.lib.lvm.errors import LVMCommandError
-from holland.lib.lvm.util import SignalManager, format_bytes
+from holland.lvm.errors import LVMCommandError
+from holland.lvm.util import SignalManager, format_bytes
 
 LOG = logging.getLogger(__name__)
 

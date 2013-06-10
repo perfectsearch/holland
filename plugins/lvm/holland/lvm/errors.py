@@ -1,4 +1,4 @@
-"""Standard errors raised by holland.lib.lvm"""
+"""Standard errors raised by holland.lvm"""
 
 class SnapshotError(Exception):
     """Error occurred during snapshotting process"""

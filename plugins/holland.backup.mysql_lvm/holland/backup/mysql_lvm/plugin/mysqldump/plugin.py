@@ -5,7 +5,7 @@ import tempfile
 import logging
 from holland.core import BackupPlugin, BackupError, Configspec, load_plugin
 from holland.core.util import directory_size
-from holland.lib.lvm import LogicalVolume, CallbackFailuresError, \
+from holland.lvm import LogicalVolume, CallbackFailuresError, \
                             LVMCommandError, relpath, getmount
 from holland.lib.mysql.client import MySQLError
 from holland.backup.mysql_lvm.plugin.common import build_snapshot, \

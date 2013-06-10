@@ -1,5 +1,5 @@
 from nose.tools import *
-from holland.lib.lvm.errors import *
+from holland.lvm.errors import *
 
 def test_errors():
     exc = LVMCommandError('cmd', -1, 'error message')

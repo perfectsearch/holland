@@ -1,7 +1,7 @@
 import os
 import signal
 from nose.tools import *
-from holland.lib.lvm.util import *
+from holland.lvm.util import *
 
 __test__ = False
 

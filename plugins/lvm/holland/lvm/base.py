@@ -3,10 +3,10 @@
 import os
 import signal
 import logging
-from holland.lib.lvm.raw import pvs, vgs, lvs, lvsnapshot, lvremove, \
+from holland.lvm.raw import pvs, vgs, lvs, lvsnapshot, lvremove, \
                                 mount, umount, blkid
-from holland.lib.lvm.util import getdevice, SignalManager
-from holland.lib.lvm.errors import LVMCommandError
+from holland.lvm.util import getdevice, SignalManager
+from holland.lvm.errors import LVMCommandError
 
 LOG = logging.getLogger(__name__)
 

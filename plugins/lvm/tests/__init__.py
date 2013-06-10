@@ -4,7 +4,7 @@ import shutil
 import tempfile
 import subprocess
 from nose.tools import *
-from holland.lib.lvm.raw import *
+from holland.lvm.raw import *
 from tests.constants import *
 
 def teardown():

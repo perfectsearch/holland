@@ -1,7 +1,7 @@
 import os
 import signal
 from nose.tools import *
-from holland.lib.lvm.util import *
+from holland.lvm.util import *
 
 def test_format_bytes():
     assert_equals(format_bytes(1024), '1.00KB')

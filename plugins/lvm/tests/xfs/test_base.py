@@ -1,7 +1,7 @@
 import sys
 from nose.tools import *
-from holland.lib.lvm.base import *
-from holland.lib.lvm.util import getdevice
+from holland.lvm.base import *
+from holland.lvm.util import getdevice
 from tests.constants import *
 
 __test__ = False

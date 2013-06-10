@@ -7,8 +7,8 @@ import logging
 from cStringIO import StringIO
 from subprocess import Popen, PIPE, STDOUT, list2cmdline
 
-from holland.lib.lvm.constants import PVS_ATTR, VGS_ATTR, LVS_ATTR
-from holland.lib.lvm.errors import LVMCommandError
+from holland.lvm.constants import PVS_ATTR, VGS_ATTR, LVS_ATTR
+from holland.lvm.errors import LVMCommandError
 
 LOG = logging.getLogger(__name__)
 

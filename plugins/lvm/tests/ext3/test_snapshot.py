@@ -1,7 +1,7 @@
 import shutil
 from nose.tools import *
-from holland.lib.lvm import LogicalVolume
-from holland.lib.lvm.snapshot import *
+from holland.lvm import LogicalVolume
+from holland.lvm.snapshot import *
 from tests.constants import *
 
 __test__ = False
