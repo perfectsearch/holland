@@ -36,6 +36,7 @@ setup(
     # Holland backup plugins exposed by holland-core
     [holland.backup]
     noop            = holland.core.backup.plugin:NoopBackupPlugin
+    script          = holland.core.backup.impl.script:ScriptPlugin
     backup-test     = holland.test:TestBackupPlugin
 
     [holland.stream]
