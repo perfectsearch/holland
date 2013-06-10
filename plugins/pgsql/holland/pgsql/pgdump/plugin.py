@@ -8,7 +8,7 @@ and pg_dumpall
 import os
 import logging
 from holland.core import BackupError, BackupPlugin, Configspec
-from holland.backup.pgdump.base import backup_pgsql, dry_run, \
+from holland.pgsql.pgdump.base import backup_pgsql, dry_run, \
                                        PgError, \
                                        dbapi, \
                                        pg_databases, \
