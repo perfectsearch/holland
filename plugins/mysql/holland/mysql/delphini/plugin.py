@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-holland.backup.delphini.plugin
+holland.mysql.delphini.plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Implements a backup plugin for holland 1.0 which is exposed as
@@ -14,9 +14,9 @@ import os
 import glob
 import logging
 from holland.core import BackupPlugin, BackupError
-from holland.backup.delphini.backend import backup
-from holland.backup.delphini.util import run_command
-from holland.backup.delphini.error import ClusterError
+from holland.mysql.delphini.backend import backup
+from holland.mysql.delphini.util import run_command
+from holland.mysql.delphini.error import ClusterError
 
 LOG = logging.getLogger(__name__)
 

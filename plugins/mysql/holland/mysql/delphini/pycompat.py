@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-holland.backup.delphini.pycompat
+holland.mysql.delphini.pycompat
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Implements :func:`namedtuple` for Python 2.4 and 2.5

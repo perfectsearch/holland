@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-holland.backup.delphini.util
+holland.mysql.delphini.util
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Utility functions to run arbitrary commands either locally or via ssh as
@@ -14,8 +14,8 @@ import os
 import re
 import logging
 from subprocess import Popen, PIPE, list2cmdline
-from holland.backup.delphini.error import ClusterError, ClusterCommandError
-from holland.backup.delphini.pycompat import namedtuple
+from holland.mysql.delphini.error import ClusterError, ClusterCommandError
+from holland.mysql.delphini.pycompat import namedtuple
 
 LOG = logging.getLogger(__name__)
 

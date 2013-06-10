@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-holland.backup.delphini.backend
+holland.mysql.delphini.backend
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Delphini backend API for generating MySQL cluster backups
@@ -12,8 +12,8 @@ Delphini backend API for generating MySQL cluster backups
 import os
 import logging
 from subprocess import list2cmdline
-from holland.backup.delphini.util import ssh, rsync, query_ndb, run_cluster_backup
-from holland.backup.delphini.error import ClusterError, ClusterCommandError
+from holland.mysql.delphini.util import ssh, rsync, query_ndb, run_cluster_backup
+from holland.mysql.delphini.error import ClusterError, ClusterCommandError
 
 LOG = logging.getLogger(__name__)
 

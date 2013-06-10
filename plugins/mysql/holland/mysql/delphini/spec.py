@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-holland.backup.delphini.spec
+holland.mysql.delphini.spec
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Defines the configspec for the delphini backup plugin. This is used by

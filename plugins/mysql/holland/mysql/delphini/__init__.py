@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-holland.backup.delphini
+holland.mysql.delphini
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Delphini provides a MySQL Cluster plugin for the Holland Backup Framework.
@@ -9,7 +9,7 @@ Delphini provides a MySQL Cluster plugin for the Holland Backup Framework.
 :license: BSD, see LICENSE.rst for details
 """
 
-from holland.backup.delphini.plugin import DelphiniPlugin
+from holland.mysql.delphini.plugin import DelphiniPlugin
 
 #: A string containing the full version number.
 __version__ = '1.0'

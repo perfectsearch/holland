@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-holland.backup.delphini.error
+holland.mysql.delphini.error
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Exceptions classes used by delphini
