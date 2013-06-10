@@ -21,6 +21,7 @@ setup(name='holland-mysql',
           # -*- Extra requirements: -*-
       ],
       entry_points="""
-      # -*- Entry points: -*-
+      [holland.backup]
+      mysqldump = holland.backup.mysqldump:provider
       """,
 )
