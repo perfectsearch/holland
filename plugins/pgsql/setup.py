@@ -21,6 +21,7 @@ setup(name='holland-pgsql',
           # -*- Extra requirements: -*-
       ],
       entry_points="""
+      [holland.backup]
       pgdump = holland.pgsql.pgdump:PgDump
       """,
 )
