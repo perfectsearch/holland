@@ -14,7 +14,7 @@ setup(name='holland.lvm',
       author_email='holland-coredev@lists.launchpad.net',
       url='http://hollandbackup.org',
       license='GPLv2',
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+      packages=find_packages(exclude=['tests', 'tests.*']),
       include_package_data=True,
       zip_safe=True,
       install_requires=[
