@@ -173,11 +173,6 @@ rm -f build/html/.buildinfo
 popd
 %endif
 
-# library : holland.lib.common
-cd plugins/holland.lib.common
-%{__python} setup.py build
-cd -
-    
 # library : holland.lib.mysql
 cd plugins/holland.lib.mysql
 %{__python} setup.py build
@@ -253,11 +248,6 @@ install -m 0644 docs/build/man/holland.1 %{buildroot}%{_mandir}/man1
 %endif
 %{__mkdir_p} %{buildroot}%{python_sitelib}/holland/{lib,backup,commands,restore}
 
-# library : holland.lib.common
-cd plugins/holland.lib.common
-%{__python} setup.py install -O1 --skip-build --root %{buildroot}
-cd -
-    
 # library : holland.lib.mysql
 cd plugins/holland.lib.mysql
 %{__python} setup.py install -O1 --skip-build --root %{buildroot}
@@ -380,13 +370,7 @@ rm -rf %{buildroot}
 
 %files common
 %defattr(-,root,root,-)
-%doc plugins/holland.lib.common/{README,LICENSE}
-%{python_sitelib}/%{name}/lib/compression.py*
-%{python_sitelib}/%{name}/lib/archive/
-%{python_sitelib}/%{name}/lib/hooks.py*
-%{python_sitelib}/%{name}/lib/which.py*
 %{python_sitelib}/%{name}/lib/mysql/
-%{python_sitelib}/holland.lib.common-*.egg-info
 %{python_sitelib}/holland.lib.mysql-*.egg-info
 
 %files mysqldump
@@ -454,6 +438,9 @@ rm -rf %{buildroot}
 
 
 %changelog
+* Mon June 10 2013 Andrew Garner <andrew.garner@rackspace.com> - 1.1.0-6
+- holland.lib.common removed by upstream
+
 * Thu May 18 2011 Andrew Garner <andrew.garner@rackspace.com> - 1.1.0-5
 - holland/lib/multidict.py holland/lib/safefilename.py has been
   removed from the holland-common package
