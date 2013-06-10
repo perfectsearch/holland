@@ -6,7 +6,7 @@ import logging
 from cStringIO import StringIO
 from subprocess import Popen, STDOUT, list2cmdline
 from holland.core import BackupError
-from holland.lib.which import which, WhichError
+from holland.core.util.path import which
 
 LOG = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ def locate_mysqld_exe(config):
             LOG.debug("Searching for %s on path %s", 
                       candidate, path or os.environ['PATH'])
             return which(candidate, path)
-        except WhichError:
+        except OSError:
             LOG.debug("mysqld path %s does not exist - skipping", candidate)
     raise BackupError("Failed to find mysqld binary")
 

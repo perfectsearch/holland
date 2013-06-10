@@ -234,11 +234,11 @@ def locate_mysqldump(search_path):
 
     :returns: string path to a mysqldump binary
     """
-    from holland.lib.which import which, WhichError
+    from holland.core.util.path import which
     if not search_path:
         try:
             return which('mysqldump')
-        except WhichError:
+        except OSError, exc:
             raise BackupError("mysqldump not found")
     else:
         for path in search_path:

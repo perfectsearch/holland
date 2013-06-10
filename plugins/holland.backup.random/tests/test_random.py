@@ -10,7 +10,6 @@ from holland.core import load_plugin, BackupError
 from holland.core.config import Config, Configspec
 from holland.core.backup.job import BackupJob
 from holland.backup.random import RandomPlugin
-from holland.lib.which import which, WhichError
 
 spec = Configspec.from_string("""
 [holland:backup]

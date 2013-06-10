@@ -97,3 +97,28 @@ def ensure_directory(path):
         if exc.errno != errno.EEXIST:
             raise
     return False
+
+def which(cmd, path=None):
+    """Resolve a command to it's full path
+
+    >>> which('lvs')
+    '/sbin/lvs'
+    >>> which('foo')
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+      File "path.py", line 59, in which
+        raise OSError(errno.ENOENT, '%r: command not found' % cmd)
+    OSError: [Errno 2] 'foo': command not found
+
+    :param cmd: command name to resolve
+    :param path: list of directories to resolve ``cmd`` against
+    :returns: absolute path name ``cmd`` resolves to
+    :raises: OSError if no command found in ``path``
+    """
+    if path is None:
+        path = os.environ.get('PATH', '').split(os.pathsep)
+    for dirname in path:
+        binpath = os.path.abspath(os.path.normpath(os.path.join(dirname, cmd)))
+        if os.path.isfile(binpath) and os.access(binpath, os.X_OK):
+            return binpath
+    raise OSError(errno.ENOENT, '%r: command not found' % cmd)

@@ -11,14 +11,14 @@ from holland.core import load_plugin, BackupError
 from holland.core.config import Config, Configspec
 from holland.core.backup.job import BackupJob
 from holland.backup.sqlite import SQLitePlugin
-from holland.lib.which import which, WhichError
+from holland.core.util.path import which
 
 
 binary = None
 for name in ['sqlite', 'sqlite2', 'sqlite3']:
     try:
         binary = which(name)    
-    except WhichError, e:
+    except OSError, e:
         pass
 if not binary:
     raise SkipTest, "Unable to find sqlite binary"
