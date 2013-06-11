@@ -13,9 +13,9 @@ from subprocess import Popen, PIPE, STDOUT
 from holland.core import BackupError
 from holland.core.stream import open_stream, load_stream_plugin
 from holland.core.util.safefilename import encode
-from holland.lib.mysql import MySQLSchema, MySQLError
-from holland.lib.mysql import DatabaseIterator, MetadataTableIterator
-from holland.lib.mysql import include_glob, exclude_glob, \
+from holland.mysql import MySQLSchema, MySQLError
+from holland.mysql import DatabaseIterator, MetadataTableIterator
+from holland.mysql import include_glob, exclude_glob, \
                               include_glob_qualified, \
                               exclude_glob_qualified
 
@@ -28,7 +28,7 @@ def server_version(client):
     >> client.server_version()
     (5, 5, 11)
 
-    :param client: A holland.lib.mysql.client:Client instance
+    :param client: A holland.mysql.client:Client instance
     :returns: tuple of integers representing the server version
     """
     try:
@@ -44,7 +44,7 @@ def schema_from_config(config):
 
     :param config: holland.core:Config instance
 
-    :returns: holland.lib.mysql:MySQLSchema instance
+    :returns: holland.mysql:MySQLSchema instance
     """
     schema = MySQLSchema()
     schema.add_database_filter(include_glob(*config['databases']))
@@ -63,7 +63,7 @@ def schema_from_config(config):
 def check_transactional(databases):
     """Check whether all of the given databases are transactional
 
-    :param databases: list of holland.lib.mysql:Database instances
+    :param databases: list of holland.mysql:Database instances
     :raises: BackupError if one or more databases had non-transactional tables
     """
     non_txn_dbs = [db for db in databases
@@ -209,7 +209,7 @@ def client_from_config(config):
 
     :returns: client instance
     """
-    from holland.lib.mysql import connect, build_mysql_config, PassiveMySQLClient
+    from holland.mysql import connect, build_mysql_config, PassiveMySQLClient
     try:
         config = build_mysql_config(config)
         LOG.debug("client_from_config => %r", config)
@@ -276,7 +276,7 @@ def defaults_from_config(config, path):
     :param path: path where the config should be written
     :returns: path to config option
     """
-    from holland.lib.mysql import build_mysql_config, write_options
+    from holland.mysql import build_mysql_config, write_options
     path = os.path.join(path, 'holland.my.cnf')
     mysql_config = build_mysql_config(config)
     write_options(mysql_config, path)

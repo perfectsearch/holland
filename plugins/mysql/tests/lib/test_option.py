@@ -1,7 +1,7 @@
 import tempfile
 import sys
 from nose.tools import *
-from holland.lib.mysql.option.base import load_options, write_options
+from holland.mysql.option.base import load_options, write_options
 
 def test_load_options():
     fileobj = tempfile.NamedTemporaryFile()

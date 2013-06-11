@@ -1,4 +1,4 @@
-from holland.lib.mysql.client.base import MySQLClient, MySQLError, \
+from holland.mysql.client.base import MySQLClient, MySQLError, \
                                           ProgrammingError, OperationalError, \
                                           connect, \
                                           PassiveMySQLClient,  AutoMySQLClient

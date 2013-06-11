@@ -7,8 +7,8 @@ import tempfile
 from subprocess import list2cmdline, check_call, CalledProcessError
 from holland.core import BackupError, BackupPlugin, open_stream
 from holland.core.util.path import directory_size
-from holland.lib.mysql.option import build_mysql_config, write_options
-from holland.lib.mysql.client import connect, MySQLError
+from holland.mysql.option import build_mysql_config, write_options
+from holland.mysql.client import connect, MySQLError
 
 LOG = logging.getLogger(__name__)
 

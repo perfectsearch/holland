@@ -52,7 +52,7 @@ def _setup_mysqlclient(mocker):
     doing stop_slave or start_slave in dry-run mode
     but allow all other (read) operations.
     """
-    connect = mocker.replace("holland.lib.mysql.client.base.connect")
+    connect = mocker.replace("holland.mysql.client.base.connect")
     client = connect(ARGS, KWARGS)
 
     client.connect()

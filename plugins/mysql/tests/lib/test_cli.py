@@ -2,7 +2,7 @@ import shutil
 from nose.tools import *
 from tempfile import mkdtemp
 from subprocess import call, STDOUT
-from holland.lib.mysql.cli import MyCmdParser
+from holland.mysql.cli import MyCmdParser
 
 mysqld = None
 

@@ -8,7 +8,7 @@ import errno
 import codecs
 import logging
 import subprocess
-from holland.lib.mysql.option.parser import OptionFile
+from holland.mysql.option.parser import OptionFile
 
 LOG = logging.getLogger(__name__)
 

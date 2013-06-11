@@ -1,1 +1,1 @@
-from holland.lib.mysql import *
+from holland.mysql import *

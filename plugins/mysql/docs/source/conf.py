@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# holland.lib.mysql documentation build configuration file, created by
+# holland.mysql documentation build configuration file, created by
 # sphinx-quickstart on Sat Apr 18 21:00:42 2009.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -38,7 +38,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'holland.lib.mysql'
+project = u'holland.mysql'
 copyright = u'2009, Andrew Garner'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -165,7 +165,7 @@ htmlhelp_basename = 'hollandlibmysqldoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, document class [howto/manual]).
 latex_documents = [
-  ('index', 'hollandlibmysql.tex', ur'holland.lib.mysql Documentation',
+  ('index', 'hollandlibmysql.tex', ur'holland.mysql Documentation',
    ur'Andrew Garner', 'manual'),
 ]
 

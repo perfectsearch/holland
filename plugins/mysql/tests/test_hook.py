@@ -1,4 +1,4 @@
-from holland.lib.mysqldump import *
+from holland.mysqldump import *
 
 def test_foo():
     MySQLSelectHook('name')
