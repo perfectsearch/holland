@@ -40,8 +40,8 @@ except ImportError:
             raise CalledProcessError(retcode, cmd)
         return 0
 
-from holland.core.stream import StreamPlugin, StreamError
-from holland.core.stream.base import RealFileLike
+from .plugin import StreamPlugin, StreamError
+from .base import RealFileLike
 
 class CompressionStreamPlugin(StreamPlugin):
     name = None
@@ -196,23 +196,29 @@ class WriteCommand(RealFileLike):
         self.process.stdin.writelines(sequence)
 
 
+from holland.core.plugin import plugin_registry
+
+@plugin_registry.register
 class GzipPlugin(CompressionStreamPlugin):
     name = 'gzip'
     aliases = ['pigz']
     extension = '.gz'
     summary = 'gzip/pigz compression codec'
 
+@plugin_registry.register
 class LzopPlugin(CompressionStreamPlugin):
     name = 'lzop'
     extension = '.lzo'
     summary = 'lzop compression codec'
 
+@plugin_registry.register
 class BzipPlugin(CompressionStreamPlugin):
     name = 'bzip2'
     aliases = ['pbzip2']
     extension = '.bz'
     summary = 'bzip2/pbzip2 compression codec'
 
+@plugin_registry.register
 class LzmaPlugin(CompressionStreamPlugin):
     name = 'lzma'
     aliases = ['xz', 'pxz']
