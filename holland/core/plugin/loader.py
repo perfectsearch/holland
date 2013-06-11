@@ -58,26 +58,35 @@ class RegistryPluginLoader(AbstractPluginLoader):
     def __init__(self):
         self.registry = OrderedDict()
 
-    def register(self, namespace, name):
+    def register(self, plugincls):
         """Class decorator to register a class with a DictPluginLoader instance
 
-        @registry.register('plugin_namespace', 'plugin_name')
+        @registry.register
         class MyPlugin:
+            name = 'myplugin'
+            namespace = 'awesome-plugins'
+            aliases = ['other_name']
             ...
 
 
-        >>> register.load_plugin('plugin_namespace', 'plugin_name')
+        >>> register.load_plugin(namespace='awesome-plugins'', 'myplugin')
         MyPlugin()
 
-        :attr namespace:  namespace to register plugin under
-        :attr name: plugin name to register plugin under
+        ``plugincls`` must have three attributes:
+        name - string name for the plugin
+        namespace - plugin namespace this plugin works under
+        aliases - iterable of string names ``plugincls`` is also loadable by
+
+        :attr plugincls:  Plugin class to register with this registry
+
         """
-        @wraps(register)
-        def wrapper(cls):
-            namespace_dict = self.registry.setdefault(namespace, OrderedDict())
-            namespace_dict[name] = cls
-            return cls
-        return wrapper
+        name = getattr(plugincls, 'name')
+        namespace = getattr(plugincls, 'namespace')
+        aliases = getattr(plugincls, 'aliases', ())
+        namespace_dict = self.registry.setdefault(namespace, OrderedDict())
+        for name in (name,) + tuple(aliases):
+            namespace_dict[name] = plugincls
+        return plugincls
 
     def load(self, namespace, name):
         """Load a plugin from this loader's registry
