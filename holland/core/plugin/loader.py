@@ -85,6 +85,9 @@ class RegistryPluginLoader(AbstractPluginLoader):
         aliases = getattr(plugincls, 'aliases', ())
         namespace_dict = self.registry.setdefault(namespace, OrderedDict())
         for name in (name,) + tuple(aliases):
+            if name in namespace_dict:
+                LOG.debug("Class %r already registered under %r.%r",
+                          plugincls, namespace, name)
             namespace_dict[name] = plugincls
         return plugincls
 
