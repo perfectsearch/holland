@@ -22,6 +22,8 @@ class BasePlugin(object):
     and provide a dict with the following attributes:
 
       * name          - canonical name of this plugin
+      * aliases       - iterable of alternative names for this plugin
+      * namespace     - plugin namespace this plugin is for (e.g. holland.backup)
       * author        - plugin author's name
       * summary       - one-line (<80 char) short description of this plugin
       * description   - multi-line text blurb describing this plugin
@@ -33,7 +35,7 @@ class BasePlugin(object):
     name = None
 
     #: namespace this plugin is registered under - a simple string
-    plugin_namespace = None
+    namespace = None
 
     #: aliases for this plugin
     aliases = ()
