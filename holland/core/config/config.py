@@ -13,8 +13,8 @@ import re
 import codecs
 import textwrap
 import logging
-from ..exc import HollandError
-from ..util.datastructures import SortedDict as OrderedDict
+from holland.core.exc import HollandError
+from holland.core.util.pycompat import OrderedDict
 
 LOG = logging.getLogger(__name__)
 

@@ -15,7 +15,7 @@
     :license: BSD, see LICENSE.rst for details
 """
 
-from holland.core.util.pycompat import Scanner
+from re import Scanner
 
 def decode(filename):
     """Decode a ``safefilename`` encoded filename to the original filename
