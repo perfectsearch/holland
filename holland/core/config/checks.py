@@ -1,6 +1,6 @@
 """
-    holland.core.config.check
-    ~~~~~~~~~~~~~~~~~~~~~~~~~
+    holland.core.config.checks
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     DSL parser for parsing configspec checks.
 

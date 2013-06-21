@@ -1,6 +1,6 @@
 """
-    holland.core.config.spec
-    ~~~~~~~~~~~~~~~~~~~~~~~~
+    holland.core.config.configspec
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Support for defining valid config parameters and values and validating
     candidate configs
@@ -10,10 +10,10 @@
 """
 
 import logging
-from holland.core.config.config import Config, BaseFormatter
-from holland.core.config.check import Check, CheckError
-from holland.core.config.validation import default_validators, ValidationError
-from holland.core.config.util import missing
+from .config import Config, BaseFormatter
+from .checks import Check, CheckError
+from .validators import default_validators, ValidationError
+from .util import missing
 
 LOG = logging.getLogger(__name__)
 

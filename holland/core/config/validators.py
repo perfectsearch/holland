@@ -1,5 +1,5 @@
 """
-    holland.core.config.validation
+    holland.core.config.validators
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Validation implementations for Configspec checks
