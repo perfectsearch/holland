@@ -1,0 +1,4 @@
+nose>=10.4
+SQLAlchemy>=0.5.5
+jinja2>=2.2.1
+argparse>=1.2.1
