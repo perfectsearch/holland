@@ -12,7 +12,7 @@ import pkgutil
 import logging
 import pkg_resources
 from functools import wraps
-from holland.core.util.datastructures import OrderedDict
+from holland.core.util.pycompat import OrderedDict
 from holland.core.plugin.util import import_module
 from holland.core.plugin.error import PluginError, PluginLoadError, \
                                       PluginNotFoundError

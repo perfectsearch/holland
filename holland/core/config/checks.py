@@ -11,8 +11,8 @@
     :license: BSD, see LICENSE.rst for details
 """
 
+from re import Scanner
 from holland.core.config.util import unquote, missing
-from holland.core.util.pycompat import Scanner
 
 __all__ = [
     'Check',
