@@ -8,7 +8,7 @@ if sys.version_info >= (3, 0):
         use_2to3_fixers=[]
     )
 
-version = '1.1.0a2'
+version = '2.0.0'
 
 setup(
     name="holland",
