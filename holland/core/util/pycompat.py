@@ -1,328 +1,387 @@
 """
-    holland.core.util.pycompat
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+holland.core.util.pycompat
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Methods and classes backported from more recent versions of python to
-    provide support for older python versions
+Methods and classes backported from more recent versions of python to
+provide support for older python versions
 
-    Presently this module should be compatible back to python2.3
-
-    Two components are currently backported here:
-        * re.Scanner from python2.6 - useful for regex based tokenizers
-        * string.Template from python2.4 - simple string interpolation
-
-    :license: PSF, see LICENSE.rst for details
+:license: PSF, see LICENSE.rst for details
 """
 
+# Backport of OrderedDict() class that runs on Python 2.4, 2.5, 2.6, 2.7
+# and pypy.
+# Passes Python2.7's test suite and incorporates all the latest updates.
 
-import re
-import textwrap
-from keyword import iskeyword
 try:
-    set
-except NameError:
-    from sets import Set as set
+    from thread import get_ident as _get_ident
+except ImportError:
+    from dummy_thread import get_ident as _get_ident
 
-class Scanner(object):
-    """A simple regular expression based scanner
-
-    This class can be used to tokenize a string based on a series of regular
-    expression rules.
-    """
-    def __init__(self, lexicon, flags=0):
-        import sre_parse
-        import sre_compile
-        from sre_constants import BRANCH, SUBPATTERN
-        self.lexicon = lexicon
-        # combine phrases into a compound pattern
-        p = []
-        s = sre_parse.Pattern()
-        s.flags = flags
-        for phrase, action in lexicon:
-            p.append(sre_parse.SubPattern(s, [
-                (SUBPATTERN, (len(p)+1, sre_parse.parse(phrase, flags))),
-                ]))
-        s.groups = len(p)+1
-        p = sre_parse.SubPattern(s, [(BRANCH, (None, p))])
-        self.scanner = sre_compile.compile(p)
-
-    def scan(self, string):
-        """Scan string and return a list of tokens
-
-        :returns: 2-tuple: list of tokens, str of remainder of string that
-                  could not be scanned
-        """
-        result = []
-        append = result.append
-        match = self.scanner.scanner(string).match
-        i = 0
-        while 1:
-            m = match()
-            if not m:
-                break
-            j = m.end()
-            if i == j:
-                break
-            action = self.lexicon[m.lastindex-1][1]
-            if hasattr(action, '__call__'):
-                self.match = m
-                action = action(self, m.group())
-            if action is not None:
-                append(action)
-            i = j
-        return result, string[i:]
-
-class _TemplateMetaclass(type):
-    pattern = r"""
-    %(delim)s(?:
-      (?P<escaped>%(delim)s) |   # Escape sequence of two delimiters
-      (?P<named>%(id)s)      |   # delimiter and a Python identifier
-      {(?P<braced>%(id)s)}   |   # delimiter and a braced identifier
-      (?P<invalid>)              # Other ill-formed delimiter exprs
-    )
-    """
-
-    def __init__(cls, name, bases, dct):
-        super(_TemplateMetaclass, cls).__init__(name, bases, dct)
-        if 'pattern' in dct:
-            pattern = cls.pattern
-        else:
-            pattern = _TemplateMetaclass.pattern % {
-                'delim' : re.escape(cls.delimiter),
-                'id'    : cls.idpattern,
-                }
-        cls.pattern = re.compile(pattern, re.IGNORECASE | re.VERBOSE)
+try:
+    from _abcoll import KeysView, ValuesView, ItemsView
+except ImportError:
+    pass
 
 
-class Template(object):
-    """A string class for supporting $-substitutions."""
-    __metaclass__ = _TemplateMetaclass
+class OrderedDict(dict):
+    'Dictionary that remembers insertion order'
+    # An inherited dict maps keys to values.
+    # The inherited dict provides __getitem__, __len__, __contains__, and get.
+    # The remaining methods are order-aware.
+    # Big-O running times for all methods are the same as for regular
+    # dictionaries.
 
-    delimiter = '$'
-    idpattern = r'[_a-z][_a-z0-9]*'
+    # The internal self.__map dictionary maps keys to links in a doubly linked
+    # list.
+    # The circular doubly linked list starts and ends with a sentinel element.
+    # The sentinel element never gets deleted (this simplifies the algorithm).
+    # Each link is stored as a list of length three:  [PREV, NEXT, KEY].
 
-    def __init__(self, template):
-        self.template = template
+    def __init__(self, *args, **kwds):
+        '''Initialize an ordered dictionary.  Signature is the same as for
+        regular dictionaries, but keyword arguments are not recommended
+        because their insertion order is arbitrary.
 
-    # Search for $$, $identifier, ${identifier}, and any bare $'s
-
-    def _invalid(self, mo):
-        i = mo.start('invalid')
-        lines = self.template[:i].splitlines(True)
-        if not lines:
-            colno = 1
-            lineno = 1
-        else:
-            colno = i - len(''.join(lines[:-1]))
-            lineno = len(lines)
-        raise ValueError('Invalid placeholder in string: line %d, col %d' %
-                         (lineno, colno))
-
-    def substitute(self, *args, **kws):
-        from datastructures import MergeDict as _multimap
+        '''
         if len(args) > 1:
-            raise TypeError('Too many positional arguments')
-        if not args:
-            mapping = kws
-        elif kws:
-            mapping = _multimap(kws, args[0])
-        else:
-            mapping = args[0]
-        # Helper function for .sub()
-        def convert(mo):
-            # Check the most common path first.
-            named = mo.group('named') or mo.group('braced')
-            if named is not None:
-                val = mapping[named]
-                # We use this idiom instead of str() because the latter will
-                # fail if val is a Unicode containing non-ASCII characters.
-                return '%s' % (val,)
-            if mo.group('escaped') is not None:
-                return self.delimiter
-            if mo.group('invalid') is not None:
-                self._invalid(mo)
-            raise ValueError('Unrecognized named group in pattern',
-                             self.pattern)
-        return self.pattern.sub(convert, self.template)
-
-    def safe_substitute(self, *args, **kws):
-        from datastructures import MergeDict as _multimap
-        if len(args) > 1:
-            raise TypeError('Too many positional arguments')
-        if not args:
-            mapping = kws
-        elif kws:
-            mapping = _multimap(kws, args[0])
-        else:
-            mapping = args[0]
-        # Helper function for .sub()
-        def convert(mo):
-            named = mo.group('named')
-            if named is not None:
-                try:
-                    # We use this idiom instead of str() because the latter
-                    # will fail if val is a Unicode containing non-ASCII
-                    return '%s' % (mapping[named],)
-                except KeyError:
-                    return self.delimiter + named
-            braced = mo.group('braced')
-            if braced is not None:
-                try:
-                    return '%s' % (mapping[braced],)
-                except KeyError:
-                    return self.delimiter + '{' + braced + '}'
-            if mo.group('escaped') is not None:
-                return self.delimiter
-            if mo.group('invalid') is not None:
-                return self.delimiter
-            raise ValueError('Unrecognized named group in pattern',
-                             self.pattern)
-        return self.pattern.sub(convert, self.template)
-
-
-def namedtuple(typename, field_names, verbose=False, rename=False, doc=None):
-    """
-    Returns a :class:`tuple` subclass named `typename` with a limited number
-    of possible items who are accessible under their field name respectively.
-
-    Due to the implementation `typename` as well as all `field_names` have to
-    be valid python identifiers also the names used in `field_names` may not
-    repeat themselves.
-
-    You can solve the latter issue for `field_names` by passing ``rename=True``,
-    any given name which is either a keyword or a repetition is then replaced
-    with `_n` where `n` is an integer increasing with every rename starting by
-    1.
-
-    :func:`namedtuple` creates the code for the subclass and executes it
-    internally you can view that code by passing ``verbose==True``, which will
-    print the code.
-
-    Unlike :class:`tuple` a named tuple provides several methods as helpers:
-
-    .. class:: SomeNamedTuple(foo, bar)
-
-       .. classmethod:: _make(iterable)
-
-          Returns a :class:`SomeNamedTuple` populated with the items from the
-          given `iterable`.
-
-       .. method:: _asdict()
-
-          Returns a :class:`dict` mapping the field names to their values.
-
-       .. method:: _replace(**kwargs)
-
-          Returns a :class:`SomeNamedTuple` values replaced with the given
-          ones::
-
-              >>> t = SomeNamedTuple(1, 2)
-              >>> t._replace(bar=3)
-              SomeNamedTuple(foo=1, bar=3)
-              # doctest: DEACTIVATE
-
-    .. note::
-       :func:`namedtuple` is compatible with :func:`collections.namedtuple`.
-
-    .. versionadded:: 0.5
-    """
-    def name_generator():
-        for i in count(1):
-            yield '_%d' % i
-    make_name = name_generator().next
-
-    if iskeyword(typename):
-        raise ValueError('the given typename is a keyword: %s' % typename)
-    if isinstance(field_names, basestring):
-        field_names = field_names.replace(',', ' ').split()
-    real_field_names = []
-    seen_names = set()
-    for name in field_names:
-        if iskeyword(name):
-            if rename:
-                name = make_name()
-            else:
-                raise ValueError('a given field name is a keyword: %s' % name)
-        elif name in seen_names:
-            if rename:
-                name = make_name()
-            else:
-                raise ValueError('a field name has been repeated: %s' % name)
-        real_field_names.append(name)
-        seen_names.add(name)
-
-    code = textwrap.dedent("""
+            raise TypeError('expected at most 1 arguments, got %d' % len(args))
         try:
-            from operator import itemgetter
-        except ImportError:
-            def itemgetter(*items):
-                '''Return a callable object that fetches item from its operand using
-                 the operand's __getitem__() method.
-                '''
-                if len(items) == 1:
-                    item = items[0]
-                    def g(obj):
-                        return obj[item]
-                else:
-                    def g(obj):
-                        return tuple([obj[item] for item in items])
-                return g
+            self.__root
+        except AttributeError:
+            self.__root = root = []                     # sentinel node
+            root[:] = [root, root, None]
+            self.__map = {}
+        self.__update(*args, **kwds)
 
-        class %(typename)s(tuple):
-            '''%(docstring)s'''
+    def __setitem__(self, key, value, dict_setitem=dict.__setitem__):
+        'od.__setitem__(i, y) <==> od[i]=y'
+        # Setting a new item creates a new link which goes at the end of the
+        # linked list, and the inherited dictionary is updated with the new
+        # key/value pair.
+        if key not in self:
+            root = self.__root
+            last = root[0]
+            last[1] = root[0] = self.__map[key] = [last, root, key]
+        dict_setitem(self, key, value)
 
-            _fields = %(fields)s
+    def __delitem__(self, key, dict_delitem=dict.__delitem__):
+        'od.__delitem__(y) <==> del od[y]'
+        # Deleting an existing item uses self.__map to find the link which is
+        # then removed by updating the links in the predecessor and successor
+        # nodes.
+        dict_delitem(self, key)
+        link_prev, link_next, key = self.__map.pop(key)
+        link_prev[1] = link_next
+        link_next[0] = link_prev
 
-            @classmethod
-            def _make(cls, iterable):
-                result = tuple.__new__(cls, iterable)
-                if len(result) > %(field_count)d:
-                    raise TypeError(
-                        'expected %(field_count)d arguments, got %%d' %% len(result)
-                    )
-                return result
+    def __iter__(self):
+        'od.__iter__() <==> iter(od)'
+        root = self.__root
+        curr = root[1]
+        while curr is not root:
+            yield curr[2]
+            curr = curr[1]
 
-            def __new__(cls, %(fieldnames)s):
-                return tuple.__new__(cls, (%(fieldnames)s))
+    def __reversed__(self):
+        'od.__reversed__() <==> reversed(od)'
+        root = self.__root
+        curr = root[0]
+        while curr is not root:
+            yield curr[2]
+            curr = curr[0]
 
-            def _asdict(self):
-                return dict(zip(self._fields, self))
+    def clear(self):
+        'od.clear() -> None.  Remove all items from od.'
+        try:
+            for node in self.__map.itervalues():
+                del node[:]
+            root = self.__root
+            root[:] = [root, root, None]
+            self.__map.clear()
+        except AttributeError:
+            pass
+        dict.clear(self)
 
-            def _replace(self, **kwargs):
-                result = self._make(map(kwargs.pop, %(fields)s, self))
-                if kwargs:
-                    raise ValueError(
-                        'got unexpected arguments: %%r' %% kwargs.keys()
-                    )
-                return result
+    def popitem(self, last=True):
+        '''od.popitem() -> (k, v), return and remove a (key, value) pair.
 
-            def __getnewargs__(self):
-                return tuple(self)
+        Pairs are returned in LIFO order if last is true or FIFO order
+        if false.
 
-            def __repr__(self):
-                return '%(typename)s(%(reprtext)s)' %% self
-    """) % {
-        'typename': typename,
-        'fields': repr(tuple(real_field_names)),
-        'fieldnames': ', '.join(real_field_names),
-        'field_count': len(real_field_names),
-        'reprtext': ', '.join([name + '=%r' for name in real_field_names]),
-        'docstring': doc or typename + '(%s)' % ', '.join(real_field_names)
+        '''
+        if not self:
+            raise KeyError('dictionary is empty')
+        root = self.__root
+        if last:
+            link = root[0]
+            link_prev = link[0]
+            link_prev[1] = root
+            root[0] = link_prev
+        else:
+            link = root[1]
+            link_next = link[1]
+            root[1] = link_next
+            link_next[0] = root
+        key = link[2]
+        del self.__map[key]
+        value = dict.pop(self, key)
+        return key, value
+
+    # -- the following methods do not depend on the internal structure --
+
+    def keys(self):
+        'od.keys() -> list of keys in od'
+        return list(self)
+
+    def values(self):
+        'od.values() -> list of values in od'
+        return [self[key] for key in self]
+
+    def items(self):
+        'od.items() -> list of (key, value) pairs in od'
+        return [(key, self[key]) for key in self]
+
+    def iterkeys(self):
+        'od.iterkeys() -> an iterator over the keys in od'
+        return iter(self)
+
+    def itervalues(self):
+        'od.itervalues -> an iterator over the values in od'
+        for k in self:
+            yield self[k]
+
+    def iteritems(self):
+        'od.iteritems -> an iterator over the (key, value) items in od'
+        for k in self:
+            yield (k, self[k])
+
+    def update(*args, **kwds):
+        '''od.update(E, **F) -> None.  Update od from dict/iterable E and F.
+
+        If E is a dict instance, does:         for k in E: od[k] = E[k]
+        If E has a .keys() method, does:       for k in E.keys(): od[k] = E[k]
+        Or if E is an iterable of items, does: for k, v in E: od[k] = v
+        In either case, this is followed by:   for k, v in F.items(): od[k] = v
+
+        '''
+        if len(args) > 2:
+            raise TypeError('update() takes at most 2 positional '
+                            'arguments (%d given)' % (len(args),))
+        elif not args:
+            raise TypeError('update() takes at least 1 argument (0 given)')
+        self = args[0]
+        # Make progressively weaker assumptions about "other"
+        other = ()
+        if len(args) == 2:
+            other = args[1]
+        if isinstance(other, dict):
+            for key in other:
+                self[key] = other[key]
+        elif hasattr(other, 'keys'):
+            for key in other.keys():
+                self[key] = other[key]
+        else:
+            for key, value in other:
+                self[key] = value
+        for key, value in kwds.items():
+            self[key] = value
+
+    # let subclasses override update without breaking __init__
+    __update = update
+
+    __marker = object()
+
+    def pop(self, key, default=__marker):
+        '''od.pop(k[,d]) -> v, remove specified key and return the
+        corresponding value.  If key is not found, d is returned if given,
+        otherwise KeyError is raised.
+        '''
+        if key in self:
+            result = self[key]
+            del self[key]
+            return result
+        if default is self.__marker:
+            raise KeyError(key)
+        return default
+
+    def setdefault(self, key, default=None):
+        'od.setdefault(k[,d]) -> od.get(k,d), also set od[k]=d if k not in od'
+        if key in self:
+            return self[key]
+        self[key] = default
+        return default
+
+    def __repr__(self, _repr_running={}):
+        'od.__repr__() <==> repr(od)'
+        call_key = id(self), _get_ident()
+        if call_key in _repr_running:
+            return '...'
+        _repr_running[call_key] = 1
+        try:
+            if not self:
+                return '%s()' % (self.__class__.__name__,)
+            return '%s(%r)' % (self.__class__.__name__, self.items())
+        finally:
+            del _repr_running[call_key]
+
+    def __reduce__(self):
+        'Return state information for pickling'
+        items = [[k, self[k]] for k in self]
+        inst_dict = vars(self).copy()
+        for k in vars(OrderedDict()):
+            inst_dict.pop(k, None)
+        if inst_dict:
+            return (self.__class__, (items,), inst_dict)
+        return self.__class__, (items,)
+
+    def copy(self):
+        'od.copy() -> a shallow copy of od'
+        return self.__class__(self)
+
+    @classmethod
+    def fromkeys(cls, iterable, value=None):
+        '''OD.fromkeys(S[, v]) -> New ordered dictionary with keys from S
+        and values equal to v (which defaults to None).
+
+        '''
+        d = cls()
+        for key in iterable:
+            d[key] = value
+        return d
+
+    def __eq__(self, other):
+        '''od.__eq__(y) <==> od==y.  Comparison to another OD is
+        order-sensitive while comparison to a regular mapping is
+        order-insensitive.
+
+        '''
+        if isinstance(other, OrderedDict):
+            return len(self)==len(other) and self.items() == other.items()
+        return dict.__eq__(self, other)
+
+    def __ne__(self, other):
+        return not self == other
+
+    # -- the following methods are only used in Python 2.7 --
+
+    def viewkeys(self):
+        "od.viewkeys() -> a set-like object providing a view on od's keys"
+        return KeysView(self)
+
+    def viewvalues(self):
+        "od.viewvalues() -> an object providing a view on od's values"
+        return ValuesView(self)
+
+    def viewitems(self):
+        "od.viewitems() -> a set-like object providing a view on od's items"
+        return ItemsView(self)
+
+# Selective backports from py3k functools caching functions
+
+import functools
+import collections
+from itertools import ifilterfalse
+
+def lru_cache(maxsize=100):
+    '''Least-recently-used cache decorator.
+
+    Arguments to the cached function must be hashable.
+    Cache performance statistics stored in f.hits and f.misses.
+    Clear the cache with f.clear().
+    http://en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used
+
+    '''
+    maxqueue = maxsize * 10
+    def decorating_function(user_function,
+            len=len, iter=iter, tuple=tuple, sorted=sorted, KeyError=KeyError):
+        cache = {}                  # mapping of args to results
+        queue = collections.deque() # order that keys have been used
+        # times each key is in the queue
+        refcount = collections.defaultdict(lambda: 0)
+        sentinel = object()         # marker for looping around the queue
+        kwd_mark = object()         # separate positional and keyword args
+
+        # lookup optimizations (ugly but fast)
+        queue_append, queue_popleft = queue.append, queue.popleft
+        queue_appendleft, queue_pop = queue.appendleft, queue.pop
+
+        @functools.wraps(user_function)
+        def wrapper(*args, **kwds):
+            # cache key records both positional and keyword args
+            key = args
+            if kwds:
+                key += (kwd_mark,) + tuple(sorted(kwds.items()))
+
+            # record recent use of this key
+            queue_append(key)
+            refcount[key] += 1
+
+            # get cache entry or compute if not found
+            try:
+                result = cache[key]
+                wrapper.hits += 1
+            except KeyError:
+                result = user_function(*args, **kwds)
+                cache[key] = result
+                wrapper.misses += 1
+
+                # purge least recently used cache entry
+                if len(cache) > maxsize:
+                    key = queue_popleft()
+                    refcount[key] -= 1
+                    while refcount[key]:
+                        key = queue_popleft()
+                        refcount[key] -= 1
+                    del cache[key], refcount[key]
+
+            # periodically compact the queue by eliminating duplicate keys
+            # while preserving order of most recent access
+            if len(queue) > maxqueue:
+                refcount.clear()
+                queue_appendleft(sentinel)
+                for key in ifilterfalse(refcount.__contains__,
+                                        iter(queue_pop, sentinel)):
+                    queue_appendleft(key)
+                    refcount[key] = 1
+
+
+            return result
+
+        def clear():
+            cache.clear()
+            queue.clear()
+            refcount.clear()
+            wrapper.hits = wrapper.misses = 0
+
+        wrapper.hits = wrapper.misses = 0
+        wrapper.clear = clear
+        return wrapper
+    return decorating_function
+
+
+def total_ordering(cls):
+    """Class decorator that fills in missing ordering methods"""
+    convert = {
+        '__lt__': [('__gt__', lambda self, other: not (self < other or self == other)),
+                   ('__le__', lambda self, other: self < other or self == other),
+                   ('__ge__', lambda self, other: not self < other)],
+        '__le__': [('__ge__', lambda self, other: not self <= other or self == other),
+                   ('__lt__', lambda self, other: self <= other and not self == other),
+                   ('__gt__', lambda self, other: not self <= other)],
+        '__gt__': [('__lt__', lambda self, other: not (self > other or self == other)),
+                   ('__ge__', lambda self, other: self > other or self == other),
+                   ('__le__', lambda self, other: not self > other)],
+        '__ge__': [('__le__', lambda self, other: (not self >= other) or self == other),
+                   ('__gt__', lambda self, other: self >= other and not self == other),
+                   ('__lt__', lambda self, other: not self >= other)]
     }
-
-    for i, name in enumerate(real_field_names):
-        code += '    %s = property(itemgetter(%d))\n' % (name, i)
-
-    if verbose:
-        print code
-
-    namespace = {}
-    # there should never occur an exception here but if one does I'd rather
-    # have the source to see what is going on
-    try:
-        exec code in namespace
-    except SyntaxError, e: # pragma: no cover
-        raise SyntaxError(e.args[0] + ':\n' + code)
-    result = namespace[typename]
-
-    return result
+    roots = set(dir(cls)) & set(convert)
+    if not roots:
+        raise ValueError('must define at least one ordering operation: < > <= >=')
+    root = max(roots)       # prefer __lt__ to __le__ to __gt__ to __ge__
+    for opname, opfunc in convert[root]:
+        if opname not in roots:
+            opfunc.__name__ = opname
+            opfunc.__doc__ = getattr(int, opname).__doc__
+            setattr(cls, opname, opfunc)
+    return cls
