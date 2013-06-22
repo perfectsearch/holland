@@ -99,13 +99,13 @@ class RegistryPluginLoader(AbstractPluginLoader):
         :returns: BasePlugin instance
         :raises: PluginError if a plugin could not be loaded
         """
-
         try:
             plugin_namespace = self.registry[namespace]
         except KeyError:
             raise PluginNotFoundError(namespace, name=None)
         try:
-            return plugin_namespace[name]
+            plugin_cls = plugin_namespace[name]
+            return plugin_cls(name)
         except KeyError:
             raise PluginNotFoundError(namespace, name)
 
