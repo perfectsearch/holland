@@ -127,6 +127,30 @@ class OrderedDict(dict):
         value = dict.pop(self, key)
         return key, value
 
+    def move_to_end(self, key, last=True):
+        '''Move an existing element to the end (or beginning if last==False).
+
+        Raises KeyError if the element does not exist.
+        When last=True, acts like a fast version of self[key]=self.pop(key).
+
+        '''
+        link = self.__map[key]
+        link_prev = link[0]
+        link_next = link[1]
+        link_prev[1] = link_next
+        link_next[0] = link_prev
+        root = self.__root
+        if last:
+            last = root[0]
+            link[0] = last
+            link[1] = root
+            last[1] = root[0] = link
+        else:
+            first = root[1]
+            link[0] = root
+            link[1] = first
+            root[1] = first[1] = link
+   
     # -- the following methods do not depend on the internal structure --
 
     def keys(self):
