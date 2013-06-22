@@ -9,8 +9,8 @@
 """
 
 from holland.core.config.config import Config, ConfigError
-from holland.core.config.spec import Configspec, ValidateError
-from holland.core.config.check import CheckParser
+from holland.core.config.configspec import Configspec, ValidateError
+from holland.core.config.checks import CheckParser
 
 __all__ = [
     'Config',

@@ -1,17 +1,18 @@
 """
-    holland.core.config.check
-    ~~~~~~~~~~~~~~~~~~~~~~~~~
+holland.core.config.checks
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    DSL parser for parsing configspec checks.
+DSL parser for parsing configspec checks.
 
-    This implementation was heavily derived from the ideas and implementation
-    in `ConfigObj <http://www.voidspace.org.uk/python/configobj.html>_`
+This implementation was heavily derived from the ideas and implementation
+in `ConfigObj <http://www.voidspace.org.uk/python/configobj.html>_`
 
-    :copyright: 2010-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
+:copyright: 2010-2013 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
 """
 
 from re import Scanner
+from operator import itemgetter
 from holland.core.config.util import unquote, missing
 
 __all__ = [
@@ -262,11 +263,11 @@ class Check(tuple):
     <escapeseq>         ::= "\\" <any ASCII character>
     """
 
-    name = property(lambda self: self[0])
-    args = property(lambda self: self[1])
-    kwargs = property(lambda self: self[2])
-    default = property(lambda self: self[3])
-    aliasof = property(lambda self: self[4])
+    name = property(itemgetter(0))
+    args = property(itemgetter(1))
+    kwargs = property(itemgetter(2))
+    default = property(itemgetter(3))
+    aliasof = property(itemgetter(4))
 
     @classmethod
     def parse(cls, check):
@@ -275,6 +276,11 @@ class Check(tuple):
         default = kwargs.pop('default', missing)
         aliasof = kwargs.pop('aliasof', missing)
         return cls((name, args, kwargs, default, aliasof))
+
+    @property
+    def is_alias(self):
+        """Boolean flag whether this check is an alias for another check"""
+        return self.aliasof is not missing
 
     def __repr__(self):
         return "Check(name=%r, args=%r, kwargs=%r, default=%r, aliasof=%r)" % \

@@ -35,7 +35,7 @@ def validate_config(config):
     :raises: ValidateError on validation errors
     """
     configspec = BackupPlugin.configspec()
-    configspec.validate(config, ignore_unknown_sections=True)
+    configspec.validate(config)
     backup_plugin = config['holland:backup']['plugin']
     plugin = load_plugin('holland.backup', backup_plugin)
     configspec.merge(plugin.configspec())

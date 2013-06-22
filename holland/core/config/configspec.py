@@ -1,19 +1,19 @@
 """
-    holland.core.config.spec
-    ~~~~~~~~~~~~~~~~~~~~~~~~
+holland.core.config.configspec
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Support for defining valid config parameters and values and validating
-    candidate configs
+Support for defining valid config parameters and values and validating
+candidate configs
 
-    :copyright: 2010-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
+:copyright: 2010-2013 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
 """
 
 import logging
-from holland.core.config.config import Config, BaseFormatter
-from holland.core.config.check import Check, CheckError
-from holland.core.config.validation import default_validators, ValidationError
-from holland.core.config.util import missing
+from .config import Config, BaseFormatter
+from .util import missing
+from .checks import Check, CheckError
+from .validators import load_validator, ValidatorError
 
 LOG = logging.getLogger(__name__)
 
@@ -65,23 +65,19 @@ class CheckFormatter(BaseFormatter):
             return value
 
         try:
-            validator = self.configspec.registry[check.name]
-            validator = validator(check.args, check.kwargs)
+            validator = load_validator(check)
             return validator.format(value)
-        except KeyError:
+        except ValidatorError:
             return value
 
 class Configspec(Config):
     """A configuration that can validate other configurations
     """
-    #: registry dictionary for resolving checks
-    registry = ()
 
     def __init__(self, *args, **kwargs):
         super(Configspec, self).__init__(*args, **kwargs)
-        self.registry = dict(default_validators)
 
-    def validate(self, config, ignore_unknown_sections=False):
+    def validate(self, config, suppress_missing=False):
         """Validate a config against this configspec.
 
         This method modifies ``config`` replacing option values with the
@@ -102,11 +98,12 @@ class Configspec(Config):
                     errors.extend(exc.errors)
             else:
                 try:
-                    self._validate_option(key, value, config)
-                except ValidationError, exc:
+                    self.validate_option(key, config)
+                except ValidatorError, exc:
                     errors.append((exc, config.source.get(key, None)))
 
-        self.check_missing(config, ignore_unknown_sections)
+        if not suppress_missing:
+            self.check_missing(config, suppress_missing)
         config.formatter = CheckFormatter(self)
         if errors:
             raise ValidateError(errors)
@@ -121,7 +118,7 @@ class Configspec(Config):
             cfgsect = config.setdefault(key, config.__class__())
             cfgsect.name = key
             if key not in config.source:
-                config.source[key] = self[key]
+                config.source[key] = self.source[key]
 
         # ensure we are always validating a Config instance
         if not isinstance(cfgsect, Config):
@@ -137,6 +134,50 @@ class Configspec(Config):
         # recurse to the Configspec subsection
         check.validate(cfgsect)
 
+    def validate_option(self, key, config):
+        """Validate a single option"""
+        check = Check.parse(self[key])
+
+        if key not in config:
+            if check.is_alias:
+                LOG.debug("Skipping check for configspec option %s in [%s] "
+                          "because config %s has no option and option %s is "
+                          "an alias for canonical option '%s'",
+                          key, config.section,
+                          config.path,
+                          key, check.aliasof)
+                return
+            if check.default is not missing:
+                value = check.default
+            else:
+                value = missing
+        else:
+            value = config[key]
+
+        validator = load_validator(check)
+
+        try:
+            value = validator.validate(value)
+        except ValidatorError, exc:
+            raise ValidatorError("[%s] -> %s : %s" % (
+                                    config.section,
+                                    key,
+                                    exc
+                                  ), value)
+
+        config[key] = value
+        if key not in config.source:
+            config.source[key] = self.source[key]
+
+        if check.is_alias:
+            if check.aliasof not in config or \
+                    config.is_after(key, check.aliasof):
+                config.rename(key, check.aliasof)
+            else:
+                # check.aliasof is in config
+                # or check.aliasof is after key
+                del config[key]
+
     def _resolve_value(self, key, check, config):
         """Resolve a value for a given key
 
@@ -148,20 +189,15 @@ class Configspec(Config):
         * if the key is not aliased then use the default value provided by the
           check
         * if no value at all is specified and there is no default for the check
-          raise a ValidationError
+          raise a ValidatorError
         """
         value = config.get(key, missing)
-        # if no value for the key was provided in the config try its
-        # alias, if one exists
-        if value is missing and check.aliasof is not missing:
-            value = config.get(check.aliasof, missing)
-        # if no alias was found, try the default
         if value is missing:
             value = check.default
         # if not even a default value, raise an error noting this option is
         # required
         if value is missing:
-            raise ValidationError("Option '%s' requires a specified value" %
+            raise ValidatorError("Option '%s' requires a specified value" %
                                   key, None)
         return value
 
@@ -170,28 +206,31 @@ class Configspec(Config):
         try:
             check = Check.parse(checkstr)
         except CheckError:
-            raise ValidationError("Internal Error.  Failed to parse a "
+            raise ValidatorError("Internal Error.  Failed to parse a "
                                   "validation check '%s'" % checkstr, checkstr)
 
-        try:
-            validator_cls = self.registry[check.name]
-        except KeyError:
-            raise ValidationError("Unknown validation check '%s'" % check.name,
-                                  checkstr)
+        # Missing key that's an aliasof some other key
+        # if that other name is in the config, use that instead
+        if key not in config and check.aliasof in config:
+            return
 
-        validator = validator_cls(check.args, check.kwargs)
-        value = self._resolve_value(key, check, config)
+        try:
+            validator = load_validator(check)
+        except ValidatorError:
+            raise ValidatorError("Unknown validation check '%s'" % check.name,
+                                  checkstr)
+        value = config.get(key, check.default)
         try:
             value = validator.validate(value)
-        except ValidationError, exc:
-            raise ValidationError("%s.%s : %s" % (config.name, key, exc),
+        except ValidatorError, exc:
+            raise ValidatorError("%s.%s : %s" % (config.section, key, exc),
                                   exc.value)
-
         config[key] = value
         if key not in config.source:
             config.source[key] = self.source[key]
+
         if check.aliasof is not missing:
-            config.rename(key, check.aliasof)
+            return check.aliasof
 
 
     def check_missing(self, config, ignore_unknown_sections):
@@ -205,14 +244,19 @@ class Configspec(Config):
                 if isinstance(config[key], dict):
                     if ignore_unknown_sections:
                         continue
-                    source, lineno = config.source[key]
-                    LOG.warn("Unknown section [%s]: %s line %d", key, source,
-                            lineno)
+                    source  = config.source.get(key)
+                    LOG.warn("Unknown section[%s]", key)
                 else:
-                    source, start, end = config.source[key]
-                    if start == end:
-                        line_range = "line %d" % start
+                    #source, start, end = config.source[key]
+                    source = config.source.get(key)
+                    if source:
+                        source, start, end = source
+                        if start == end:
+                            line_range = "line %d" % start
+                        else:
+                            line_range = "lines %d-%d" % (start, end)
+                        LOG.warn("Unknown option %s in [%s] from %s %s", key,
+                                config.section, source, line_range)
                     else:
-                        line_range = "lines %d-%d" % (start, end)
-                    LOG.warn("Unknown option %s in [%s] %s %s", key,
-                            config.name, source, line_range)
+                        LOG.warn("Unknown option %s in [%s]",
+                                 key, config.section)

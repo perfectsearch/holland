@@ -8,8 +8,6 @@ Base plugin classes for Holland
 :license: BSD, see LICENSE.rst for details
 """
 
-from holland.core.config import Configspec
-
 class BasePlugin(object):
     """The base Plugin class that all Holland plugins
     derive from.
@@ -94,6 +92,7 @@ class ConfigurablePlugin(BasePlugin):
 
         :returns: instance of holland.core.config.Configspec
         """
+        from holland.core.config import Configspec
         return Configspec()
 
     def configure(self, config):
