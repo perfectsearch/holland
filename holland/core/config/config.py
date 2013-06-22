@@ -14,7 +14,8 @@ import codecs
 import textwrap
 import logging
 from holland.core.exc import HollandError
-from holland.core.util.pycompat import OrderedDict
+from holland.core.util import OrderedDict
+from .util import unquote 
 
 LOG = logging.getLogger(__name__)
 
@@ -52,22 +53,42 @@ class Config(OrderedDict):
     cont_cre        = re.compile(r'\s+(?P<value>.+?)$')
     include_cre     = re.compile(r'%include (?P<name>.+?)\s*$')
 
+    #: name of the section.  The root config will always have the name ''
+    section = ''
+
     #: path where this configuration was loaded from or None if not loaded from
     #  a file
     path = None
 
     #: an object that's always asked when formatting a key/value pair
-    formatter       = BaseFormatter()
+    formatter = BaseFormatter()
 
     #: dict mapping keys to source file/lines
-    source          = ()
+    source = ()
 
     def __init__(self, *args, **kwargs):
         super(Config, self).__init__(*args, **kwargs)
         self.source = {}
 
+    def is_after(self, key1, key2):
+        """Check if key1 was added after key2 in this config"""
+        keys = self.keys()
+        return keys.index(key1) > keys.index(key2)
+
+    def rename(self, key_name_orig, key_name_new):
+        """Rename a config option to another name, retaining the current
+        position and value
+        """
+        self[key_name_new] = self[key_name_orig]
+        keys = list(self.keys())
+        idx = keys.index(key_name_orig)
+        for name in keys[idx:]:
+            if name == key_name_new: continue
+            self.move_to_end(name)
+        del self[key_name_orig]
+
     @classmethod
-    def from_iterable(cls, iterable):
+    def from_iterable(cls, iterable, name=None):
         """Parse a sequence of lines and return a ``Config`` instance.
 
         :param iterable: any iterable object that yield lines of text
@@ -76,7 +97,7 @@ class Config(OrderedDict):
         """
         cfg = cls()
         section = cfg
-        name = getattr(iterable, 'name', '<unknown>')
+        cfg.path = getattr(iterable, 'name', name)
         key = None
         for lineno, line in enumerate(iterable):
             if cls.empty_cre.match(line):
@@ -89,8 +110,8 @@ class Config(OrderedDict):
                 except KeyError:
                     cfg[sectname] = cls()
                     section = cfg[sectname]
-                    section.name = sectname
-                cfg.source[sectname] = (name, lineno + 1)
+                    section.section = sectname
+                cfg.source[sectname] = (cfg.path, lineno + 1)
                 key = None # reset key
                 continue
             match = cls.key_cre.match(line)
@@ -99,7 +120,7 @@ class Config(OrderedDict):
                 key = cfg.optionxform(key.strip())
                 value = cfg.valuexform(value)
                 section[key] = value
-                section.source[key] = (name, lineno + 1, lineno + 1)
+                section.source[key] = (cfg.path, lineno + 1, lineno + 1)
                 continue
             match = cls.cont_cre.match(line)
             if match:
@@ -126,7 +147,12 @@ class Config(OrderedDict):
         return cfg
 
     @classmethod
-    def from_string(cls, configstr):
+    def from_path(cls, path, encoding='utf8'):
+        with codecs.open(path, 'rb', encoding=encoding) as fileobj:
+            return cls.from_iterable(fileobj)
+
+    @classmethod
+    def from_string(cls, configstr, name=None):
         """Parse a string and generate a config instance
 
         This method will dedent ``configstr`` so leading whitespace to avoid
@@ -137,7 +163,9 @@ class Config(OrderedDict):
         :raises: ConfigError
         :returns: ``Config`` (or subclass)
         """
-        return cls.from_iterable(textwrap.dedent(configstr).splitlines(True))
+        config = cls.from_iterable(textwrap.dedent(configstr).splitlines(True),
+                                   name)
+        return config
 
     @classmethod
     def read(cls, filenames, encoding='utf8'):
@@ -181,7 +209,7 @@ class Config(OrderedDict):
                         raise TypeError('value-namespace conflict')
                 except KeyError:
                     section = self.__class__()
-                    section.name = key
+                    section.section = key
                     self[key] = section
                 section.merge(value)
             else:
@@ -210,7 +238,7 @@ class Config(OrderedDict):
                         raise TypeError('value-namespace conflict')
                 except KeyError:
                     section = self.__class__()
-                    section.name = key
+                    section.section = key
                     self[key] = section
                     self.source[key] = config.source[key]
                 section.meld(value)
@@ -223,7 +251,7 @@ class Config(OrderedDict):
                     self.source[key] = config.source[key]
         return self
 
-    def write(self, path, encoding='utf8'):
+    def write(self, path=None, encoding='utf8'):
         """Write a representaton of the config to the specified filename.
 
         The target filename will be written with the requested encoding.
@@ -233,6 +261,11 @@ class Config(OrderedDict):
         :param path: filename or file-like object to serialize this config to
         :param encoding: encoding to writes this config as
         """
+        path = path or self.path
+        # check that some path is specified
+        if not path:
+            raise ConfigError("No path specified for Config.write()")
+
         try:
             write = path.write
             write(unicode(self))
@@ -277,6 +310,12 @@ class Config(OrderedDict):
         """
         return str(section)
 
+    @property
+    def text(self):
+        """Simple property to format this Config instance to a unicode text
+        string"""
+        return unicode(self)
+
     def __setitem__(self, key, value):
         if isinstance(value, dict) and not isinstance(value, self.__class__):
             value = self.__class__(value)
@@ -306,3 +345,10 @@ class Config(OrderedDict):
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__,
                            dict.__repr__(self))
+
+    def __getattr__(self, key):
+        try:
+            return self[key.replace('_', '-')]
+        except KeyError:
+            raise AttributeError('%r object has no attribute %r' %
+                                 (self.__class__.__name__, key))
