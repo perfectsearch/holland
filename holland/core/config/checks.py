@@ -276,6 +276,11 @@ class Check(tuple):
         aliasof = kwargs.pop('aliasof', missing)
         return cls((name, args, kwargs, default, aliasof))
 
+    @property
+    def is_alias(self):
+        """Boolean flag whether this check is an alias for another check"""
+        return self.aliasof is not missing
+
     def __repr__(self):
         return "Check(name=%r, args=%r, kwargs=%r, default=%r, aliasof=%r)" % \
                 (self.name, self.args, self.kwargs, self.default, self.aliasof)
