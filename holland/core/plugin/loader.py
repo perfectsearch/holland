@@ -266,10 +266,9 @@ class ChainedPluginLoader(AbstractPluginLoader):
 
     def iterate(self, namespace):
         for loader in self.loaders:
-            LOG.info("Loading from loader=%r", loader)
+            LOG.debug("Loading from loader=%r", loader)
             try:
                 for plugin in loader.iterate(namespace):
-                    LOG.info("yielding plugin=%r", plugin)
                     yield plugin
             except PluginLoadError:
                 continue
