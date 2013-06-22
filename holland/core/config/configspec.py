@@ -184,7 +184,7 @@ class Configspec(Config):
         try:
             value = validator.validate(value)
         except ValidationError, exc:
-            raise ValidationError("%s.%s : %s" % (config.name, key, exc),
+            raise ValidationError("%s.%s : %s" % (config.section, key, exc),
                                   exc.value)
 
         config[key] = value
@@ -215,4 +215,4 @@ class Configspec(Config):
                     else:
                         line_range = "lines %d-%d" % (start, end)
                     LOG.warn("Unknown option %s in [%s] %s %s", key,
-                            config.name, source, line_range)
+                            config.section, source, line_range)
