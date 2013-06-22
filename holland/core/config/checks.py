@@ -1,14 +1,14 @@
 """
-    holland.core.config.checks
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+holland.core.config.checks
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    DSL parser for parsing configspec checks.
+DSL parser for parsing configspec checks.
 
-    This implementation was heavily derived from the ideas and implementation
-    in `ConfigObj <http://www.voidspace.org.uk/python/configobj.html>_`
+This implementation was heavily derived from the ideas and implementation
+in `ConfigObj <http://www.voidspace.org.uk/python/configobj.html>_`
 
-    :copyright: 2010-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
+:copyright: 2010-2013 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
 """
 
 from re import Scanner
