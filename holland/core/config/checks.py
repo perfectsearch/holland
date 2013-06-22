@@ -12,6 +12,7 @@
 """
 
 from re import Scanner
+from operator import itemgetter
 from holland.core.config.util import unquote, missing
 
 __all__ = [
@@ -262,11 +263,11 @@ class Check(tuple):
     <escapeseq>         ::= "\\" <any ASCII character>
     """
 
-    name = property(lambda self: self[0])
-    args = property(lambda self: self[1])
-    kwargs = property(lambda self: self[2])
-    default = property(lambda self: self[3])
-    aliasof = property(lambda self: self[4])
+    name = property(itemgetter(0))
+    args = property(itemgetter(1))
+    kwargs = property(itemgetter(2))
+    default = property(itemgetter(3))
+    aliasof = property(itemgetter(4))
 
     @classmethod
     def parse(cls, check):
