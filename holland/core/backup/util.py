@@ -11,7 +11,7 @@
 import logging
 from holland.core.plugin import load_plugin, PluginError
 from holland.core.backup.plugin import BackupPlugin
-from holland.core.backup.error import BackupError
+from holland.core.backup.exc import BackupError
 
 LOG = logging.getLogger(__name__)
 

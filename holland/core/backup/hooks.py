@@ -14,7 +14,7 @@ import time
 from datetime import datetime
 from holland.core.config import Config
 from holland.core.hooks import BaseHook, load_hooks_from_config
-from holland.core.backup.error import BackupError
+from holland.core.backup.exc import BackupError
 from holland.core.util import format_bytes, format_interval, parse_bytes, \
                               directory_size, run_command
 
