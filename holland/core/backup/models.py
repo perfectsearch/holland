@@ -1,10 +1,10 @@
 """
-holland.core.backup
-~~~~~~~~~~~~~~~~~~~
+holland.core.backup.models
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Run backups through the holland backup manager
+Catalog database SQLAlchemy models
 
-:copyright: 2008-2011 Rackspace US, Inc.
+:copyright: 2008-2013 Rackspace US, Inc.
 :license: BSD, see LICENSE.rst for details
 """
 
@@ -44,6 +44,7 @@ class BaseExt(object):
 
 DeclarativeBase = declarative_base(cls=BaseExt)
 
+# Monkey patch support for BigInt, as needed
 try:
     from sqlalchemy.types import BigInteger
 except ImportError:
