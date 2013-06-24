@@ -1,3 +1,12 @@
+"""
+holland.core.backup.catalog
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Front-end API to the catalog database
+
+:copyright: 2008-2013 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
+"""
 from contextlib import contextmanager
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
