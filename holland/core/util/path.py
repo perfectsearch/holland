@@ -122,3 +122,24 @@ def which(cmd, path=None):
         if os.path.isfile(binpath) and os.access(binpath, os.X_OK):
             return binpath
     raise OSError(errno.ENOENT, '%r: command not found' % cmd)
+
+def replace_symlink(source, link_name):
+    """Add or replace a symlink ``link_name`` that points to ``source``
+
+    When link_name already exists, it will be replaced atomically. That is,
+    ``link_name`` will never "disappear" - it will either point to the old
+    content or point to the new content.
+    """
+    tmp_link = '{name}.{pid}.{ts}'.format(
+                name=link_name, pid=os.getpid(), ts=int(time.time())
+            )
+    # this will fail in the case that tmp_link already exists
+    # this is an error and should only happen in pathological
+    # situations - caller is responsible for handling the OSError
+    os.symlink(source, tmp_link)
+    try:
+        os.rename(tmp_link, link_name)
+    except:
+        # drop the tmp_link
+        os.unlink(tmp_link)
+        raise

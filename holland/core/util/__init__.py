@@ -8,7 +8,7 @@ Utility methods
 :license: BSD, see LICENSE.rst for details
 """
 
-from .path import relpath, getmount, disk_free, directory_size
+from .path import relpath, getmount, disk_free, directory_size, replace_symlink
 from .fmt import format_interval, format_datetime, format_bytes, parse_bytes
 from .misc import run_command
 from .pycompat import OrderedDict, lru_cache, total_ordering
