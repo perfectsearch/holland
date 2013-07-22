@@ -1,11 +1,11 @@
 """
-    holland.cli.cmd.base
-    ~~~~~~~~~~~~~~~~~~~~
+holland.cli.cmd.base
+~~~~~~~~~~~~~~~~~~~~
 
-    Holland CLI Command API
+Holland CLI Command API
 
-    :copyright: 2008-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
+:copyright: 2008-2011 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
 """
 
 import sys
