@@ -14,8 +14,8 @@ import traceback
 import logging
 from logging import _levelNames as log_levels
 from holland import __version__
-from holland.cli.config import load_global_config
-import holland.cli.log as holland_logging
+from holland.cli.util import load_global_config
+import holland.cli.util as holland_logging
 from holland.cli.cmd import ArgparseCommand, argument, CommandNotFoundError
 
 HOLLAND_BANNER = """
