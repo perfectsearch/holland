@@ -1,11 +1,11 @@
 """
-    holland.cli.main
-    ~~~~~~~~~~~~~~~~~~~
+holland.cli.main
+~~~~~~~~~~~~~~~~~~~
 
-    Main holland cli script
+Main holland cli script
 
-    :copyright: 2008-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
+:copyright: 2008-2011 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
 """
 
 import os
