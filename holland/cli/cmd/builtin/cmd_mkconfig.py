@@ -1,9 +1,11 @@
 """Generate backupset configuration files"""
 
 import sys
-from holland.cli.cmd.base import ArgparseCommand, argument
-from holland.core import Config, load_plugin, BackupPlugin, PluginError
+from holland.cli.cmd.interface import ArgparseCommand, argument
+from holland.core import Config, load_plugin, BackupPlugin
+from holland.core.plugin import PluginError, plugin_registry
 
+@plugin_registry.register
 class MakeConfig(ArgparseCommand):
     """Generate a new config"""
 

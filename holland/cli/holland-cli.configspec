@@ -1,0 +1,14 @@
+## This is the configspec used by the holland command line interface
+[holland]
+plugin-dirs      = list(default=list())
+backup-directory = string(default=None)
+backupsets       = force_list(default=list())
+umask            = integer(default='0007', base=8)
+path             = string(default=None)
+tmpdir           = string(default=None)
+catalog-db       = string(default="/var/lib/holland/catalog.db")
+
+[logging]
+filename         = string(default='/var/log/holland/holland.log')
+format           = string(default='%(asctime)s [%(levelname)s] %(message)s')
+level            = log_level(default="info")

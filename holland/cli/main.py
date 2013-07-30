@@ -1,22 +1,22 @@
 """
-    holland.cli.main
-    ~~~~~~~~~~~~~~~~~~~
+holland.cli.main
+~~~~~~~~~~~~~~~~~~~
 
-    Main holland cli script
+Main holland cli script
 
-    :copyright: 2008-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
+:copyright: 2008-2011 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
 """
 
+import logging
 import os
 import signal
 import traceback
-import logging
-from logging import _levelNames as log_levels
-from holland import __version__
-from holland.cli.config import load_global_config
-import holland.cli.log as holland_logging
-from holland.cli.cmd import ArgparseCommand, argument, CommandNotFoundError
+
+from holland import version
+from holland.cli import util
+from holland.cli.cmd import interface
+from holland.cli.cmd import exc
 
 HOLLAND_BANNER = """
 Holland Backup v%s
@@ -28,19 +28,21 @@ More info available at http://hollandbackup.org
 [[[[[[[]]]]]]] [[[[[[[]]]]]]]
 [[[[[[[]]]]]]] [[[[[[[]]]]]]]
 
-""" % __version__
+""" % version.__version__
 
 LOG = logging.getLogger(__name__)
 
-holland_logging.configure_warnings()
-holland_logging.configure_basic_logger()
+util.configure_warnings()
+util.configure_basic_logger()
+
+argument = interface.argument
 
 def terminate(signum, frame):
     """Terminate from SIGTERM cleanly"""
     LOG.debug("terminate(signum=%r, frame=%r)", signum, frame)
     raise SystemExit("Caught SIGTERM")
 
-class HollandCli(ArgparseCommand):
+class HollandCli(interface.ArgparseCommand):
     """Main holland command interface"""
 
     name = 'holland'
@@ -70,7 +72,7 @@ class HollandCli(ArgparseCommand):
     ]
 
     def __init__(self, name):
-        ArgparseCommand.__init__(self, name)
+        interface.ArgparseCommand.__init__(self, name)
         self.configure(None)
 
     def execute(self, opts, parser):
@@ -83,14 +85,16 @@ class HollandCli(ArgparseCommand):
         and only prints the available commands.
         """
         try:
-            config = load_global_config(opts.config)
+            config = util.load_global_config(opts.config)
         except (IOError, ValueError), exc:
             self.stderr("Failed to load config file %s: %s", opts.config, exc)
             return 1
 
         if opts.log_level:
+            level_names = logging._levelNames
+            level_name = opts.log_level.upper()
             try:
-                config['logging']['level'] = log_levels[opts.log_level.upper()]
+                config['logging']['level'] = level_names[level_name]
             except KeyError:
                 self.stderr("Invalid --log-level '%s'", opts.log_level)
         if config['holland']['umask'] is not None:
@@ -99,7 +103,7 @@ class HollandCli(ArgparseCommand):
             os.environ['TMPDIR'] = config['holland']['tmpdir']
         if config['holland']['path']:
             os.environ['PATH'] = config['holland']['path']
-        holland_logging.configure_logging(config['logging'], quiet=opts.quiet)
+        util.configure_logging(config['logging'], quiet=opts.quiet)
         signal.signal(signal.SIGTERM, terminate)
         signal.signal(signal.SIGQUIT, terminate)
         signal.signal(signal.SIGHUP, signal.SIG_IGN)
@@ -115,7 +119,7 @@ class HollandCli(ArgparseCommand):
             self.stderr("Interrupted")
         except SystemExit:
             self.stderr("Terminated")
-        except CommandNotFoundError, exc:
+        except interface.CommandNotFoundError, exc:
             self.stderr("'%s' is not a valid holland command. "
                         "See holland help for valid commands.", exc.name)
         except: # unexpected command failure
@@ -123,21 +127,5 @@ class HollandCli(ArgparseCommand):
                         opts.subcommand)
             traceback.print_exc()
         return 1
-
-    def plugin_info(self):
-        """Plugin info for the main holland command"""
-        # this is not used as we do not expose the main script command as a
-        # plugin, but included here anyway for documentation purposes
-        return dict(
-            author='Rackspace',
-            name='holland',
-            summary='Main holland script',
-            description='''
-            This is the main holland cli command as bundled
-            with the holland backup framework.
-            ''',
-            version=__version__,
-            api_version=__version__
-        )
 
 holland = HollandCli('holland')

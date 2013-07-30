@@ -1,21 +1,87 @@
 """
-    holland.cli.log
-    ~~~~~~~~~~~~~~~~
+holland.cli.util
+~~~~~~~~~~~~~~~
 
-    Log utility functions for holland cli
+Utility functions for holland cli
 
-    :copyright: 2008-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
+:copyright: 2008-2013 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
 """
 
-import os, sys
-import warnings
 import logging
+import os
+import pkgutil
+import sys
+import warnings
 
-DEFAULT_LOG_FORMAT = '[%(levelname)s] %(message)s'
+from holland import core
+
+DEFAULT_LOG_FORMAT = '%(asctime)s %(levelname)-8s: %(message)s'
 DEFAULT_LOG_LEVEL = logging.INFO
 
 LOG = logging.getLogger(__name__)
+
+class GlobalHollandConfig(core.Config):
+    """Config for the global holland.conf
+
+    This object is passed to each subcommand holland runs via that
+    commands configure() method. This provides access to global
+    config options and loading other configs relative to the root
+    holland.conf's directory
+    """
+
+    def basedir(self):
+        """Find the base directory where this holland.conf lives"""
+        return os.path.abspath(os.path.dirname(self.path or '.'))
+
+    def load_backupset(self, name):
+        """Load a backupset relative to this holland.conf instance"""
+        if not os.path.isabs(name):
+            name = os.path.join(self.basedir(), 'backupsets', name)
+
+        if not os.path.isdir(name) and not name.endswith('.conf'):
+            name += '.conf'
+
+        cfg = Config.read([name])
+
+        # load providers/$plugin.conf if available
+        plugin = cfg.get('holland:backup', {}).get('plugin')
+        if plugin:
+            provider_path = os.path.join(self.basedir(),
+                                         'providers',
+                                         plugin + '.conf')
+            try:
+                cfg.meld(Config.read([provider_path]))
+            except core.ConfigError:
+                LOG.debug("No global provider found.  Skipping.")
+        cfg.name = os.path.splitext(os.path.basename(name))[0]
+        return cfg
+
+    @classmethod
+    def configspec(cls):
+        """Retrieve the configspec from this class"""
+        pkg = __name__.rpartition('.')[0]
+        data = pkgutil.get_data(pkg, 'holland-cli.configspec')
+        return core.Configspec.from_string(data)
+
+def load_global_config(path):
+    """Conditionally load the global holland.conf
+
+    If the requested path does not exist a default
+    GlobalHollandConfig instance will be returned
+    """
+    if path:
+        try:
+            cfg = GlobalHollandConfig.read([path])
+            cfg.name = path
+        except core.ConfigError, exc:
+            LOG.error("Failed to read %s: %s", path, exc)
+            cfg = GlobalHollandConfig()
+    else:
+        cfg = GlobalHollandConfig()
+
+    GlobalHollandConfig.configspec().validate(cfg)
+    return cfg
 
 def _clear_root_handlers():
     """Remove all pre-existing handlers on the root logger"""
@@ -39,7 +105,7 @@ def configure_basic_logger():
 
     configure_logger(logger=root,
                      handler=handler,
-                     fmt=DEFAULT_LOG_FORMAT,
+                     fmt='%(message)s',
                      level=logging.INFO)
 
 def configure_logger(logger, handler, fmt, level):
@@ -66,7 +132,6 @@ def log_warning(message, category, filename, lineno, _file=None, _line=None):
         log.debug("(%s) %s", _file, warning_string)
     else:
         log.debug(warning_string)
-        log.warn("%s", message)
 
 def configure_warnings():
     """Ensure warnings go through log_warning"""

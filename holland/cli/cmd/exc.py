@@ -1,11 +1,11 @@
 """
-    holland.cli.error
-    ~~~~~~~~~~~~~~~~~
+holland.cli.error
+~~~~~~~~~~~~~~~~~
 
-    Standard exception classes raised by the holland.cli.cmd api
+Standard exception classes raised by the holland.cli.cmd api
 
-    :copyright: 2008-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
+:copyright: 2008-2011 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
 """
 
 class CommandError(Exception):
