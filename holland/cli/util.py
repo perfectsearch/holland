@@ -93,16 +93,7 @@ def configure_basic_logger():
     """Configure a simple console logger"""
     root = logging.getLogger()
 
-    if not os.isatty(sys.stderr.fileno()):
-        class NullHandler(logging.Handler):
-            """No-op log handler"""
-            def emit(self, something):
-                """Null emitter"""
-                pass
-        handler = NullHandler()
-    else:
-        handler = logging.StreamHandler()
-
+    handler = logging.StreamHandler()
     configure_logger(logger=root,
                      handler=handler,
                      fmt='%(message)s',
@@ -154,10 +145,13 @@ def configure_logging(config, quiet=False):
     _clear_root_handlers()
 
     if not quiet:
+        # default to sending everything to stderr
+        # with not reformatting
         configure_logger(logger=logging.getLogger(),
                          handler=logging.StreamHandler(),
-                         fmt=DEFAULT_LOG_FORMAT,
+                         fmt='%(message)s',
                          level=config['level'])
+
     try:
         configure_logger(logger=logging.getLogger(),
                          handler=logging.FileHandler(config['filename'],
