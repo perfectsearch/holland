@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 import sys, os
+from holland.version import __version__
 
 extra = {}
 if sys.version_info >= (3, 0):
@@ -8,11 +9,9 @@ if sys.version_info >= (3, 0):
         use_2to3_fixers=[]
     )
 
-version = '2.0.0'
-
 setup(
     name="holland",
-    version=version,
+    version=__version__,
     description="Holland Core Framework",
     long_description="""\
     This package provides the core functionality for
