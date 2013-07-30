@@ -153,7 +153,7 @@ def configure_logging(config, quiet=False):
     # as well as adding additional file loggers
     _clear_root_handlers()
 
-    if not quiet and os.isatty(sys.stderr.fileno()):
+    if not quiet:
         configure_logger(logger=logging.getLogger(),
                          handler=logging.StreamHandler(),
                          fmt=DEFAULT_LOG_FORMAT,
