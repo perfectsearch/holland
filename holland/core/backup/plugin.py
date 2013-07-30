@@ -134,7 +134,6 @@ class BackupPlugin(ConfigurablePlugin):
         pre-backup-hook         = string(default=None)
         post-backup-hook        = string(default=None)
         backup-failure-hook     = string(default=None)
-        hooks                   = list(default=list())
         """)
 
 class NoopBackupPlugin(BackupPlugin):
