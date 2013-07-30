@@ -15,7 +15,8 @@ import traceback
 
 from holland import version
 from holland.cli import util
-from holland.cli import cmd
+from holland.cli.cmd import interface
+from holland.cli.cmd import exc
 
 HOLLAND_BANNER = """
 Holland Backup v%s
@@ -34,14 +35,14 @@ LOG = logging.getLogger(__name__)
 util.configure_warnings()
 util.configure_basic_logger()
 
-argument = cmd.argument
+argument = interface.argument
 
 def terminate(signum, frame):
     """Terminate from SIGTERM cleanly"""
     LOG.debug("terminate(signum=%r, frame=%r)", signum, frame)
     raise SystemExit("Caught SIGTERM")
 
-class HollandCli(cmd.ArgparseCommand):
+class HollandCli(interface.ArgparseCommand):
     """Main holland command interface"""
 
     name = 'holland'
@@ -71,7 +72,7 @@ class HollandCli(cmd.ArgparseCommand):
     ]
 
     def __init__(self, name):
-        cmd.ArgparseCommand.__init__(self, name)
+        interface.ArgparseCommand.__init__(self, name)
         self.configure(None)
 
     def execute(self, opts, parser):
@@ -118,7 +119,7 @@ class HollandCli(cmd.ArgparseCommand):
             self.stderr("Interrupted")
         except SystemExit:
             self.stderr("Terminated")
-        except cmd.CommandNotFoundError, exc:
+        except interface.CommandNotFoundError, exc:
             self.stderr("'%s' is not a valid holland command. "
                         "See holland help for valid commands.", exc.name)
         except: # unexpected command failure

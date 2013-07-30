@@ -1,7 +1,10 @@
 """Command to run a holland backup"""
-from holland.core import BackupManager, BackupError, ConfigError
-from holland.cli.cmd.base import ArgparseCommand, argument
+from holland.core.backup import BackupManager, BackupError
+from holland.core.config import ConfigError
+from holland.core.plugin import plugin_registry
+from holland.cli.cmd.interface import ArgparseCommand, argument
 
+@plugin_registry.register
 class Backup(ArgparseCommand):
     """Run a backup for one or more backupset configurations
 

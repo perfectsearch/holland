@@ -11,9 +11,9 @@ Holland CLI Command API
 import sys
 import logging
 from textwrap import dedent
-from argparse import RawDescriptionHelpFormatter
+import argparse
 from holland.core import BasePlugin, iterate_plugins
-from holland.cli.cmd.error import CommandNotFoundError
+from holland.cli.cmd.exc import CommandNotFoundError
 
 LOG = logging.getLogger(__name__)
 
@@ -24,6 +24,10 @@ class BaseCommand(BasePlugin):
     command line args.  Subclasses should override ``__call__(args)`` and
     implement the actual command
     """
+
+    #: Namespace for this command
+    #: This should be holland.commands for the standard holland cli
+    namespace = 'holland.commands'
 
     #: Name of this command
     #: :type: str
@@ -159,7 +163,7 @@ class ArgparseError(Exception):
         self.status = status
 
 
-class SafeArgumentParser(ArgumentParser):
+class SafeArgumentParser(argparse.ArgumentParser):
     """Subclass of argparse.ArgumentParser that does not call sys.exit
     on error
     """
@@ -202,7 +206,7 @@ class ArgparseCommand(BaseCommand):
 
         :returns: ArgumentParser instance
         """
-        fmt_cls = RawDescriptionHelpFormatter
+        fmt_cls = argparse.RawDescriptionHelpFormatter
         parser = SafeArgumentParser(description=dedent(self.description),
                                     prog=self.name,
                                     epilog=dedent(self.epilog or ''),
