@@ -2,8 +2,10 @@
 
 from holland.core import BackupManager, ConfigError
 from holland.core.util.fmt import format_bytes
-from holland.cli.cmd.base import ArgparseCommand, argument
+from holland.core.plugin import plugin_registry
+from holland.cli.cmd.interface import ArgparseCommand, argument
 
+@plugin_registry.register
 class Purge(ArgparseCommand):
     """Purge backup command"""
     name = 'purge'

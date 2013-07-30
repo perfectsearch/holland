@@ -1,9 +1,10 @@
 """holland help command"""
 
-from holland.cli.cmd.base import ArgparseCommand, argument
-from holland.cli.cmd.error import CommandNotFoundError
-from holland.core.plugin import iterate_plugins
+from holland.cli.cmd.interface import ArgparseCommand, argument
+from holland.cli.cmd.exc import CommandNotFoundError
+from holland.core.plugin import iterate_plugins, plugin_registry
 
+@plugin_registry.register
 class Help(ArgparseCommand):
     """Holland help subcommand"""
 

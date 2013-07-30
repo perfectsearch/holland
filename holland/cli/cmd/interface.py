@@ -1,20 +1,19 @@
 """
-    holland.cli.cmd.base
-    ~~~~~~~~~~~~~~~~~~~~
+holland.cli.cmd.base
+~~~~~~~~~~~~~~~~~~~~
 
-    Holland CLI Command API
+Holland CLI Command API
 
-    :copyright: 2008-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
+:copyright: 2008-2011 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
 """
 
 import sys
 import logging
 from textwrap import dedent
-from argparse import RawDescriptionHelpFormatter
+import argparse
 from holland.core import BasePlugin, iterate_plugins
-from holland.cli.cmd.util import SafeArgumentParser, ArgparseError
-from holland.cli.cmd.error import CommandNotFoundError
+from holland.cli.cmd.exc import CommandNotFoundError
 
 LOG = logging.getLogger(__name__)
 
@@ -25,6 +24,10 @@ class BaseCommand(BasePlugin):
     command line args.  Subclasses should override ``__call__(args)`` and
     implement the actual command
     """
+
+    #: Namespace for this command
+    #: This should be holland.commands for the standard holland cli
+    namespace = 'holland.commands'
 
     #: Name of this command
     #: :type: str
@@ -40,6 +43,15 @@ class BaseCommand(BasePlugin):
 
     #: name aliases this command is also known by
     aliases = ()
+
+    #: name of the author of this command
+    author = ''
+
+    #: string version of this command
+    version = ''
+
+    #: api_version this command expects
+    api_version = ''
 
     def __init__(self, name):
         BasePlugin.__init__(self, name)
@@ -137,27 +149,31 @@ class BaseCommand(BasePlugin):
         """Check whether this command should match a given name"""
         return self.name == name or name in self.aliases
 
-    def plugin_info(self):
-        """Provide plugin info about this command
-
-        This method should return a dictionary listing a minimum of the
-        following attributes:
-
-          * name          - short one word name of this command
-          * summary       - one line summary of this command
-          * description   - longer description of this command
-          * author        - author of this command in name [<email>] format
-          * version       - version of this command
-          * api_version   - version of holland this command is intended to work
-                            with
-
-        :returns: dict
-        """
-        raise NotImplementedError()
 
 def argument(*args, **kwargs):
     """Simple wrapper for argparse parameters"""
     return (args, kwargs)
+
+
+class ArgparseError(Exception):
+    """Raise when Argparse runs into an error"""
+    def __init__(self, message, status=0):
+        Exception.__init__(self, message)
+        self.message = message
+        self.status = status
+
+
+class SafeArgumentParser(argparse.ArgumentParser):
+    """Subclass of argparse.ArgumentParser that does not call sys.exit
+    on error
+    """
+
+    def error(self, message):
+        raise ArgparseError(message)
+
+    def exit(self, status=0, message=None):
+        raise ArgparseError(message, status)
+
 
 class ArgparseCommand(BaseCommand):
     """Command implementation that parses arguments with argparse
@@ -190,7 +206,7 @@ class ArgparseCommand(BaseCommand):
 
         :returns: ArgumentParser instance
         """
-        fmt_cls = RawDescriptionHelpFormatter
+        fmt_cls = argparse.RawDescriptionHelpFormatter
         parser = SafeArgumentParser(description=dedent(self.description),
                                     prog=self.name,
                                     epilog=dedent(self.epilog or ''),
@@ -228,21 +244,3 @@ class ArgparseCommand(BaseCommand):
     def help(self):
         """Format help via ArgumentParser"""
         return self.create_parser().format_help()
-
-    def plugin_info(self):
-        """Provide plugin info about this command
-
-        This method should return a dictionary listing a minimum of the
-        following attributes:
-
-          * name          - short one word name of this command
-          * summary       - one line summary of this command
-          * description   - longer description of this command
-          * author        - author of this command in name [<email>] format
-          * version       - version of this command
-          * api_version   - version of holland this command is intended to work
-                            with
-
-        :returns: dict
-        """
-        raise NotImplementedError()

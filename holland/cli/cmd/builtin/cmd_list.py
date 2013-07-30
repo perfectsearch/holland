@@ -4,10 +4,12 @@ import textwrap
 import logging
 from holland.core import BackupSpool, iterate_plugins
 from holland.core.util import format_bytes, format_datetime
-from holland.cli.cmd.base import ArgparseCommand, argument
+from holland.cli.cmd.interface import ArgparseCommand, argument
+from holland.core.plugin import plugin_registry
 
 LOG = logging.getLogger(__name__)
 
+@plugin_registry.register
 class ListCommands(ArgparseCommand):
     """List available commands"""
 
@@ -42,6 +44,7 @@ class ListCommands(ArgparseCommand):
             holland_version='1.1.0'
         )
 
+@plugin_registry.register
 class ListPlugins(ArgparseCommand):
     """List available plugins"""
 
