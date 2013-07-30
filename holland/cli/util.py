@@ -42,7 +42,7 @@ class GlobalHollandConfig(core.Config):
         if not os.path.isdir(name) and not name.endswith('.conf'):
             name += '.conf'
 
-        cfg = Config.read([name])
+        cfg = core.Config.read([name])
 
         # load providers/$plugin.conf if available
         plugin = cfg.get('holland:backup', {}).get('plugin')
@@ -51,7 +51,7 @@ class GlobalHollandConfig(core.Config):
                                          'providers',
                                          plugin + '.conf')
             try:
-                cfg.meld(Config.read([provider_path]))
+                cfg.meld(core.Config.read([provider_path]))
             except core.ConfigError:
                 LOG.debug("No global provider found.  Skipping.")
         cfg.name = os.path.splitext(os.path.basename(name))[0]
