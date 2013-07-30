@@ -75,7 +75,8 @@ def load_global_config(path):
             cfg = GlobalHollandConfig.read([path])
             cfg.name = path
         except core.ConfigError, exc:
-            LOG.error("Failed to read %s: %s", path, exc)
+            LOG.warning("holland config '%s' unreadable ([%d] %s): Using defaults", 
+                        path, exc.errno, exc.strerror)
             cfg = GlobalHollandConfig()
     else:
         cfg = GlobalHollandConfig()
@@ -159,7 +160,7 @@ def configure_logging(config, quiet=False):
                          fmt=config['format'],
                          level=config['level'])
     except IOError, exc:
-        LOG.info("Failed to open log file: %s", exc)
-        LOG.info("Skipping file logging.")
+        LOG.warning("Logging to '%s' failed ([%d] %s). logfile disabled.",
+                    config.filename, exc.errno, exc.strerror)
 
     configure_warnings()
