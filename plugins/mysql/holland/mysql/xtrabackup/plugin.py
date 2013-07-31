@@ -14,9 +14,11 @@ import sys
 
 from holland.core.backup.plugin import BackupPlugin
 from holland.core.util.path import directory_size
-from holland.core.stream.interface import open_stream
+from holland.core.stream.interface import open_stream, load_stream_plugin
 from holland.mysql.client import MySQL, generate_defaults_file
 from holland.mysql.xtrabackup import util
+
+LOG = logging.getLogger(__name__)
 
 class XtrabackupPlugin(BackupPlugin):
     #: control connection to mysql server
@@ -42,10 +44,10 @@ class XtrabackupPlugin(BackupPlugin):
 
         try:
             try:
-                _, datadir = client.variables_like('datadir')
-            except MySQL.MySQLError, exc:
+                 datadir = client.var('datadir')
+            except MySQL.DatabaseError, exc:
                 raise BackupError("Failed to find mysql datadir: [%d] %s" %
-                                  exc.args)
+                                  exc.orig.args)
 
             try:
                 return directory_size(datadir)
@@ -53,7 +55,7 @@ class XtrabackupPlugin(BackupPlugin):
                 raise BackupError('Failed to calculate directory size: [%d] %s'
                                   % (exc.errno, exc.strerror))
         finally:
-            client.close()
+            client.dispose()
 
     @contextlib.contextmanager
     def open_xb_logfile(self):
@@ -68,19 +70,19 @@ class XtrabackupPlugin(BackupPlugin):
     @contextlib.contextmanager
     def open_xb_stdout(self):
         """Open the stdout output for a streaming xtrabackup run"""
-        config = self.config['xtrabackup']
-        backup_directory = self.target_directory
+        config = self.config.xtrabackup
+        backup_directory = self.backup_directory
         stream = util.determine_stream_method(config['stream'])
         if stream:
             compression = load_stream_plugin(self.config.compression)
             if stream == 'tar':
-                archive_path = join(backup_directory, 'backup.tar')
+                archive_path = os.path.join(backup_directory, 'backup.tar')
             elif stream == 'xbstream':
-                archive_path = join(backup_directory, 'backup.xb')
+                archive_path = os.path.join(backup_directory, 'backup.xb')
             else:
                 raise BackupError("Unknown stream method '%s'" % stream)
             try:
-                with compresion.open(archive_path, 'wb') as fileobj:
+                with compression.open(archive_path, 'wb') as fileobj:
                     yield fileobj
             except OSError, exc:
                 raise BackupError("Unable to create output file: %s" % exc)
@@ -91,7 +93,7 @@ class XtrabackupPlugin(BackupPlugin):
 
     def dryrun(self):
         xb_cfg = self.config['xtrabackup']
-        args = util.build_xb_args(xb_cfg, self.target_directory,
+        args = util.build_xb_args(xb_cfg, self.backup_directory,
                 self.defaults_path)
         LOG.info("* xtrabackup command: %s", list2cmdline(args))
         args = [
@@ -119,7 +121,7 @@ class XtrabackupPlugin(BackupPlugin):
 
     def backup(self):
         xb_cfg = self.config['xtrabackup']
-        backup_directory = self.target_directory
+        backup_directory = self.backup_directory
         tmpdir = util.evaluate_tmpdir(xb_cfg['tmpdir'], backup_directory)
         # innobackupex --tmpdir does not affect xtrabackup
         util.add_xtrabackup_defaults(self.defaults_path, tmpdir=tmpdir)
@@ -132,7 +134,7 @@ class XtrabackupPlugin(BackupPlugin):
                     util.run_xtrabackup(args, stdout, stderr)
                 except Exception, exc:
                     LOG.info("!! %s", exc)
-                    for line in open(join(self.target_directory, 'xtrabackup.log'), 'r'):
+                    for line in open(join(self.backup_directory, 'xtrabackup.log'), 'r'):
                         LOG.error("    ! %s", line.rstrip())
                     raise
 
