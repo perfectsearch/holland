@@ -14,7 +14,7 @@ from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import SingletonThreadPool
 from sqlalchemy.exc import DatabaseError, DBAPIError
-from holland.core import lru_cache, HollandError, human_duration
+from holland.core import HollandError, human_duration
 
 LOG = logging.getLogger(__name__)
 
@@ -128,7 +128,6 @@ class MySQL(object):
 
 
     # XXX: Various compatibility issues with MySQL 5.0 for some variables
-    @lru_cache(maxsize=64)
     def variable(self, name, session=False):
         """Show value of various MySQL system variables
 
@@ -336,7 +335,6 @@ class MySQL(object):
         return self.execute('SHOW WARNINGS').fetchall()
 
     @property
-    @lru_cache(maxsize=1)
     def version(self):
         """MySQL server version as a X.X.X string"""
         version = self.var('version')
@@ -344,7 +342,6 @@ class MySQL(object):
         return version.split('-')[0]
 
     @property
-    @lru_cache(maxsize=1)
     def version_tuple(self):
         """MySQL Server version as a tuple"""
         version = self.version

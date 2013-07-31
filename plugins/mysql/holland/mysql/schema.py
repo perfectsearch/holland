@@ -7,7 +7,7 @@ from sqlalchemy import Column, ForeignKey, String, Integer
 from sqlalchemy.sql import and_, or_, not_, func, alias, literal_column
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import OperationalError, DBAPIError
-from holland.core import lru_cache, human_size, human_duration
+from holland.core import format_bytes, format_interval
 from holland.mysql.client import first
 
 LOG = logging.getLogger(__name__)
@@ -124,7 +124,6 @@ class InformationSchema(object):
         query = self.mysql.session().query(Schemata.schema_name)
         return [name for name, in query.all()]
 
-    @lru_cache(maxsize=1)
     def databases(self):
         query = self.mysql.session().query(self.Schemata.schema_name)
         try:
@@ -133,7 +132,6 @@ class InformationSchema(object):
         except DBAPIError, exc:
             raise exc.orig
 
-    @lru_cache(maxsize=32768)
     def data_size(self, name, additional_exclusions=()):
         data_length = InformationSchema.Table.data_length
         index_length = InformationSchema.Table.index_length
@@ -150,7 +148,6 @@ class InformationSchema(object):
         value = int(query.filter(self.Table.table_schema == name).scalar())
         return value
 
-    @lru_cache(maxsize=1)
     def excluded_tables(self):
         # if no filtering clauses, nothing filtered
         if self.table_clauses:
@@ -169,7 +166,6 @@ class InformationSchema(object):
         for schema, table in query.filter_by(table_schema=schema_name).all():
             yield schema, table
 
-    @lru_cache(maxsize=1)
     def transactional_database(self, name):
         table_schema = self.Table.table_schema
         table_name = self.Table.table_name
