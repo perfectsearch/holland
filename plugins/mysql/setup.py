@@ -24,7 +24,7 @@ setup(name='holland.mysql',
       entry_points="""
       [holland.backup]
       mysqldump = holland.mysql.mysqldump:MySQLDumpBackupPlugin
-      #xtrabackup = holland.mysql.xtrabackup:XtrabackupPlugin
+      xtrabackup = holland.mysql.xtrabackup:XtrabackupPlugin
       #delphini  = holland.mysql.delphini:DelphiniPlugin
       """,
 )
