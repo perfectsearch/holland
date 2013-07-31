@@ -2,6 +2,7 @@ import os
 from os.path import join
 import time
 import logging
+from holland.core.backup.exc import BackupError
 from holland.core.config import Config
 from holland.core.util import relpath, format_interval
 from holland.core.util.pycompat import total_ordering
@@ -83,10 +84,25 @@ class EstimationHook(HookPlugin):
         LOG.info("Estimated backup size: %s", format_bytes(estimated_bytes))
         LOG.info("Estimation took %s",
                  format_interval(time.time() - start_time))
+
+        adjust_by_percent = self.config.estimated_size_adjust_by_percent
+        adj_estimated_bytes = estimated_bytes*adjust_by_percent
+
+        if adj_estimated_bytes != estimated_bytes:
+            LOG.info("Adjusted estimated size by %.2f%% to %s",
+                      adjust_by_percent*100, 
+                     format_bytes(adj_estimated_bytes))
+
         available_bytes = disk_usage(self.context.backup.backup_directory).free
         LOG.info("Available space on '%s': %s", 
                  self.context.backup.backup_directory,
                  format_bytes(available_bytes))
+
+        if available_bytes < adj_estimated_bytes:
+            LOG.info("Available space is less than estimated space for a backup. Aborting.")
+            raise BackupError("Insufficient space for backup.  Required: %s Available: %s" %
+                              (format_bytes(estimated_bytes),
+                               format_bytes(available_bytes)))
 
     # update this on either failed backup or on a completed backup
     # but not both
@@ -256,7 +272,7 @@ class RotateBackupsHook(HookPlugin):
         LOG.info("Rotating backups in '%s'", backupset_path)
         retention_count = self.config.retention_count
         from holland.core.backup.controller import PurgeOptions
-        purge_options = PurgeOptions(retention_count)
+        purge_options = PurgeOptions(retention_count, dry_run=False)
         self.context.controller.purge_set(name, purge_options, exclude)
 
     def before_backup(self):
