@@ -8,6 +8,7 @@
     :license: BSD, see LICENSE.rst for details
 """
 
+from holland.core.exc import HollandError
 from holland.core.plugin import load_plugin, iterate_plugins
 from holland.core.plugin import BasePlugin, PluginError
 from holland.core.config import Config, ConfigError, Configspec
@@ -21,6 +22,7 @@ from holland.core.backup import BackupPlugin, BackupError
 from holland.core.backup import BackupController
 
 __all__ = [
+    'HollandError',
     'BasePlugin',
     'load_plugin',
     'iterate_plugins',

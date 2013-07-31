@@ -1,231 +1,174 @@
-"""Compression plugins for the holland.core.stream API"""
+"""
+holland.core.stream.compression
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-import os
+Implement compression command support
+
+:copyright: 2010-2013 Rackspace US, Inc.
+:license: BSD, see LICENSE.rst for details
+"""
+
 import errno
-from tempfile import TemporaryFile, mkstemp
-from subprocess import Popen, PIPE, STDOUT
-try:
-    from subprocess import check_call, CalledProcessError
-except ImportError:
-    from subprocess import call
-
-    class CalledProcessError(Exception):
-        """This exception is raised when a process run by check_call() or
-        check_output() returns a non-zero exit status.
-        The exit status will be stored in the returncode attribute;
-        check_output() will also store the output in the output attribute.
-        """
-        def __init__(self, returncode, cmd, output=None):
-            self.returncode = returncode
-            self.cmd = cmd
-            self.output = output
-        def __str__(self):
-            return "Command '%s' returned non-zero exit status %d" % (self.cmd, self.returncode)
-
-    def check_call(*popenargs, **kwargs):
-        """Run command with arguments.  Wait for command to complete.  If
-        the exit code was zero then return, otherwise raise
-        CalledProcessError.  The CalledProcessError object will have the
-        return code in the returncode attribute.
-
-        The arguments are the same as for the Popen constructor.  Example:
-
-        check_call(["ls", "-l"])
-        """
-        retcode = call(*popenargs, **kwargs)
-        if retcode:
-            cmd = kwargs.get("args")
-            if cmd is None:
-                cmd = popenargs[0]
-            raise CalledProcessError(retcode, cmd)
-        return 0
-
-from .plugin import StreamPlugin, StreamError
-from .base import RealFileLike
-
-class CompressionStreamPlugin(StreamPlugin):
-    name = None
-    aliases = ()
-    summary = ''
-    extension = ''
-
-    def open(self, filename, mode, level=None, inline=True):
-        if 'r' in mode:
-            return ReadCommand(filename, [self.name, '--decompress'])
-        elif 'w' in mode:
-            if not filename.endswith(self.extension):
-                filename += self.extension
-            args = [self.name, '--stdout']
-            if level:
-                args += ['-%d' % abs(level)]
-            if inline:
-                return WriteCommand(filename, args)
-            else:
-                return PostCompressFile(args, filename, 'wb')
-        else:
-            raise StreamError("Invalid mode %r" % mode)
-
-    def stream_info(self, filename, mode, level=None, inline=True):
-        args = ''.join([
-            self.name,
-            'r' in mode and '--decompress' or '--stdout',
-            ('w' in mode and inline) and ' (inline)' or ''
-        ])
-        return dict(
-            extension=self.extension,
-            name=filename + self.extension,
-            description=args
-        )
-
-    def plugin_info(self):
-        return dict(
-            name=self.name,
-            summary=self.summary,
-            author='Rackspace',
-            version='1.1.0',
-            api_version='1.1.0',
-        )
-
-
-class PostCompressFile(file):
-    def __init__(self, argv, *args, **kwargs):
-        self.argv = argv
-        file.__init__(self, *args, **kwargs)
-
-    def close(self):
-        file.close(self)
-        try:
-            stdout, tmppath = mkstemp(dir=os.path.dirname(self.name))
-            stderr = TemporaryFile()
-            check_call(self.argv,
-                       stdin=open(self.name, 'r'),
-                       stdout=stdout,
-                       stderr=stderr,
-                       close_fds=True)
-            os.rename(tmppath, self.name)
-        except CalledProcessError, exc:
-            raise IOError("Compression command failed when closing file: %s" %
-                          exc)
-
-
-class ReadCommand(RealFileLike):
-    def __init__(self, filename, argv):
-        self.name = filename
-        self._fileobj = open(filename, 'rb')
-        self._err = TemporaryFile()
-        self.process = Popen(
-            list(argv),
-            stdin=self._fileobj,
-            stdout=PIPE,
-            stderr=self._err,
-            close_fds=True
-        )
-
-    def close(self):
-        if self.closed:
-            return
-        self.process.stdout.close()
-        self.process.wait()
-        self.fileobj.close()
-        if self.process.returncode != 0:
-            raise IOError("gzip exited with non-zero status (%d)" %
-                          self.process.returncode)
-        RealFileLike.close(self)
-
-    def fileno(self):
-        return self.process.stdout.fileno()
-
-    def read(self, size=None):
-        args = []
-        if size is not None:
-            args.append(size)
-        return self.process.stdout.read(*args)
-
-    def readline(self, size=None):
-        args = []
-        if size is not None:
-            args.append(size)
-        return self.process.stdout.readline(*args)
-
-    def write(self, data):
-        raise IOError("File not open for writing")
-
-
-class WriteCommand(RealFileLike):
-    def __init__(self, filename, argv):
-        self.name = filename
-        self._fileobj = open(filename, 'wb')
-        self._err = TemporaryFile()
-        try:
-            self.process = Popen(
-                list(argv),
-                stdin=PIPE,
-                stdout=self._fileobj,
-                stderr=self._err,
-                close_fds=True
-            )
-        except OSError, exc:
-            if exc.errno == errno.ENOENT:
-                raise IOError("%r: command not found" % argv[0])
-            raise
-
-    def close(self):
-        if self.closed:
-            return
-        self.process.stdin.close()
-        self.process.wait()
-        self._fileobj.close()
-        if self.process.returncode != 0:
-            raise IOError("gzip exited with non-zero status (%d)" %
-                          self.process.returncode)
-        RealFileLike.close(self)
-
-    def fileno(self):
-        return self.process.stdin.fileno()
-
-    def read(self, size=None):
-        raise IOError("File not open for reading")
-
-    def readline(self, size=None):
-        self.read()
-
-    def write(self, data):
-        self.process.stdin.write(data)
-
-    def writelines(self, sequence):
-        self.process.stdin.writelines(sequence)
-
-
+import logging
+from tempfile import TemporaryFile
+from subprocess import Popen, PIPE, STDOUT, list2cmdline
 from holland.core.plugin import plugin_registry
+from holland.core.util import which
+from holland.core.stream.plugin import StreamPlugin, FileDescriptorStream
 
-@plugin_registry.register
-class GzipPlugin(CompressionStreamPlugin):
-    name = 'gzip'
-    aliases = ['pigz']
-    extension = '.gz'
-    summary = 'gzip/pigz compression codec'
+LOG = logging.getLogger(__name__)
 
-@plugin_registry.register
-class LzopPlugin(CompressionStreamPlugin):
-    name = 'lzop'
-    extension = '.lzo'
-    summary = 'lzop compression codec'
+def simple_command(args):
+    """Run a simple command"""
+    def wrapper():
+        """Dispatch to a compression command"""
+        process = Popen(args,
+                        stdin=PIPE,
+                        stdout=PIPE,
+                        stderr=STDOUT,
+                        close_fds=True)
+        stdout, _ = process.communicate()
+        if process.returncode != 0:
+            raise IOError("Failed to run %s on ${path}" % list2cmdline(args))
+    return wrapper
 
-@plugin_registry.register
-class BzipPlugin(CompressionStreamPlugin):
-    name = 'bzip2'
-    aliases = ['pbzip2']
-    extension = '.bz'
-    summary = 'bzip2/pbzip2 compression codec'
+# XXX: Handle stderr correctly
+class CompressionInputStream(FileDescriptorStream):
+    """Open a compressed file in read-only mode"""
+    def __init__(self, path, mode='r', args=()):
+        super(CompressionInputStream, self).__init__(path, mode, args)
+        self._process = Popen(args,
+                              stdin=open(path, mode),
+                              stdout=PIPE,
+                              stderr=PIPE,
+                              close_fds=True)
 
-@plugin_registry.register
-class LzmaPlugin(CompressionStreamPlugin):
-    name = 'lzma'
-    aliases = ['xz', 'pxz']
-    extension = '.xz'
-    summary = 'lzma compression codec'
+    def fileno(self):
+        return self._process.stdout.fileno()
 
-    def __init__(self, name):
-        if name == 'lzma':
-            name = 'xz'
-        self.name = name
+    def close(self):
+        if self.closed:
+            return
+        self._process.stdout.close()
+        self._process.wait()
+        self.closed = True
+
+
+class CompressionOutputStream(object):
+    """Write to a compressed file"""
+    def __init__(self, path, mode, args):
+        self.name = path
+        self.mode = mode
+        self.args = args
+        self.closed = False
+        self._stderr = TemporaryFile()
+        self._process = Popen(args,
+                              stdin=PIPE,
+                              stdout=open(path, 'w'),
+                              stderr=self._stderr,
+                              close_fds=True)
+
+    def fileno(self):
+        return self._process.stdin.fileno()
+
+    def close(self):
+        if self.closed:
+            return
+        self._process.stdin.close()
+        self._process.wait()
+        self.closed = True
+        self._stderr.seek(0)
+        for line in self._stderr:
+            LOG.info("%s: %s", self.args[0], line.rstrip())
+        self._stderr.close()
+        if self._process.returncode != 0:
+            raise IOError("%s exited with non-zero status" %
+                    (list2cmdline(self.args)))
+
+    def write(self, data):
+        self._process.stdin.write(data)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, value, traceback):
+        try:
+            self.close()
+        except:
+            if exc_type is None:
+                raise
+
+class BaseCompressionPlugin(StreamPlugin):
+    ext = ''
+
+    def open(self, name, mode):
+        cfg = self.config
+        try:
+            cmd = which(cfg['method'])
+        except OSError, exc:
+            raise IOError(errno.ENOENT,
+                          "Could not find '%s' on path" %
+                          cfg['method'])
+        args = [
+            cmd
+        ] + cfg['additional-args']
+
+        if 'r' in mode:
+            args.insert(1, '-d')
+
+        path = name
+
+        if not path.endswith(self.ext):
+            path += self.ext
+
+        if 'r' in mode:
+            return CompressionInputStream(path, mode, args)
+        if 'w' in mode:
+            if cfg.level:
+                args.append('-' + str(cfg.level))
+            if cfg['inline']:
+                return CompressionOutputStream(path, mode, args)
+            else:
+                # rather run the command on close
+                return on_closing(stream, simple_command(args + [path]))
+        raise IOError('invalid mode: ' + mode)
+
+    def configspec(self):
+        return """
+        method = compression(default=gzip)
+        level = integer(min=0, max=9, default=1)
+        additional-args = cmdline(default=list())
+        inline = boolean(default=True)
+        """
+    @property
+    def command(self):
+        return self.name
+
+# Handle variants
+# gzip -> gzip, pigz
+# bzip2 -> bzip2, pbzip2
+# lzma -> xz, lzma (note: lzma is old and xz-utils is newer)
+# lzop -> lzop
+class GzipCompressionPlugin(BaseCompressionPlugin):
+    ext = '.gz'
+    summary = 'gzip compression'
+
+class Bzip2CompressionPlugin(BaseCompressionPlugin):
+    ext = '.bz2'
+    summary = 'bzip2 compression'
+
+class LzmaCompressionPlugin(BaseCompressionPlugin):
+    ext = '.xz'
+    summary = 'lzma compression'
+
+class LzopCompressionPlugin(BaseCompressionPlugin):
+    ext = '.lzo'
+    summary =  'lzo compression'
+
+plugin_registry.register('holland.stream', 'gzip', GzipCompressionPlugin)
+plugin_registry.register('holland.stream', 'pigz', GzipCompressionPlugin)
+plugin_registry.register('holland.stream', 'bzip2', Bzip2CompressionPlugin)
+plugin_registry.register('holland.stream', 'pbzip2', Bzip2CompressionPlugin)
+plugin_registry.register('holland.stream', 'lzma', LzmaCompressionPlugin)
+plugin_registry.register('holland.stream', 'xz', LzmaCompressionPlugin)
+plugin_registry.register('holland.stream', 'lzop', LzopCompressionPlugin)
