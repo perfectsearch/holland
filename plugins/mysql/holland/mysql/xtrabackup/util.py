@@ -12,7 +12,7 @@ from string import Template
 from os.path import join, isabs, expanduser
 from subprocess import Popen, PIPE, STDOUT, list2cmdline
 from holland.core.backup import BackupError
-from holland.lib.which import which, WhichError
+from holland.core.util.path import which
 
 LOG = logging.getLogger(__name__)
 
@@ -58,8 +58,9 @@ def apply_xtrabackup_logfile(xb_cfg, backupdir):
     if not isabs(innobackupex):
         try:
             innobackupex = which(innobackupex)
-        except WhichError:
-            raise BackupError("Failed to find innobackupex script")
+        except OSError, exc:
+            raise BackupError("Failed to find innobackupex script: %s" % exc)
+
     args = [
         innobackupex,
         '--apply-log',
