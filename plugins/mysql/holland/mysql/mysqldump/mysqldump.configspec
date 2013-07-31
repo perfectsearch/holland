@@ -1,0 +1,62 @@
+[mysqldump]
+extra-defaults     = boolean(default=no)
+explicit-tables    = boolean(default=no)
+mysql-binpath      = force_list(default=list())
+
+lock-method        = option('flush-lock', 'lock-tables',
+                            'single-transaction',
+                            'auto-detect',
+                            'none',
+                            default='auto-detect')
+
+databases          = force_list(default=list('*'))
+exclude-databases  = force_list(default=list())
+
+tables             = force_list(default=list("*"))
+exclude-tables     = force_list(default=list())
+ignore-tables      = force_list(default=list())
+exclude-invalid-views = boolean(default=yes)
+
+engines            = force_list(default=list("*"))
+exclude-engines    = force_list(default=list())
+
+flush-logs         = boolean(default=yes)
+flush-privileges   = boolean(default=yes)
+dump-routines      = boolean(default=yes)
+dump-events        = boolean(default=yes)
+stop-slave         = boolean(default=no)
+max-allowed-packet = string(default="128M")
+bin-log-position   = boolean(default=no)
+
+# XXX: Legacy support. Replaced by mysqldump-strategy
+file-per-database  = boolean(default=no)
+
+mysqldump-strategy = option('all-databases',
+                            'file-per-database',
+                            'file-per-table',
+                            default='file-per-database')
+
+# XXX: Not implemented yet
+#parallelism        = integer(min=1, default=1)
+
+additional-options = force_list(default=list())
+
+# XXX: Deprecated - use [holland:backup] -> estimation-method
+estimate-method    = string(default='plugin')
+
+[compression]
+method             = compression(default=gzip)
+inline             = boolean(default=yes)
+level              = integer(min=0, max=9, default=1)
+options            = cmdline(default='')
+additional-args    = cmdline(default='', aliasof='options')
+
+[mysql:client]
+defaults-file       = force_list(default=list('~/.my.cnf'))
+defaults-extra-file = force_list(default=list('~/.my.cnf'),
+                     aliasof='defaults-file')
+user                = string(default=None)
+password            = string(default=None)
+socket              = string(default=None)
+host                = string(default=None)
+port                = integer(min=0, default=None)
