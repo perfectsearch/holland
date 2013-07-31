@@ -114,7 +114,8 @@ class InformationSchema(object):
 
     def add_database_filter(self, clause):
         self.database_clauses.append(clause)
-        self.databases.clear()
+        #XXX: lru_cache not implemented
+        #self.databases.clear()
 
     def add_table_filter(self, clause):
         self.table_clauses.append(clause)
