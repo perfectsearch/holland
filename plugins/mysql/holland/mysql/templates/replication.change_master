@@ -1,0 +1,2 @@
+-- Source: {{source|default('unknown')}}
+CHANGE MASTER TO MASTER_LOG_FILE = '{{name}}', MASTER_LOG_POS = {{position}};
