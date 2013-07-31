@@ -111,7 +111,7 @@ class BaseCompressionPlugin(StreamPlugin):
                           cfg['method'])
         args = [
             cmd
-        ] + cfg['additional-args']
+        ] + cfg['options']
 
         if 'r' in mode:
             args.insert(1, '-d')
@@ -137,7 +137,8 @@ class BaseCompressionPlugin(StreamPlugin):
         return """
         method = compression(default=gzip)
         level = integer(min=0, max=9, default=1)
-        additional-args = cmdline(default=list())
+        options = cmdline(default=list())
+        additional-args = cmdline(default=list(), aliasof='options')
         inline = boolean(default=True)
         """
     @property
