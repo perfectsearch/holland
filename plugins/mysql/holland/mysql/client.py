@@ -122,10 +122,10 @@ class MySQL(object):
 
     def execute(self, sql, *multiparams, **params):
         """Execute an arbitrary query"""
-        try:
-            return self._engine.execute(sql, *multiparams, **params)
-        except DBAPIError, exc:
-            raise exc.orig
+        #try:
+        return self._engine.execute(sql, *multiparams, **params)
+        #except DBAPIError, exc:
+        #    raise exc.orig
 
 
     # XXX: Various compatibility issues with MySQL 5.0 for some variables
