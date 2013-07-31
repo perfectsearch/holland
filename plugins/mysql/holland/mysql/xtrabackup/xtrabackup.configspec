@@ -1,0 +1,26 @@
+[xtrabackup]
+global-defaults     = string(default='/etc/my.cnf')
+innobackupex        = string(default='innobackupex-1.5.1')
+ibbackup            = string(default=None)
+stream              = string(default=tar)
+apply-logs          = boolean(default=yes)
+slave-info          = boolean(default=no)
+safe-slave-backup   = boolean(default=no)
+no-lock             = boolean(default=no)
+tmpdir              = string(default=None)
+additional-options  = force_list(default=list())
+pre-command         = string(default=None)
+
+[compression]
+method              = option('none', 'gzip', 'gzip-rsyncable', 'pigz', 'bzip2', 'pbzip2', 'lzma', 'lzop', default=gzip)
+inline              = boolean(default=yes)
+options             = string(default="")
+level               = integer(min=0, max=9, default=1)
+
+[mysql:client]
+defaults-extra-file = force_list(default=list('~/.my.cnf'))
+user                = string(default=None)
+password            = string(default=None)
+socket              = string(default=None)
+host                = string(default=None)
+port                = integer(min=0, default=None)
