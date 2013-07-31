@@ -118,7 +118,7 @@ class MySQL(object):
         except TypeError:
             del kwargs['case_sensitive']
             self._engine = create_engine(*args, **kwargs)
-        self.DatabaseError = self._engine.dialect.dbapi.DatabaseError
+        #self.DatabaseError = self._engine.dialect.dbapi.DatabaseError
 
     def execute(self, sql, *multiparams, **params):
         """Execute an arbitrary query"""
