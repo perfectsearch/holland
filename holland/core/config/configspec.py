@@ -239,7 +239,7 @@ class Configspec(Config):
         These are either bugs in the configspec or simply typos or invalid
         options.
         """
-        for key in config:
+        for key in config.keys():
             if key not in self:
                 if isinstance(config[key], dict):
                     if ignore_unknown_sections:
@@ -260,3 +260,4 @@ class Configspec(Config):
                     else:
                         LOG.warn("Unknown option %s in [%s]",
                                  key, config.section)
+                del config[key]
