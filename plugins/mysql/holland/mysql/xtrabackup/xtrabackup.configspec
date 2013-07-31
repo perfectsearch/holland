@@ -8,13 +8,13 @@ slave-info          = boolean(default=no)
 safe-slave-backup   = boolean(default=no)
 no-lock             = boolean(default=no)
 tmpdir              = string(default=None)
-additional-options  = force_list(default=list())
+additional-options  = cmdline(default='')
 pre-command         = string(default=None)
 
 [compression]
 method              = option('none', 'gzip', 'gzip-rsyncable', 'pigz', 'bzip2', 'pbzip2', 'lzma', 'lzop', default=gzip)
 inline              = boolean(default=yes)
-options             = string(default="")
+options             = cmdline(default="")
 level               = integer(min=0, max=9, default=1)
 
 [mysql:client]
