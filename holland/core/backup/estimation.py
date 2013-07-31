@@ -56,8 +56,8 @@ class ConstantEstimationMethod(EstimationMethod):
     name = 'const'
 
     def estimate(self, value):
-        from holland.core.util import bytes_from_human_size
-        return bytes_from_human_size(value)
+        from holland.core.util import parse_bytes
+        return parse_bytes(value)
 
 
 @estimation_registry.register

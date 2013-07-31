@@ -155,11 +155,11 @@ class BackupController:
             if purge_options.dry_run:
                 LOG.info("Would purge %s", node.path)
             else:
-                LOG.info("Purging %s", node.path)
                 try:
                     self.release(node.path)
                 except:
                     LOG.info("Release failed", exc_info=True)
+                LOG.info("Purging %s", node.path)
                 node.purge()
 
         return kept_backups, candidates
