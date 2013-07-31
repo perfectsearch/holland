@@ -19,7 +19,7 @@ from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.types import String, Text, Integer, Numeric, DateTime
 from sqlalchemy.orm import backref, relation, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from holland.core import __version__ as __holland_version__
+from holland.version import __version__ as __holland_version__
 
 LOG = logging.getLogger(__name__)
 

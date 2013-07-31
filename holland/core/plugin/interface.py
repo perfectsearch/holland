@@ -92,8 +92,13 @@ class ConfigurablePlugin(BasePlugin):
 
         :returns: instance of holland.core.config.Configspec
         """
+        return self.str_to_configspec("")
+
+    @staticmethod
+    def str_to_configspec(value):
+        """Convert a string value to a Configspec object"""
         from holland.core.config import Configspec
-        return Configspec()
+        return Configspec.from_string(value)
 
     def configure(self, config):
         """Configure this plugin with the given dict-like object

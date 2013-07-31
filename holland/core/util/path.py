@@ -12,6 +12,8 @@
 
 import os
 import errno
+import time
+import collections
 
 # Taken from posixpath in Python2.6
 def relpath(path, start=os.curdir):
@@ -59,6 +61,20 @@ def disk_free(target_path):
     path = getmount(target_path)
     info = os.statvfs(path)
     return info.f_frsize*info.f_bavail
+
+_ntuple_diskusage = collections.namedtuple('usage', 'total used free')
+
+def disk_usage(path):
+    """Return disk usage statistics about the given path.
+
+    Return value is a named tuple with attributes 'total', 'used' and
+    'free', which are the amount of total, used and free space, in bytes.
+    """
+    stat = os.statvfs(path)
+    free = stat.f_bavail * stat.f_frsize
+    total = stat.f_blocks * stat.f_frsize
+    used = (stat.f_blocks - stat.f_bfree) * stat.f_frsize
+    return _ntuple_diskusage(total, used, free)
 
 def directory_size(path):
     """

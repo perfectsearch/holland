@@ -1,5 +1,7 @@
 """Command to run a holland backup"""
-from holland.core.backup import BackupManager, BackupError
+import os
+from holland.core.exc import HollandError
+from holland.core.backup import BackupController, BackupError
 from holland.core.config import ConfigError
 from holland.core.plugin import plugin_registry
 from holland.cli.cmd.interface import ArgparseCommand, argument
@@ -18,7 +20,7 @@ class Backup(ArgparseCommand):
     arguments = [
         argument('--backup-directory', '-d', dest='directory'),
         argument('--dry-run', '-n', action='store_true'),
-        argument('--skip-hooks', action='store_true'),
+        argument('--catalog-db'),
         argument('backupset', nargs='*'),
     ]
 
@@ -32,7 +34,8 @@ class Backup(ArgparseCommand):
         parser = ArgparseCommand.create_parser(self)
         parser.set_defaults(
             directory=self.config['holland']['backup-directory'],
-            backupset=self.config['holland']['backupsets']
+            backupset=self.config['holland']['backupsets'],
+            catalog_db=self.config['holland']['catalog-db'],
         )
         return parser
 
@@ -50,47 +53,46 @@ class Backup(ArgparseCommand):
                         "or use the --backup-directory=<path> option")
             return 1
 
-        backupmgr = BackupManager(namespace.directory)
+    def execute(self, namespace, parser):
+        "Run the backup command"
+        backupsets = namespace.backupset
 
-        skip_hooks = namespace.skip_hooks
+        if not backupsets:
+            self.stderr("Nothing to backup")
+            return 1
+
+        if not namespace.directory:
+            self.stderr("No backup-directory specified.  "
+                        "Please set a backup-directory in /etc/holland/holland.conf "
+                        "or use the --backup-directory=<path> option")
+            return 1
+
+        self.config['holland']['backup-directory'] = namespace.directory
+        self.config['holland']['catalog-db'] = namespace.catalog_db
         dry_run = namespace.dry_run
-
-        for name in backupsets:
-            try:
-                self.run_backup(name, backupmgr,
-                                skip_hooks=skip_hooks,
-                                dry_run=dry_run)
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except (IOError, ValueError), exc:
-                self.stderr("Could not open config file. %s", exc)
-                break
-            except (ConfigError, BackupError), exc:
-                self.stderr("Backup '%s' failed: %s", name, exc)
-                break
+        join = os.path.join
+        controller = BackupController.from_config(self.config['holland'])
+        try:
+            with controller.job(is_dryrun=dry_run):
+                for name in namespace.backupset:
+                    cfg = self.load_config(name)
+                    name, _ = os.path.splitext(os.path.basename(name))
+                    controller.backup(cfg, name=name)
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except HollandError, exc:
+            self.debug("Failed backup", exc_info=True)
+            self.stderr("%s", exc)
+        except:
+            self.stderr("Uncaught exception. Logging stacktrace for debugging purposes", exc_info=True)
         else:
             return 0
         return 1
 
-    def run_backup(self, name, backupmgr, skip_hooks=False, dry_run=False):
+    def load_config(self, name):
         "Run a single backup"
-        config = self.config.load_backupset(name)
-        if skip_hooks:
-            try:
-                config['holland:backup']['hooks'] = []
-            except KeyError:
-                # ignore bad configs - this gets caught by the
-                # BackupManager during config validation
-                pass
-        backupmgr.backup(config, dry_run=dry_run)
-
-    def plugin_info(self):
-        "Backup command plugin info"
-        return dict(
-            name=self.name,
-            summary=self.summary,
-            description=self.description,
-            author='Rackspace',
-            version='1.1.0',
-            api_version='1.1.0'
-        )
+        try:
+            return self.config.load_backupset(name)
+        except IOError, exc:
+            raise HollandError("Failed to load backup config %s: %s" %
+                                (name, exc))

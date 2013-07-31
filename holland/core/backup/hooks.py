@@ -1,229 +1,298 @@
-"""
-    holland.core.backup.hooks
-    ~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    This module implements the hooks for various standard backup actions
-
-    :copyright: 2010-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
-"""
-
 import os
-import logging
+from os.path import join
 import time
-from datetime import datetime
+import logging
 from holland.core.config import Config
-from holland.core.hooks import BaseHook, load_hooks_from_config
-from holland.core.backup.exc import BackupError
-from holland.core.util import format_bytes, format_interval, parse_bytes, \
-                              directory_size, run_command
+from holland.core.util import relpath, format_interval
+from holland.core.util.pycompat import total_ordering
+from holland.core.plugin.interface import BasePlugin
+from holland.core.plugin.loader import RegistryPluginLoader
 
 LOG = logging.getLogger(__name__)
+hook_registry = RegistryPluginLoader()
 
-class BackupHook(BaseHook):
-    """Generic BackupHook"""
+class HookExecutor(object):
+    def __init__(self, context):
+        self.context = context
+        self.hooks = []
 
-    def execute(self, job, event):
-        """Process a backup job event"""
-        raise NotImplementedError()
+    def event(self, name):
+        # at the very least we should ensure this always returns a HollandError
+        # subclass
+        LOG.debug("Dispatching hook event '%s'", name)
+        for obj in self.hooks:
+            try:
+                obj(name)
+            except:
+                LOG.debug("Hook %r failed on event %s", obj, name)
+                raise
 
-    def plugin_info(self):
-        return dict(
-            name='internal-hook'
-        )
-# builtin hooks
+    def __enter__(self):
+        hooks = hook_registry.iterate('holland.backup.hooks')
+        self.hooks = sorted(list(hooks))
+        for obj in self.hooks:
+            obj.bind(self.context)
+        return self
 
-class AutoPurgeFailuresHook(BackupHook):
-    """Purge failed backups immediately"""
+    def __exit__(self, exc_type, exc_value, traceback):
+        del self.hooks[:]
 
-    def execute(self, job, event):
-        """Purge failed backup"""
-        LOG.info("+++ Running %s", job.store.path)
-        job.store.purge()
-        LOG.info("+ Purged failed job %s", job.store.path)
 
-class DryRunPurgeHook(BackupHook):
-    """Purge staging directory after a dry-run is complete"""
+@total_ordering
+class HookPlugin(BasePlugin):
 
-    def execute(self, job, event):
-        """Purge backup directory for dry-run backup"""
-        job.store.purge()
-        LOG.info("+ Purged %s after dry-run", job.store.path)
+    namespace = 'holland.backup.hooks'
+    priority = 0
+    context = None
 
-class RotateBackupsHook(BackupHook):
-    """Purge old backups when run"""
+    def bind(self, context):
+        self.context = context
+        self.config = context.config['holland:backup']
 
-    def execute(self, job, event):
-        """Process the automated purge policy
+    def __call__(self, event):
+        event = event.replace('-', '_')
+        callee = getattr(self, event, None)
+        if callee:
+            callee()
+        #else:
+        #    LOG.debug("No method %s defined on hook %s", event, self)
 
-        If this runs before starting a new backup it is important to preserve
-        the existing backup directory or the plugin will have no where to
-        store data.
-        """
-        if job.store.spool is None:
-            LOG.info("No backup spool detected. Skipping backup rotation.")
+    def __eq__(self, other):
+        return (self.priority == other.priority and
+                self.__class__ == other.__class__)
+
+    def __lt__(self, other):
+        return self.priority < other.priority
+
+@hook_registry.register
+class EstimationHook(HookPlugin):
+    """Predict the size of the current backup"""
+    name = 'estimation'
+    priority = 50
+    def before_backup(self):
+        estimation_method = self.config['estimation-method']
+        LOG.info("Using estimation method '%s'", estimation_method.name)
+        from . import estimation
+        plugin = estimation.load_estimation_plugin(estimation_method.name)
+        plugin.bind(self.context)
+        LOG.debug("Loaded estimation plugin: %r", plugin)
+        start_time = time.time()
+        estimated_bytes = plugin.estimate(estimation_method.arg)
+        self.context.backup.estimated_size = estimated_bytes
+        from holland.core.util import format_bytes, disk_usage
+        LOG.info("Estimated backup size: %s", format_bytes(estimated_bytes))
+        LOG.info("Estimation took %s",
+                 format_interval(time.time() - start_time))
+        available_bytes = disk_usage(self.context.backup.backup_directory).free
+        LOG.info("Available space on '%s': %s", 
+                 self.context.backup.backup_directory,
+                 format_bytes(available_bytes))
+
+    # update this on either failed backup or on a completed backup
+    # but not both
+    def update_backup_size(self):
+        backup = self.context.backup
+        from holland.core.util import format_bytes, directory_size
+        if backup.real_size is None:
+            from holland.core.util import directory_size
+            try:
+                backup.real_size = directory_size(backup.backup_directory)
+            except OSError, exc:
+                if exc.errno != errno.ENOENT:
+                    raise # XXX: convert to holland error
+                # backup-directory no longer exists
+                backup.real_size = 0
+            LOG.info("Final backup size: %s", format_bytes(backup.real_size))
+        if backup.estimated_size:
+            LOG.info("This backup was %.4f%% of estimated-size (%s)",
+                     (float(backup.real_size) / backup.estimated_size)*100.0,
+                     format_bytes(backup.estimated_size))
+    failed_backup = update_backup_size
+    completed_backup = update_backup_size
+
+@hook_registry.register
+class ChecksumHook(HookPlugin):
+    """Checksum backup directory"""
+    name = 'checksum'
+    priority = 100
+    def after_backup(self):
+        if self.context.backup.job.is_dryrun:
             return
-        retention_count = job.config['holland:backup']['retention-count']
-        LOG.info("+ Keep %d backups", retention_count)
-        if retention_count == 0:
-            LOG.debug("Increasing retention-count to maintain new backup")
-            retention_count += 1
-        _, kept, purged = job.store.spool.purge(job.store.name,
-                                                retention_count)
-        for backup in purged:
-            LOG.info("+ Purged old backup %s", backup.path)
-        for backup in kept:
-            LOG.info("+ Kept backup %s", backup.path)
+        import hashlib
+        backup_directory = self.context.backup.backup_directory
+        if self.config.checksum_algorithm == 'none':
+            LOG.info("Checksums are disabled.")
+            return
+        if not os.path.exists(backup_directory):
+            LOG.debug("Skipping checksums - '%s' no longer exists.", backup_directory)
+            return
+        checksum = hashlib.new(self.config['checksum-algorithm'])
+        LOG.info("Generating checksums for '%s'", backup_directory)
+        checksum_path = join(backup_directory, '.holland', 'checksums')
+        anchor_time = time.time()
+        with open(checksum_path, 'wb') as checksumf:
+            print >>checksumf, "# %ssum" % self.config.checksum_algorithm
+            for dirpath, dirnames, filenames in os.walk(backup_directory):
+                for name in filenames:
+                    hash = checksum.copy()
+                    path = join(dirpath, name)
+                    rpath = relpath(path, backup_directory)
+                    # don't checksum symlinks
+                    if os.path.islink(path):
+                        continue
+                    if not os.path.isfile(path):
+                        continue
+                    # don't checksum the checksum file
+                    if path == checksum_path:
+                        continue
+                    LOG.debug("Checksumming '%s'",
+                              relpath(path, backup_directory))
+                    with open(path, 'rb') as srcf:
+                        data = srcf.read(32768)
+                        while data:
+                            hash.update(data)
+                            data = srcf.read(32768)
+                    print >>checksumf, "%s  %s" % (hash.hexdigest(), rpath)
+        LOG.info("All %s checksums calculated in %s",
+                 self.config.checksum_algorithm,
+                 format_interval(time.time() - anchor_time))
 
-class WriteConfigHook(BackupHook):
-    """Write config to backup store when called"""
+@hook_registry.register
+class WriteStatusHook(HookPlugin):
 
-    def execute(self, job, event):
-        """Write a copy of the job config to the backup directory
+    name = 'update-status'
+    config = None
 
-        This preserves the exact group of settings that were used
-        to produce this backup.
-        """
-        path = os.path.join(job.store.path, 'backup.conf')
-        job.config.write(path)
-        LOG.info("+ Saved config to %s", path)
-
-class BackupInfoHook(BackupHook):
-    """Record information about the backup
-
-    This currently logs start and stop times in ISO8601 format
-    in the job.info file as well as the final backup size.
-    """
-    def __init__(self, name):
-        super(BackupInfoHook, self).__init__(name)
+    def before_backup(self):
+        backup = self.context.backup
+        node = self.context.node
         self.config = Config()
-        self.start_time = None
+        self.config['status'] = backup.status
+        self.config['start-time'] = backup.start_time.isoformat()
+        self.config['job-id'] = str(backup.job.id)
+        self.config['backup-id'] = str(backup.id)
+        with node.open(os.path.join('.holland', 'status'), 'wb') as fp:
+            fp.write(str(self.config))
 
-    def execute(self, job, event):
-        """Record job info"""
-        path = os.path.join(job.store.path, 'job.info')
-        if event == 'before-backup':
-            self.config['start-time'] = datetime.now().isoformat()
-            self.start_time = time.time()
-            self.config.write(path)
-        else:
-            self.config['stop-time'] = datetime.now().isoformat()
-            self.config['actual-size'] = job.store.size()
-            self.config.write(path)
-            interval = time.time() - self.start_time
-            LOG.info("Backup job %s completed in %s",
-                     job.store.name, format_interval(interval))
-
-class CheckForSpaceHook(BackupHook):
-    """Check for available space before starting a backup"""
-    job_info = None
-
-    def execute(self, job, event):
-        """Estimate the available space from the plugin and abort if
-        there does not appear to be enought to successfully complete this
-        backup based on the estimate.
-
-        :raises: BackupError if estimated_space > available_space
-        """
-        if event == 'after-backup':
-            percent_size = 0
-            suggested_size = 0
-            if parse_bytes(self.job_info['estimated-size']) > 0:
-                percent_size = (100.0*job.store.size() /
-                               parse_bytes(self.job_info['estimated-size']))
-                suggested_size = (float(job.store.size()) /
-                                 parse_bytes(self.job_info['estimated-size']))
-                     
-            LOG.info("+ Final backup size %s", format_bytes(job.store.size()))
-            LOG.info("+ %.2f%% of estimated size %s ", 
-                     percent_size,
-                     self.job_info['estimated-size'])
-            LOG.info("+ Suggested estimated-size-factor = %.2f",
-                     suggested_size)
+    def after_backup(self):
+        backup = self.context.backup
+        node = self.context.node
+        # don't write out a status file if the backup driectory no longer
+        # exists
+        if not os.path.exists(node.path):
             return
+        if backup.stop_time:
+            self.config['stop-time'] = backup.stop_time.isoformat()
+        self.config['status'] = backup.status
+        with node.open(os.path.join('.holland', 'status'), 'wb') as fp:
+            fp.write(str(self.config))
 
-        LOG.info("+ Estimating backup size")
-        main_config = job.config['holland:backup']
-        estimate_scale_factor = main_config['estimated-size-factor']
-        estimate_method = main_config['estimation-method'].strip()
+@hook_registry.register
+class SaveConfigHook(HookPlugin):
+    """Write out the active config to backup directory"""
 
-        # XXX: must capture errors from each of these methods
-        if estimate_method.startswith('const:'):
-            # skip initial 'const:' string
-            estimated_bytes = parse_bytes(estimate_method[len('const:'):])
-            LOG.info(" * Using constant size %s", estimated_bytes)
-        elif estimate_method.startswith('dir:'):
-            estimated_bytes = directory_size(estimate_method[len('dir:'):])
-            LOG.info(" * Using size of directory %s: %s", estimate_method,
-                    format_bytes(estimated_bytes))
-        elif estimate_method.startswith('cmd:'):
-            cmd = estimate_method[len('cmd:'):]
-            stdout, stderr = run_command(cmd)
-            LOG.info(" - %s", cmd)
-            for line in str(stderr).splitlines():
-                LOG.info("  - %s", line.rstrip())
-            estimated_bytes = parse_bytes(stdout)
-            LOG.info(" * Using estimate from %r: %s",
-                     cmd,
-                     format_bytes(estimated_bytes))
-        elif estimate_method == 'plugin':
-            estimated_bytes = job.plugin.estimate()
-            LOG.info(" * Using plugin estimate %s",
-                    format_bytes(estimated_bytes))
-        else:
-            raise BackupError("Unknown estimation method %s" % estimate_method)
+    name = 'save-config'
+    priority = 0
 
-        available_bytes = job.store.spool_capacity()
+    saved_config = None
 
-        LOG.info("+ Plugin estimated backup size of %s",
-                format_bytes(estimated_bytes))
-        LOG.info("+ Adjusted estimated size by %.2f%% to %s",
-                 estimate_scale_factor*100,
-                 format_bytes(estimated_bytes*estimate_scale_factor))
-        LOG.info("+ Spool directory %s has %s available",
-                 job.store.path, format_bytes(available_bytes))
+    def update_config(self):
+        from tempfile import NamedTemporaryFile
+        config = self.context.config
+        backup_directory = self.context.backup.backup_directory
+        if not os.path.exists(backup_directory):
+            return
+        backup_conf = join(backup_directory, '.holland', 'config')
+        with NamedTemporaryFile(dir=join(backup_directory, '.holland'), delete=False) as f:
+            config.write(f.name)
+            LOG.debug(" Wrote config out to temporary file: %s", f.name)
+            os.rename(f.name, backup_conf)
+            LOG.debug(" Renamed %s to %s", f.name, backup_conf)
+            LOG.info("Saved config %s", backup_conf)
 
-        job_info = Config.read([os.path.join(job.store.path, 'job.info')])
-        job_info['estimated-size'] = format_bytes(estimated_bytes)
-        self.job_info = job_info
-        if available_bytes < estimated_bytes*estimate_scale_factor:
-            raise BackupError("Insufficient space for backup")
+    def before_backup(self):
+        backup_directory = self.context.backup.backup_directory
+        backup_conf = join(backup_directory, '.holland', 'config')
+        os.symlink('.holland/config', join(backup_directory, 'backup.conf'))
+        config = self.context.config
+        self.saved_config = config.copy()
+        self.update_config()
+
+    def after_backup(self):
+        config = str(self.context.config)
+        saved_config = str(self.saved_config)
+        if config != saved_config:
+            self.update_config()
 
 
-def setup_user_hooks(beacon, config):
-    """Initialize hooks based on the job config"""
-    backup_config = config['holland:backup']
-    load_hooks_from_config(backup_config['hooks'], beacon, config)
+@hook_registry.register
+class RemoveFailureHook(HookPlugin):
+    """Remove a failed backup"""
+    name = 'remove-failed-backup'
+    priority = 100
+    def failed_backup(self):
+        backup_directory = self.context.backup.backup_directory
+        LOG.info("Removing failed backup '%s'", backup_directory)
+        import shutil
+        shutil.rmtree(backup_directory)
 
-def setup_builtin_hooks(beacon, config):
-    """Connect builtin hook actions with the events they should fire on"""
-    config_writer = WriteConfigHook('<internal>')
-    estimation = CheckForSpaceHook('<internal>')
-    backup_info = BackupInfoHook('<internal>')
+    def after_backup(self):
+        if self.context.backup.job.is_dryrun:
+            LOG.info("Removing dry-run temporary files in '%s'", self.context.node.path)
+            self.context.node.purge()
 
-    beacon.before_backup.connect(backup_info, weak=False)
-    beacon.before_backup.connect(estimation, weak=False)
-    beacon.before_backup.connect(config_writer, weak=False)
+@hook_registry.register
+class RotateBackupsHook(HookPlugin):
+    """Rotate backups in a backupset"""
 
-    beacon.after_backup.connect(backup_info, weak=False)
-    beacon.after_backup.connect(estimation, weak=False)
-    beacon.after_backup.connect(config_writer, weak=False)
+    name = 'rotate-backups'
+    priority = 0
 
-    config = config['holland:backup']
-    if config['auto-purge-failures']:
-        purge_failures_hook = AutoPurgeFailuresHook('<internal>')
-        beacon.backup_failure.connect(purge_failures_hook, weak=False)
+    def _purge(self, exclude=()):
+        backup = self.context.backup
+        name = backup.name
+        spool_directory = self.context.controller.spool.path
+        backupset_path = join(spool_directory, name)
+        LOG.info("Rotating backups in '%s'", backupset_path)
+        retention_count = self.config.retention_count
+        from holland.core.backup.controller import PurgeOptions
+        purge_options = PurgeOptions(retention_count)
+        self.context.controller.purge_set(name, purge_options, exclude)
 
-    if config['purge-policy'] == 'after-backup':
-        rotate_backups = RotateBackupsHook('<internal>')
-        beacon.after_backup.connect(rotate_backups, weak=False)
-    elif config['purge-policy'] == 'before-backup':
-        rotate_backups = RotateBackupsHook('<internal>')
-        beacon.before_backup.connect(rotate_backups, weak=False)
+    def before_backup(self):
+        if self.context.backup.job.is_dryrun:
+            return
+        if self.config['purge-policy'] == 'before-backup':
+            backup = self.context.backup
+            self._purge(exclude=[backup.backup_directory])
 
-def setup_dryrun_hooks(beacon):
-    "Setup hook actions that should be run during a dry-run backup"
-    # Purge a backup
-    hook = DryRunPurgeHook('<internal>')
-    beacon.before_backup.connect(hook, sender=None)
-    beacon.backup_failure.connect(hook, sender=None)
+    def completed_backup(self):
+        if self.context.backup.job.is_dryrun:
+            return
+        if self.config['purge-policy'] == 'after-backup':
+            self._purge(exclude=[self.context.backup.backup_directory])
+
+
+@hook_registry.register
+class UserCommandHook(HookPlugin):
+    """Execute a user command"""
+
+    name = 'user-commands'
+    priority = 100
+
+    def before_backup(self):
+        if self.config.before_backup_command:
+            LOG.info("Running before-backup-command")
+
+    def completed_backup(self):
+        if self.config.completed_backup_command:
+            LOG.info("Running completed-backup-command")
+
+    def failed_backup(self):
+        if self.config.failed_backup_command:
+            LOG.info("Running failed-backup-command")
+
+    def after_backup(self):
+        if self.config.after_backup_command:
+            LOG.info("Running after-backup-command")
+

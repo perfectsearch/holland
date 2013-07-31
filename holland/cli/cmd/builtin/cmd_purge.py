@@ -1,6 +1,7 @@
 """Purge backups"""
 
-from holland.core import BackupManager, ConfigError
+from holland.core import BackupController, ConfigError
+from holland.core.backup.controller import PurgeOptions
 from holland.core.util.fmt import format_bytes
 from holland.core.plugin import plugin_registry
 from holland.cli.cmd.interface import ArgparseCommand, argument
@@ -42,33 +43,18 @@ class Purge(ArgparseCommand):
             self.stderr("No backup-directory defined.")
             return 1
 
-        mgr = BackupManager(namespace.backup_directory)
+        self.config.holland.backup_directory = namespace.backup_directory
+        controller = BackupController.from_config(self.config['holland'])
+
         if namespace.dry_run:
             self.stderr("Running in dry-run mode. "
                         "Use --force to run a real purge")
 
+        dry_run = namespace.dry_run
         for name in namespace.backups:
-            if '/' in name:
-                backup = mgr.purge_backup(name, dry_run=namespace.dry_run)
-                self.stdout("- Purged %s [%s]", backup.path,
-                            format_bytes(backup.size()))
-            else:
-                retention_count = namespace.retention_count
-                if retention_count is None:
-                    retention_count = self._retention_count(name)
-                self.stdout("Retention count: %r", retention_count)
-                backups, kept, purged = mgr.purge_backupset(name,
-                                                            retention_count,
-                                                            namespace.dry_run)
-                self.stdout("Total backups:  %d", len(backups))
-                self.stdout("Kept backups:   %d", len(kept))
-                self.stdout("Purged backups: %d", len(purged))
-                for backup in kept:
-                    self.stdout("  + %s [%s]", backup.path,
-                                format_bytes(backup.size()))
-                for backup in purged:
-                    self.stdout("  - %s [%s]", backup.path,
-                                format_bytes(backup.size()))
+            retention_count = self._retention_count(name)
+            purge_opts = PurgeOptions(retention_count, dry_run)
+            controller.purge_set(name)
         return 0
 
     def _retention_count(self, backupset):
@@ -85,13 +71,3 @@ class Purge(ArgparseCommand):
                         "Defaulting to retention-count = 1", backupset)
             return 1
 
-    def plugin_info(self):
-        """Purge plugin info"""
-        return dict(
-            name='purge',
-            summary=self.summary,
-            description=self.description,
-            author='Rackspace',
-            version='1.1.0',
-            holland_version='1.1.0'
-        )

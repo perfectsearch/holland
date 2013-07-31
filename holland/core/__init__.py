@@ -14,11 +14,11 @@ from holland.core.config import Config, ConfigError, Configspec
 from holland.core.hooks import BaseHook
 from holland.core.stream import open_stream, open_stream_wrapper
 # spool management
-from holland.core.backup import BackupSpool, BackupStore
+from holland.core.backup import BackupSpool
 # backup plugin base classes
 from holland.core.backup import BackupPlugin, BackupError
 # backup plugin api gateway
-from holland.core.backup import BackupManager
+from holland.core.backup import BackupController
 
 __all__ = [
     'BasePlugin',
@@ -31,8 +31,7 @@ __all__ = [
     'BaseHook',
     'open_stream',
     'BackupSpool',
-    'BackupStore',
-    'BackupManager',
+    'BackupController',
     'BackupPlugin',
     'BackupError',
 ]

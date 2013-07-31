@@ -1,53 +1,54 @@
-"""
-    holland.core.backup.util
-    ~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    Utility methods used by holland.core.backup
-
-    :copyright: 2010-2011 Rackspace US, Inc.
-    :license: BSD, see LICENSE.rst for details
-"""
-
+## util.py
 import logging
-from holland.core.plugin import load_plugin, PluginError
-from holland.core.backup.plugin import BackupPlugin
-from holland.core.backup.exc import BackupError
+from datetime import datetime
+from collections import namedtuple
+from ..config import Config
+from .plugin import BackupPlugin, load_backup_plugin
+from .hooks import HookExecutor
 
 LOG = logging.getLogger(__name__)
 
-def load_backup_plugin(config):
-    """Load a backup plugin from a backup config"""
-    name = config['holland:backup']['plugin']
-    if not name:
-        raise BackupError("No plugin specified in [holland:backup] in %s" %
-                          config.path)
-    try:
-        return load_plugin('holland.backup', name)
-    except PluginError, exc:
-        raise BackupError(str(exc), exc)
+def validate(config):
+    """Validate a backup config and return the configured backup plugin instance"""
+    basecfg = config['holland:backup']
+    BackupPlugin.base_configspec()['holland:backup'].validate(basecfg)
+    plugin = load_backup_plugin(basecfg.backup_plugin)
+    plugin.configspec().validate(config)
+    return plugin, config
 
-def validate_config(config):
-    """Validate a config file
+BackupContext = namedtuple('BackupContext',
+                           'backup config plugin controller node')
 
-    This method collects the configspecs from all the plugins involved in a
-    config and merges them together and validates a config in one pass.
+def execute_backup(context):
+    """Execute a backup lifecycle
 
-    :raises: ValidateError on validation errors
+    :param context: ``BackupContext`` instance to execute
     """
-    configspec = BackupPlugin.configspec()
-    configspec.validate(config)
-    backup_plugin = config['holland:backup']['plugin']
-    plugin = load_plugin('holland.backup', backup_plugin)
-    configspec.merge(plugin.configspec())
-    for hook in config['holland:backup']['hooks']:
+    backup = context.backup
+    job = backup.job
+    plugin = context.plugin
+    plugin.bind(context)
+    with HookExecutor(context) as executor:
+        executor.event('initialize')
+        plugin.setup()
         try:
-            name = config[hook]['plugin']
-        except KeyError:
-            LOG.error("No section [%s] defined for hook %s", hook, hook)
-            continue
-        plugin = load_plugin('holland.hooks', name)
-        section = configspec.setdefault(hook, configspec.__class__())
-        section['plugin'] = 'string'
-        section.merge(plugin.configspec())
-    configspec.validate(config)
-
+            executor.event('before-backup')
+            try:
+                if job.is_dryrun:
+                    plugin.dryrun()
+                else:
+                    plugin.backup()
+            finally:
+                backup.stop_time = datetime.now()
+        except BaseException, exc:
+            LOG.debug("Failed backup.  Stacktrace:", exc_info=True)
+            backup.status = 'failed'
+            backup.message = unicode(exc)
+            executor.event('failed-backup')
+            raise
+        else:
+            backup.status = 'completed'
+            executor.event('completed-backup')
+        finally:
+            executor.event('after-backup')
+            plugin.cleanup()

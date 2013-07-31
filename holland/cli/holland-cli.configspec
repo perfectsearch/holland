@@ -6,7 +6,7 @@ backupsets       = force_list(default=list())
 umask            = integer(default='0007', base=8)
 path             = string(default=None)
 tmpdir           = string(default=None)
-catalog-db       = string(default="/var/lib/holland/catalog.db")
+catalog-db       = string(default="sqlite://")
 
 [logging]
 filename         = string(default='/var/log/holland/holland.log')

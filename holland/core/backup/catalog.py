@@ -17,7 +17,7 @@ def load_catalog(url, *args, **kwargs):
     """Create a session"""
     if not url:
         url = 'sqlite://'
-    if '//:' not in url:
+    if '://' not in url:
         url = 'sqlite:///' + url
     engine = create_engine(url, *args, **kwargs)
     models.DeclarativeBase.metadata.create_all(engine)

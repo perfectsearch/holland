@@ -1,0 +1,35 @@
+[holland:backup]
+plugin = string(aliasof="backup-plugin")
+backup-plugin = string(default="noop")
+
+estimation-method = namearg(default='plugin')
+
+estimated-size-factor = float(default=1.0,
+                              aliasof='estimated-size-adjust-by-percent')
+estimated-size-adjust-by-percent = percent(default='100%')
+
+checksum-algorithm = option('none',
+                            'md5',
+                            'sha1',
+                            'sha224',
+                            'sha256',
+                            'sha384',
+                            'sha512',
+                            default='sha256')
+
+purge-policy = option(before-backup, after-backup, manual, default='after-backup')
+
+auto-purge-failures = boolean(default=yes)
+
+backups-to-keep = integer(min=0, default=1, aliasof='retention-count')
+retention-count=integer(min=0, default=1)
+
+# backup commands
+# Always run before backup starts
+before-backup-command = string(default=None)
+# Always run after backup ends
+after-backup-command = string(default=None)
+# run only if backup fails (before after-backup-command)
+failed-backup-command = string(default=None)
+# run only if backup succeeds (before after-backup-command)
+completed-backup-command = string(default=None)
