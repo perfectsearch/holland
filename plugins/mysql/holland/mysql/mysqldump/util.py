@@ -79,7 +79,7 @@ def mysqldump_version(bin_mysqldump):
     argv = [bin_mysqldump, '--no-defaults', '--version']
     try:
         stdout, _ = subprocess.communicate(argv, stderr=STDOUT, close_fds=True)
-    except CalledProcessError, exc:
+    except subprocess.CalledProcessError, exc:
         for line in exc.output.splitlines():
             LOG.error("mysqldump --version: %s", line.rstrip())
         return None
