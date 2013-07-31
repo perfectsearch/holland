@@ -53,7 +53,7 @@ def generate_sqlfile_footer(mysql):
     -- Dump completed on {timestamp}
     ''').rstrip()
 
-    return footer.format(timestamp=time.strftime('%Y-%m-%d %H:%M:%s'))
+    return footer.format(timestamp=time.strftime('%Y-%m-%d %H:%M:%S'))
 
 def dump_and_exclude_invalid_views(output_path, defaults_file, information_schema):
     LOG.info("Discovering invalid views")
@@ -71,15 +71,17 @@ def dump_and_exclude_invalid_views(output_path, defaults_file, information_schem
             print >>sqlf, generate_sqlfile_header(information_schema.mysql)
             for schema_name in databases:
                 LOG.debug(u"Checking %s for invalid views", schema_name)
-                print >>sqlf, u"--"
-                print >>sqlf, u"-- Current Database: `%s`" % (schema_name)
-                print >>sqlf, u"--"
-                print >>sqlf
+                schema_header = False
                 table_exclusions = []
                 for table_schema, table_name, message in invalid_views(schema_name):
-                    LOG.info(u"Invalid view %s.%s detected: %s",
-                             table_schema, table_name, message)
-                    LOG.info(u"Adding ignore-table=%s.%s",
+                    if not schema_header:
+                        print >>sqlf, u"--"
+                        print >>sqlf, u"-- Current Database: `%s`" % (schema_name)
+                        print >>sqlf, u"--"
+                        print >>sqlf
+                        schema_header = True
+
+                    LOG.info(u"Invalid view detected. Adding ignore-table=%s.%s: %s",
                              table_schema, table_name, message)
                     table_exclusions.append((table_schema + '.' + table_name))
                     print >>fileobj, u"ignore-table=%s.%s" % \
@@ -94,6 +96,7 @@ def dump_and_exclude_invalid_views(output_path, defaults_file, information_schem
                         print >>sqlf, (u"-- SHOW CREATE TABLE on invalid views"
                                        u" only works on MySQL 5.5+")
                     print >>sqlf # newline
+                    invalid_view_count += 1
 
                 # XXX: this is a hack for file-per-table, so that
                 # information_schema.tables() skips invalid views
