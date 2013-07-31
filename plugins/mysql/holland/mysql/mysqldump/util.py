@@ -78,7 +78,19 @@ def which_mysqldump(candidates=None):
 def mysqldump_version(bin_mysqldump):
     argv = [bin_mysqldump, '--no-defaults', '--version']
     try:
-        stdout, _ = subprocess.communicate(argv, stderr=STDOUT, close_fds=True)
+        process = subprocess.Popen(argv,
+                                   stdout=subprocess.PIPE, 
+                                   stderr=subprocess.STDOUT,
+                                   close_fds=True)
+    except OSError, exc:
+        # mysqldump is likely not in the path
+        raise HollandError("Failed to run '%s': [%d] %s" % (
+                            ' '.join(argv),
+                            exc.errno,
+                            exc.strerror))
+
+    try:
+        stdout, _ = process.communicate()
     except subprocess.CalledProcessError, exc:
         for line in exc.output.splitlines():
             LOG.error("mysqldump --version: %s", line.rstrip())
