@@ -33,7 +33,7 @@ from time import time, sleep
 from subprocess import Popen, STDOUT, list2cmdline
 from jinja2 import Environment, PackageLoader
 from holland.core import HollandError
-from holland.core.util import human_duration
+from holland.core.util import format_interval
 
 LOG = logging.getLogger(__name__)
 info = LOG.info
@@ -168,7 +168,7 @@ class MySQLServer(object):
                 if not os.path.exists(self.socket):
                     self.kill()
                     raise MySQLTimeoutError("startup timed out")
-            info("%s startup took %s", argv[0], human_duration(time() - anchor_time))
+            info("%s startup took %s", argv[0], format_interval(time() - anchor_time))
         else:
             debug("bootstrap is set, not checking for socket file")
 
@@ -205,7 +205,7 @@ class MySQLServer(object):
                 info(" ! Process terminated with SIGKILL")
 
         returncode = process.poll()
-        info("%s stopped in %s", self.to_argv()[0], human_duration(time() - anchor_time))
+        info("%s stopped in %s", self.to_argv()[0], format_interval(time() - anchor_time))
         if returncode != 0:
             error(" !  %s exited with non-zero status: %d", self.to_argv()[0], returncode)
             raise MySQLTimeoutError("mysqld exited with non-zero status %d" % (

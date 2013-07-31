@@ -13,8 +13,9 @@ import logging
 import contextlib
 from tempfile import TemporaryFile
 from subprocess import check_call, CalledProcessError
-from holland.core import BackupPlugin, load_stream_plugin
-from holland.core.util import human_duration, human_size, relpath
+from holland.core.backup.plugin import BackupPlugin
+from holland.core.stream import load_stream_plugin
+from holland.core.util import format_interval, format_bytes, relpath
 from holland.mysql.schema import InformationSchema
 from holland.mysql.client import MySQL, generate_defaults_file
 from . import util, filters, views, strategy
@@ -51,7 +52,7 @@ class MySQLDumpBackupPlugin(BackupPlugin):
             for schema in self.ischema.databases():
                 schema_size = self.ischema.data_size(schema)
                 total_size += schema_size
-                LOG.info("Estimated size for `%s`: %s", schema, human_size(schema_size))
+                LOG.info("Estimated size for `%s`: %s", schema, format_bytes(schema_size))
         except self.mysql.DatabaseError, exc:
             LOG.error("MySQL error during estimation: [%d] %s", *exc.args)
             self.fail("MySQL error during estimation: [%d] %s" %
@@ -158,7 +159,7 @@ class MySQLDumpBackupPlugin(BackupPlugin):
                             LOG.info("%s dumped in %s",
                                      relpath(stdout.name,
                                              self.backup_directory),
-                                     human_duration(time.time() - start_time))
+                                     format_interval(time.time() - start_time))
                         except OSError, exc:
                             LOG.info("[%d] %s", exc.errno, exc.strerror)
                             self.fail("Failed to run mysqldump [%d] %s" %

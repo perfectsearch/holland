@@ -14,7 +14,8 @@ from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import SingletonThreadPool
 from sqlalchemy.exc import DatabaseError, DBAPIError
-from holland.core import HollandError, human_duration
+from holland.core import HollandError
+from holland.core.util import format_interval
 
 LOG = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ class MySQLFlushLock(object):
         self.lock_start = time.time()
         self.mysql.flush_tables_with_read_lock()
         LOG.info("FLUSH TABLES WITH READ LOCK completed in %s",
-                 human_duration(time.time() - self.lock_start, precision=5))
+                 format_interval(time.time() - self.lock_start, precision=5))
 
     def unlock(self):
         if self.locked:
@@ -62,9 +63,9 @@ class MySQLFlushLock(object):
             start = time.time()
             self.mysql.unlock_tables()
             LOG.info("UNLOCK TABLES completed in %s",
-                    human_duration(time.time() - start))
+                    format_interval(time.time() - start))
             LOG.info("MySQL was locked for %s",
-                     human_duration(time.time() - self.lock_start, precision=5))
+                     format_interval(time.time() - self.lock_start, precision=5))
             self.locked = False
 
     def __enter__(self):
@@ -73,7 +74,7 @@ class MySQLFlushLock(object):
             start = time.time()
             self.mysql.flush_tables()
             LOG.info("FLUSH /*!40101 LOCAL */TABLES took %s",
-                     human_duration(time.time() - start))
+                     format_interval(time.time() - start))
         self.lock()
         return self
 

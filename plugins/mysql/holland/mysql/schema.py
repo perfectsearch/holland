@@ -7,7 +7,7 @@ from sqlalchemy import Column, ForeignKey, String, Integer
 from sqlalchemy.sql import and_, or_, not_, func, alias, literal_column
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import OperationalError, DBAPIError
-from holland.core import format_bytes, format_interval
+from holland.core.util import format_bytes, format_interval
 from holland.mysql.client import first
 
 LOG = logging.getLogger(__name__)

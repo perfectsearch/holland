@@ -9,7 +9,7 @@ import logging
 import time
 import codecs
 from textwrap import dedent
-from holland.core import __version__ as holland_version
+from holland.version import __version__ as holland_version
 
 LOG = logging.getLogger(__name__)
 

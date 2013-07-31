@@ -9,8 +9,9 @@ Utility methods for mysqldump plugin
 import os
 import codecs
 import logging
-from holland.core import which, HollandError
-from holland.core.util.pycompat import check_output, PIPE, STDOUT, CalledProcessError
+import subprocess
+from holland.core.exc import HollandError
+from holland.core.util.path import which
 
 LOG = logging.getLogger(__name__)
 
@@ -75,15 +76,15 @@ def which_mysqldump(candidates=None):
     raise HollandError("No mysqldump binary found")
 
 def mysqldump_version(bin_mysqldump):
+    argv = [bin_mysqldump, '--no-defaults', '--version']
     try:
-        result = check_output([bin_mysqldump, '--no-defaults', '--version'],
-                              stderr=STDOUT, close_fds=True)
+        stdout, _ = subprocess.communicate(argv, stderr=STDOUT, close_fds=True)
     except CalledProcessError, exc:
         for line in exc.output.splitlines():
             LOG.error("mysqldump --version: %s", line.rstrip())
         return None
     else:
-        version_str = result.split()[4][:-1]
+        version_str = stdout.split()[4][:-1]
         LOG.info("%s version: %s", bin_mysqldump, version_str)
         version_tuple = tuple(map(int, version_str.split('.')))
         return version_tuple
