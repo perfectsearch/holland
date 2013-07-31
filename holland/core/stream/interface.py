@@ -10,11 +10,11 @@ This module provides the basic methods for the stream API
 
 import os
 import logging
-from holland.core.error import HollandError
+from holland.core.exc import HollandError
 from holland.core.config import Config, Configspec
 from holland.core.plugin import ConfigurablePlugin, PluginError, \
                                 load_plugin, iterate_plugins, plugin_registry
-from holland.core.config.validators import BaseValidator, ValidationError
+from holland.core.config.validators import AbstractValidator, ValidatorError
 
 LOG = logging.getLogger(__name__)
 
@@ -77,8 +77,11 @@ def available_methods():
         results.extend(plugin.aliases)
     return results
 
-class CompressionValidator(BaseValidator):
+@plugin_registry.register
+class CompressionValidator(AbstractValidator):
     """Validate a compression method"""
+
+    name = 'compression'
 
     def convert(self, value):
         """Verify a compression method is available"""
@@ -87,14 +90,12 @@ class CompressionValidator(BaseValidator):
             msg = "Invalid compression method '%s'. Available methods %s" % (
                     value, ','.join(available)
                   )
-            raise ValidationError(msg, value)
+            raise ValidatorError(msg, value)
         return value
 
     def format(self, value):
         return value
 
-plugin_registry.register('holland.config.validators', 'compression',
-                         CompressionValidator)
 
 def open_basedir(basedir, method=None, config=()):
     """A wrapper to open a stream relative to some base path and dispatch to

@@ -13,7 +13,7 @@ import logging
 from tempfile import TemporaryFile
 from subprocess import Popen, PIPE, STDOUT, list2cmdline
 from holland.core.plugin import plugin_registry
-from holland.core.util import which
+from holland.core.util.path import which
 from holland.core.stream.plugin import StreamPlugin, FileDescriptorStream
 
 LOG = logging.getLogger(__name__)
@@ -149,26 +149,33 @@ class BaseCompressionPlugin(StreamPlugin):
 # bzip2 -> bzip2, pbzip2
 # lzma -> xz, lzma (note: lzma is old and xz-utils is newer)
 # lzop -> lzop
+@plugin_registry.register
 class GzipCompressionPlugin(BaseCompressionPlugin):
+    name = 'gzip'
+    aliases = tuple(['pigz'])
     ext = '.gz'
     summary = 'gzip compression'
 
+
+@plugin_registry.register
 class Bzip2CompressionPlugin(BaseCompressionPlugin):
+    name = 'bzip2'
+    aliases = tuple(['pbzip2'])
     ext = '.bz2'
     summary = 'bzip2 compression'
 
+
+@plugin_registry.register
 class LzmaCompressionPlugin(BaseCompressionPlugin):
+    name = 'lzma'
+    aliases = tuple(['xz'])
     ext = '.xz'
     summary = 'lzma compression'
 
+@plugin_registry.register
 class LzopCompressionPlugin(BaseCompressionPlugin):
+    name = 'lzop'
+
     ext = '.lzo'
     summary =  'lzo compression'
 
-plugin_registry.register('holland.stream', 'gzip', GzipCompressionPlugin)
-plugin_registry.register('holland.stream', 'pigz', GzipCompressionPlugin)
-plugin_registry.register('holland.stream', 'bzip2', Bzip2CompressionPlugin)
-plugin_registry.register('holland.stream', 'pbzip2', Bzip2CompressionPlugin)
-plugin_registry.register('holland.stream', 'lzma', LzmaCompressionPlugin)
-plugin_registry.register('holland.stream', 'xz', LzmaCompressionPlugin)
-plugin_registry.register('holland.stream', 'lzop', LzopCompressionPlugin)
