@@ -200,7 +200,7 @@ class EntrypointPluginLoader(AbstractPluginLoader):
         """Iterate over an entrypoint namespace and yield the loaded entrypoint
         object
         """
-        LOG.info("Iterating over namespace=%r", namespace)
+        LOG.debug("Iterating over namespace=%r", namespace)
         for plugin in pkg_resources.iter_entry_points(namespace):
             try:
                 yield plugin.load()(plugin.name)
@@ -269,6 +269,7 @@ class ChainedPluginLoader(AbstractPluginLoader):
             LOG.debug("Loading from loader=%r", loader)
             try:
                 for plugin in loader.iterate(namespace):
+                    LOG.debug("yielding plugin=%r", plugin)
                     yield plugin
             except PluginLoadError:
                 continue
