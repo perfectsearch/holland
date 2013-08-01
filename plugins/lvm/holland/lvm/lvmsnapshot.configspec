@@ -26,7 +26,7 @@ exclude = force_list(default=list('./mysql.sock'))
 
 [rsync]
 
-[copytree]
+[dircopy]
 
 [shell]
 
