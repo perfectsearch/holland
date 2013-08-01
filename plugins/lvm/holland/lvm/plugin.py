@@ -63,10 +63,14 @@ class LVMSnapshot(BackupPlugin):
         name = self.lvm_config.snapshot_name
         extents = self.lvm_config.snapshot_size
         options = self.lvm_config.snapshot_create_options
+        skip_unmount = self.lvm_config.skip_unmount
         for attempt in xrange(self.max_create_attempts):
             try:
                 start_time = time.time()
-                with volume.snapshotted(name, extents, options) as snapshot:
+                with volume.snapshotted(name, 
+                                        extents,
+                                        options,
+                                        skip_unmount) as snapshot:
                     LOG.info("Snapshot creation took %s",
                              format_interval(time.time() - start_time,
                                  precision=5))
@@ -103,7 +107,9 @@ class LVMSnapshot(BackupPlugin):
                     raise
             os.chmod(snapshot_mountpoint, 0755)
 
-        with TemporaryDirectory(dirname=snapshot_mountpoint) as tmpdir:
+        with TemporaryDirectory(dirname=snapshot_mountpoint,
+                                delete=not self.lvm_config.skip_unmount) as tmpdir:
+            LOG.info("Created snapshot mountpoint: %s", tmpdir)
             yield tmpdir
 
     def release_snapshot(self, snapshot):
@@ -120,8 +126,12 @@ class LVMSnapshot(BackupPlugin):
         cfg = self.lvm_config
         relative_paths = set(self.lvm_config.relative_paths)
         if not relative_paths:
-            rpath = relpath(cfg.target_path, getmount(cfg.target_path))
-            relative_paths.add(rpath)
+            if cfg.target_path:
+                rpath = relpath(cfg.target_path, getmount(cfg.target_path))
+                relative_paths.add(rpath)
+            else:
+                relative_paths.add('.')
+
         LOG.info("Examining paths '%s' relative to mountpoint '%s'",
                  ','.join(relative_paths), mountpoint)
         archiver = load_archiver(cfg.archive_method)
@@ -156,6 +166,7 @@ class LVMSnapshot(BackupPlugin):
         if not self.lvm_config.snapshot_name:
             self.lvm_config.snapshot_name = volume.lv_name + '_snapshot'
             LOG.info("snapshot-name is empty, using '%s'", self.lvm_config.snapshot_name)
+        skip_unmount = self.lvm_config.skip_unmount
         with self.create_mountpoint() as mountpoint:
             with self.create_snapshot(volume) as snapshot:
                 snapshot_mount_options = self.lvm_config.snapshot_mount_options
@@ -163,7 +174,8 @@ class LVMSnapshot(BackupPlugin):
                     logging.info("Mounting '%s' with options -o %s",
                                  snapshot.device, ','.join(snapshot_mount_options))
                 with snapshot.mounted(at=mountpoint,
-                                      mount_options=snapshot_mount_options):
+                                      mount_options=snapshot_mount_options,
+                                      skip_unmount=skip_unmount):
                     logging.info("Mounted '%s' at '%s'",
                                  snapshot.device,
                                  snapshot.mountpoint())
