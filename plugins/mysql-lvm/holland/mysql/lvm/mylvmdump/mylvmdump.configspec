@@ -17,6 +17,8 @@ extra-flush = boolean(default=yes)
 flush-logs = boolean(default=no)
 synchronize-binlogs = boolean(default=no)
 
+skip-unmount = boolean(default=no)
+
 
 # some mysqldump parameters are overriden here
 [mysqldump]
