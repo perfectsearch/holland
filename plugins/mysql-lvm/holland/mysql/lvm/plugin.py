@@ -13,7 +13,7 @@ import logging
 from contextlib import contextmanager
 from holland.core import getmount, relpath, human_duration, directory_size
 from holland.lvm import LVMSnapshot
-from holland.mysql import MySQL, MySQLFlushLock, generate_defaults_file
+from holland.mysql.client import MySQL, MySQLFlushLock, generate_defaults_file
 from holland.mysql.server import MySQLServer
 from holland.mysql.lvm import util
 
