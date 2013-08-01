@@ -332,11 +332,12 @@ class Config(OrderedDict):
             if isinstance(value, Config):
                 lines.append("[%s]" % key)
                 lines.append(unicode(value))
-                lines.append("")
             else:
                 value = self.formatter.format(key, value)
                 if value is not None:
                     lines.append("%s = %s" % (key, value))
+                else:
+                    lines.append("# %s = " % key)
         if lines and lines[-1] != '':
             lines.append('')
         return os.linesep.join(lines)
