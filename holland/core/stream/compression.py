@@ -111,7 +111,10 @@ class BaseCompressionPlugin(StreamPlugin):
                           cfg['method'])
         args = [
             cmd
-        ] + cfg['options']
+        ]
+
+        if cfg.get('options'):
+            args.extend(cfg['options'])
 
         if 'r' in mode:
             args.insert(1, '-d')
@@ -126,11 +129,7 @@ class BaseCompressionPlugin(StreamPlugin):
         if 'w' in mode:
             if cfg.level:
                 args.append('-' + str(cfg.level))
-            if cfg['inline']:
-                return CompressionOutputStream(path, mode, args)
-            else:
-                # rather run the command on close
-                return on_closing(stream, simple_command(args + [path]))
+            return CompressionOutputStream(path, mode, args)
         raise IOError('invalid mode: ' + mode)
 
     def configspec(self):
