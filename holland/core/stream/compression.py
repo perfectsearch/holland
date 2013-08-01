@@ -153,18 +153,24 @@ class BaseCompressionPlugin(StreamPlugin):
 @plugin_registry.register
 class GzipCompressionPlugin(BaseCompressionPlugin):
     name = 'gzip'
-    aliases = tuple(['pigz'])
     ext = '.gz'
     summary = 'gzip compression'
 
+@plugin_registry.register
+class PigzCompressionPlugin(GzipCompressionPlugin):
+    name = 'pigz'
+    summary = 'parallel gzip compression'
 
 @plugin_registry.register
 class Bzip2CompressionPlugin(BaseCompressionPlugin):
     name = 'bzip2'
-    aliases = tuple(['pbzip2'])
     ext = '.bz2'
     summary = 'bzip2 compression'
 
+
+class Pbzip2CompressionPlugin(Bzip2CompressionPlugin):
+    name = 'pbzip2'
+    summary = 'parallel bzip2 compression'
 
 @plugin_registry.register
 class LzmaCompressionPlugin(BaseCompressionPlugin):
@@ -176,7 +182,6 @@ class LzmaCompressionPlugin(BaseCompressionPlugin):
 @plugin_registry.register
 class LzopCompressionPlugin(BaseCompressionPlugin):
     name = 'lzop'
-
     ext = '.lzo'
     summary =  'lzo compression'
 
