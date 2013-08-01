@@ -1,0 +1,54 @@
+[mysql-lvm]
+target-path = string(default=None)
+
+# These are auto-calculated from target-path by default
+source-volume = string(default=None)
+relative-paths = set(default=list())
+
+snapshot-name = string(default='holland_snapshot')
+snapshot-size = string(default='100%FREE')
+# defaults to mkdtemp under $TEMPDIR
+snapshot-mountpoint = string(default=None)
+# additional options to pass to lvcreate -s
+snapshot-create-options = cmdline(default="")
+# additional options to pass to mount when mounting
+# the created snapshot
+snapshot-mount-options = cmdline(default="")
+
+archive-method = archive_method(default=tar)
+
+innodb-recovery = boolean(default=no)
+lock-tables = boolean(default=yes)
+extra-flush = boolean(default=yes)
+flush-logs  = boolean(default=no)
+
+[mysqld]
+defaults-file = string(default=None)
+mysqld-binary = string(default='mysqld')
+
+[tar]
+pre-args = force_list(default=list())
+post-args = force_list(default=list())
+exclude = force_list(default=list('./mysql.sock'))
+
+[rsync]
+extra-args = force_list(default=list())
+additional-args = cmdline(default='')
+
+[dircopy]
+# file patterns to skip compression on
+skip-compress = force_list(default=list())
+
+[compression]
+method = compression(default='gzip')
+level = integer(min=0, max=9, default=1)
+inline = boolean(default=True)
+additional-args = cmdline(default='')
+
+[mysql:client]
+user = string(default=None)
+password = string(default=None)
+host = string(default=None)
+port = integer(default=None)
+socket = string(default=None)
+defaults-file = force_list(default=list('~/.my.cnf'))
