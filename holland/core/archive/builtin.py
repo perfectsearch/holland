@@ -56,6 +56,8 @@ class TarArchiver(ArchiverBase):
 
     name = 'tar'
 
+    summary = 'Archive via the tar command'
+
     tar_process = None
 
     def bind(self, context):
@@ -154,6 +156,8 @@ class RsyncArchiver(ArchiverBase):
 
     name = 'rsync'
 
+    summary = 'Archive using the rsync command'
+
     def archive(self, dstdir):
         join = os.path.join
         dst_path = join(dstdir)
@@ -187,6 +191,8 @@ class RsyncArchiver(ArchiverBase):
 class ShellCmdArchiver(ArchiverBase):
     name = 'shell'
 
+    summary = 'Archive a directory via a shell command'
+
     def archive(self, srcdir, dstdir):
         join = os.path.join
         shell_cmd = self.config['command-line'].format(
@@ -214,6 +220,8 @@ class ShellCmdArchiver(ArchiverBase):
 class DirCopyArchiver(ArchiverBase):
 
     name = 'dircopy'
+
+    summary = 'Archive a directory tree to another directory'
 
     def archive(self, dstdir):
         join = os.path.join

@@ -63,7 +63,7 @@ class ListPlugins(ArgparseCommand):
     """
 
     def execute(self, namespace, parser):
-        for group in ('backup', 'stream', 'hooks', 'commands'):
+        for group in ('backup', 'stream', 'archiver', 'commands'):
             plugin_list = list(iterate_plugins('holland.%s' % group))
             #plugin_list.sort()
             header = "%s plugins" % group.title()
