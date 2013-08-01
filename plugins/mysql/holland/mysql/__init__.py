@@ -1,3 +1,7 @@
-from .client import *
-from .schema import *
-from .option import *
+"""
+holland.mysql
+~~~~~~~~~~~~~
+
+MySQL support for holland
+
+"""

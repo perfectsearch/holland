@@ -27,4 +27,5 @@ setup(name='holland.mysql',
       xtrabackup = holland.mysql.xtrabackup:XtrabackupPlugin
       #delphini  = holland.mysql.delphini:DelphiniPlugin
       """,
+      namespace_packages=['holland', 'holland.mysql']
 )
