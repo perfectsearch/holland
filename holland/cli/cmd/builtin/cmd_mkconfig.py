@@ -36,7 +36,7 @@ class MakeConfig(ArgparseCommand):
         [holland:backup]
         plugin = %s
         """ % namespace.plugin)
-        config = BackupPlugin.configspec().validate(config)
+        config = plugin.base_configspec().validate(config)
 
         plugin.configspec().validate(config)
 
