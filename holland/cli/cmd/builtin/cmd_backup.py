@@ -96,3 +96,38 @@ class Backup(ArgparseCommand):
         except IOError, exc:
             raise HollandError("Failed to load backup config %s: %s" %
                                 (name, exc))
+
+
+@plugin_registry.register
+class ReleaseBackup(ArgparseCommand):
+    name = 'release'
+    summary = "release resources from an old backup"
+    description = """
+    Loads the plugin for a backup and requests that old
+    resources be released.  This is usually called after
+    a backup has been archived and may have allocated
+    extended resources (e.g. allocated a snapshot that
+    has been backed up, etc.)
+    """
+
+    arguments = [
+        argument('--backup-directory', '-d', dest='directory'),
+        argument('--catalog-db'),
+        argument('paths', nargs='*'),
+    ]
+
+    def create_parser(self):
+        parser = ArgparseCommand.create_parser(self)
+        parser.set_defaults(
+            directory=self.config['holland']['backup-directory'],
+            catalog_db=self.config['holland']['catalog-db'],
+        )
+        return parser
+
+    def execute(self, namespace, parser):
+        self.config['holland']['backup-directory'] = namespace.directory
+        self.config['holland']['catalog-db'] = namespace.catalog_db
+        controller = BackupController.from_config(self.config['holland'])
+        for path in namespace.paths:
+            controller.release(path)
+        return 0
