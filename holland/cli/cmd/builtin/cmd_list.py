@@ -1,5 +1,6 @@
 """Various list-* commands for holland.cli"""
 
+import os
 import textwrap
 import logging
 from holland.core import BackupSpool, iterate_plugins
@@ -65,7 +66,6 @@ class ListPlugins(ArgparseCommand):
     def execute(self, namespace, parser):
         for group in ('backup', 'stream', 'archiver', 'commands'):
             plugin_list = list(iterate_plugins('holland.%s' % group))
-            #plugin_list.sort()
             header = "%s plugins" % group.title()
             header_output = False
             seen = {}
@@ -78,19 +78,20 @@ class ListPlugins(ArgparseCommand):
                     print "-"*len(header)
                     header_output = True
                 wrap = textwrap.wrap
-                summary = getattr(plugin, 'summary') or ''
-                fmt_summary = '\n'.join(wrap(summary,
-                                             initial_indent=' '*28,
-                                             subsequent_indent=' '*28,
-                                             width=79))
                 name = plugin.name
+                name_width = 14 + 25 + 3
+                summary = os.linesep.join(
+                            wrap(getattr(plugin, 'summary') or '',
+                                 initial_indent=' '*name_width,
+                                 subsequent_indent=' '*name_width,
+                                 width=79)).lstrip()   
                 aliases = getattr(plugin, 'aliases')
                 for alias in aliases:
                     seen[alias] = True
                 extra = ''
                 if aliases:
                     extra = '(aliases: %s)' % (' '.join(aliases),)
-                print "%-14s%-18s - %s" % (name, extra, summary)
+                print "%-14s%-25s - %-s" % (name, extra, summary)
             if seen:
                 print
         return 0
