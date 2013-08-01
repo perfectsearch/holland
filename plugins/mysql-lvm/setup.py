@@ -22,8 +22,8 @@ setup(name='holland.mysql.lvm',
       ],
       entry_points="""
       [holland.backup]
-      mysql-lvm     = holland.mysql.lvm:MysqlLVMBackup
-      mysqldump-lvm = holland.mysql.lvm.plugin.mysqldump:MysqlDumpLVMBackup
-      mylvmdump     = holland.mysql.lvm.plugin.mysqldump:MysqlDumpLVMBackup
+      mysql-lvm     = holland.mysql.lvm.plugin:MyLVMSnapshot
+      mysqldump-lvm = holland.mysql.lvm.mylvmdump.plugin:MyLVMDump
+      mylvmdump     = holland.mysql.lvm.mylvmdump.plugin:MyLVMDump
       """,
 )
