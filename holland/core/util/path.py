@@ -175,10 +175,12 @@ class TemporaryDirectory(object):
     def __init__(self,
                  suffix="",
                  prefix=tempfile.gettempprefix(),
-                 dirname=None):
+                 dirname=None,
+                 delete=True):
         if dirname:
             ensure_directory(dirname)
         self.name = tempfile.mkdtemp(suffix, prefix, dirname)
+        self.delete = delete
         self._closed = False
 
     def __enter__(self):
@@ -197,6 +199,6 @@ class TemporaryDirectory(object):
 
     def cleanup(self):
         """Cleanup the directory used for this temporary directory"""
-        if not self._closed:
+        if not self._closed and self.delete:
             shutil.rmtree(self.name)
             self._closed = True
