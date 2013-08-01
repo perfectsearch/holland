@@ -177,7 +177,7 @@ class TemporaryDirectory(object):
                  prefix=tempfile.gettempprefix(),
                  dirname=None):
         if dirname:
-            mkdir_parents(dirname)
+            ensure_directory(dirname)
         self.name = tempfile.mkdtemp(suffix, prefix, dirname)
         self._closed = False
 
