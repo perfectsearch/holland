@@ -83,7 +83,7 @@ class BackupController:
 
     def release(self, path):
         """Allow a backup plugin to cleanup after a previous backup"""
-        backup_directory = path
+        path = os.path.realpath(path)
         config = Config.from_path(os.path.join(path, '.holland', 'config'))
         plugin, config = util.validate(config)
         namespace = os.path.basename(os.path.dirname(path))
