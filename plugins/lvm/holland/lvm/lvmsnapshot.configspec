@@ -33,3 +33,4 @@ exclude = force_list(default=list('./mysql.sock'))
 [compression]
 method = compression(default='gzip')
 level = integer(min=0, max=9, default=None)
+options = cmdline(default='')
