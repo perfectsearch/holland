@@ -34,6 +34,14 @@ class LVMSnapshotExistsError(LVMError):
     def __str__(self):
         return "LVM snapshot '%s' already exists" % snapshot_pathspec
 
+class LVMCommandError(LVMError):
+    def __init__(self, returncode, cmd, output=''):
+        self.returncode = returncode
+        self.cmd = cmd
+        self.output = output
+
+    def __str__(self):
+        return "%s exited with non-zero status(%d)" % (self.cmd, self.returncode)
 
 def capture_stdout(argv):
     with open(os.devnull, 'rb') as stdin:
@@ -44,17 +52,18 @@ def capture_stdout(argv):
                                        stderr=subprocess.STDOUT,
                                        close_fds=True)
             stdout, _ = process.communicate()
+            if process.returncode != 0:
+                raise LVMCommandError(process.returncode,
+                                      ' '.join(argv),
+                                      stdout)
             return stdout
         except OSError, exc:
             # EPERM, ENOENT, etc.
             raise #XXX: raise something more useful here
-        except subprocess.CalledProcessError, exc:
-            # lvs exited with non-zero status
-            # XXX: exc.output will probably have useful messages for
-            # troubleshooting
+        except LVMCommandError, exc:
             for line in exc.output.splitlines():
                 LOG.error("! %s", line)
-            raise # XXX: raise something more useful here
+            raise
 
 
 def lvsnapshot(device, name, extents, extra_options=(), lvcreate='lvcreate'):
@@ -350,20 +359,22 @@ class LogicalVolume(object):
         return str(capped_extents)
 
     @contextlib.contextmanager
-    def snapshotted(self, name, extents, lvcreate_options=()):
+    def snapshotted(self, name, extents, lvcreate_options=(), skip_unmount=False):
         snapshot = self.snapshot(name, extents, lvcreate_options)
         try:
             yield snapshot
         finally:
-            snapshot.remove()
+            if not skip_unmount:
+                snapshot.remove()
 
     @contextlib.contextmanager
-    def mounted(self, at, mount_options=()):
+    def mounted(self, at, mount_options=(), skip_unmount=False):
         self.mount(at, mount_options)
         try:
             yield at
         finally:
-            self.unmount()
+            if not skip_unmount:
+                self.unmount()
 
     def mount(self, path, extra_options=()):
         """Mount this logical volume
