@@ -2,7 +2,8 @@ import os
 import pwd
 import logging
 from tempfile import NamedTemporaryFile
-from holland.core import which, HollandError
+from holland.core.exc import HollandError
+from holland.core.util.path import which
 
 LOG = logging.getLogger(__name__)
 
