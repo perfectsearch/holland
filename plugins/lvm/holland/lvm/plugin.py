@@ -13,12 +13,14 @@ import os
 import tempfile
 import time
 
+
 from holland.core.archive import load_archiver
+from holland.core.config.config import Config
 from holland.core.backup.plugin import BackupPlugin
 from holland.core.util.path import TemporaryDirectory, relpath, getmount
 from holland.core.util.fmt import format_interval, format_bytes
 
-from holland.lvm.volume import LogicalVolume, LVMSnapshotExistsError, getmount
+from holland.lvm.volume import LogicalVolume, LVMSnapshotExistsError, LVMError, getmount
 
 LOG = logging.getLogger()
 
@@ -59,7 +61,6 @@ class LVMSnapshot(BackupPlugin):
     # what happens if we have exceeded the maximum number of attempts?
     @contextlib.contextmanager
     def create_snapshot(self, volume):
-        # XXX: pull these in from config instead
         name = self.lvm_config.snapshot_name
         extents = self.lvm_config.snapshot_size
         options = self.lvm_config.snapshot_create_options
@@ -110,6 +111,12 @@ class LVMSnapshot(BackupPlugin):
         with TemporaryDirectory(dirname=snapshot_mountpoint,
                                 delete=not self.lvm_config.skip_unmount) as tmpdir:
             LOG.info("Created snapshot mountpoint: %s", tmpdir)
+            if self.lvm_config.skip_unmount:
+                plugin_metadata = os.path.join(self.backup_directory, '.holland', 'lvm')
+                with open(plugin_metadata, 'ab') as fileobj:
+                    print >>fileobj, "tmpdir = %s" % tmpdir
+                    fileobj.flush()
+                    os.fsync(fileobj.fileno())
             yield tmpdir
 
     def release_snapshot(self, snapshot):
@@ -169,6 +176,13 @@ class LVMSnapshot(BackupPlugin):
         skip_unmount = self.lvm_config.skip_unmount
         with self.create_mountpoint() as mountpoint:
             with self.create_snapshot(volume) as snapshot:
+                plugin_metadata = os.path.join(self.backup_directory, '.holland', 'lvm')
+                with open(plugin_metadata, 'ab') as fileobj:
+                    print >>fileobj, "snapshot-device = %s" % snapshot.device
+                    print >>fileobj, "snapshot-device-uuid = %s" % snapshot.lv_uuid
+                    fileobj.flush()
+                    os.fsync(fileobj.fileno())
+
                 snapshot_mount_options = self.lvm_config.snapshot_mount_options
                 if snapshot_mount_options:
                     logging.info("Mounting '%s' with options -o %s",
@@ -182,3 +196,20 @@ class LVMSnapshot(BackupPlugin):
                     logging.info("Archiving snapshot data")
                     self.archive(mountpoint)
 
+    def release(self):
+        plugin_metadata = os.path.join(self.backup_directory, '.holland', 'lvm')
+        cfg = Config.read([plugin_metadata])
+        if 'snapshot-device' in cfg:
+            try:
+                snapshot = LogicalVolume.from_device(cfg.snapshot_device)
+            except LVMError, exc:
+                LOG.info("No outstanding snapshot found: %s", exc)
+                return
+            if snapshot.lv_uuid == cfg.snapshot_device_uuid:
+                self.release_snapshot(snapshot)
+                # if tmpdir is defined, and has a value try to remove that directory
+                if 'tmpdir' in cfg and cfg.tmpdir:
+                    # if unmounted this should be empty and a simple rmdir should work
+                    os.rmdir(cfg.tmpdir)
+            else:
+                LOG.info("Recorded snapshot UUID does not match current snapshot UUID. Not removing.")
