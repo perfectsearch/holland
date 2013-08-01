@@ -42,7 +42,9 @@ def generate_mysqldump_options(defaults_file, config, mysqldump_version):
             print >>fileobj, "max-allowed-packet=" + config.max_allowed_packet
             LOG.info("Added max-allowed-packet=%s",
                      config.max_allowed_packet)
-        if not file_per_table and config.bin_log_position:
+        if config.bin_log_position:
+            if file_per_table:
+                LOG.warn("mysqldump-strategy = file-per-table with --master-data")
             print >>fileobj, "master-data=2"
             LOG.info("Added master-data=2")
 
