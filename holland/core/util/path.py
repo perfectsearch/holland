@@ -14,6 +14,8 @@ import os
 import errno
 import time
 import collections
+import shutil
+import tempfile
 
 # Taken from posixpath in Python2.6
 def relpath(path, start=os.curdir):
@@ -159,3 +161,42 @@ def replace_symlink(source, link_name):
         # drop the tmp_link
         os.unlink(tmp_link)
         raise
+
+class TemporaryDirectory(object):
+    """Create and return a temporary directory.  This has the same
+    behavior as mkdtemp but can be used as a context manager.  For
+    example:
+
+        with TemporaryDirectory() as tmpdir:
+            ...
+    Upon exiting the context, the directory and everthing contained
+    in it are removed.
+    """
+    def __init__(self,
+                 suffix="",
+                 prefix=tempfile.gettempprefix(),
+                 dirname=None):
+        if dirname:
+            mkdir_parents(dirname)
+        self.name = tempfile.mkdtemp(suffix, prefix, dirname)
+        self._closed = False
+
+    def __enter__(self):
+        return self.name
+
+    def __exit__(self, exc_type, value, traceback):
+        try:
+            self.cleanup()
+        except:
+            if exc_type is None:
+                raise
+
+    def exists(self):
+        """Check if this temporary directory exists"""
+        return os.path.exists(self.name)
+
+    def cleanup(self):
+        """Cleanup the directory used for this temporary directory"""
+        if not self._closed:
+            shutil.rmtree(self.name)
+            self._closed = True
