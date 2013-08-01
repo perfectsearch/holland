@@ -34,6 +34,7 @@ from holland.mysql.server import MySQLServer
 from holland.mysql.lvm import util
 from holland.mysql.lvm.plugin import MyLVMSnapshot
 from holland.mysql.lvm.mylvmdump.util import prepare_binlogs
+from holland.mysql.lvm.mylvmdump.util import path_owner
 
 LOG = logging.getLogger(__name__)
 
