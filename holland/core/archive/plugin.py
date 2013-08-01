@@ -21,6 +21,9 @@ class ArchiveError(HollandError):
     "Base exception for errors that occur during archiving"
 
 class ArchiverBase(ConfigurablePlugin):
+
+    namespace = 'holland.archiver'
+
     config = None
 
     def __init__(self, name):
