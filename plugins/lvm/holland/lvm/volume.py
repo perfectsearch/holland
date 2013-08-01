@@ -13,6 +13,7 @@ import re
 import subprocess
 
 from holland.core.exc import HollandError
+from holland.core.util.fmt import parse_bytes, format_bytes
 
 LOG = logging.getLogger()
 
@@ -312,6 +313,7 @@ class LogicalVolume(object):
                       as megabytes
         :returns: string argument suitable for passing to --extents
         """
+        orig_value = value
         extents_cre = re.compile(r'^[0-9]+%(FREE|VG|PV)', re.I)
         if extents_cre.match(value):
             return value
@@ -321,7 +323,7 @@ class LogicalVolume(object):
             value += 'M'
         # parse value via holland.core.util.bytes_from_human_size
         try:
-            nbytes = bytes_from_human_size(value)
+            nbytes = parse_bytes(value)
         except ValueError:
             raise LVMError("Invalid snapshot size '%s'" % value)
         if nbytes < 0:
@@ -330,16 +332,19 @@ class LogicalVolume(object):
         extent_size = self.vg_extent_size
         # this is essentially ceil(nbytes / extent_size)
         nextents = (nbytes + extent_size - 1) // extent_size
-        LOG.info("Converted snapshot-size = '%s' to %s extents", nextents)
+        LOG.info("Converted snapshot-size = '%s' to %s (%s) extents",
+                  orig_value,
+                  nextents,
+                  format_bytes(extent_size))
         # cap extents to the number we currently see as available
         free_extents = self.vg_free_count
         capped_extents = min(free_extents, nextents)
         if not capped_extents:
             if not nextents:
-                raise LVMError("snapshot-size '%s' specified zero extents. Please specify 1 or more extents")
+                raise LVMError("snapshot-size '%s' specified zero extents. Please specify 1 or more extents" % orig_value)
             else:
                 raise LVMError("No free extents available in volume-group '%s'" % self.vg_name)
-        if capped_etents < nextents:
+        if capped_extents < nextents:
             LOG.info("Volume group '%s' only has %d free extents. Capping snapshot-size",
                      self.vg_name, free_extents)
         return str(capped_extents)
