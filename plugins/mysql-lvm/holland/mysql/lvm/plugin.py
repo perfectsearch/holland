@@ -32,10 +32,6 @@ class MyLVMSnapshot(LVMSnapshot):
     master_status = None
     slave_status = None
 
-    def __init__(self, name):
-        super(MyLVMSnapshot, self).__init__(name)
-        self.name = 'mysql-lvm'
-
     def load_volume(self):
         try:
             self.lvm_config.target_path = self.mysql.var('datadir')
