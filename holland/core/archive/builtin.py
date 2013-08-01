@@ -247,10 +247,10 @@ class DirCopyArchiver(ArchiverBase):
                 rpath = relpath(dirpath, srcpath)
                 target_base_path = normpath(join(dstpath, rpath))
                 if not os.path.exists(target_base_path):
-                    LOG.info("Creating directory '%s'", target_base_path)
+                    LOG.debug("Creating directory '%s'", target_base_path)
                     os.makedirs(target_base_path)
                 for name in dirnames:
-                    LOG.info("Creating directory '%s'", join(target_base_path, name))
+                    LOG.debug("Creating directory '%s'", join(target_base_path, name))
                     os.makedirs(join(target_base_path, name))
                 for name in filenames:
                     csrcpath = join(dirpath, name)
@@ -261,5 +261,5 @@ class DirCopyArchiver(ArchiverBase):
                         continue
                     # copy (dirpath, name) -> (dstpath, relpath(
                     with stream.open(cdstpath, 'wb') as fileobj:
-                        LOG.info("Copying '%s' to '%s'", csrcpath, fileobj.name)
+                        LOG.info("Copying '%s' -> '%s'", csrcpath, fileobj.name)
                         check_call(['/bin/cat', csrcpath], stdout=fileobj, close_fds=True)
