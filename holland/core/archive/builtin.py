@@ -9,7 +9,7 @@ import os
 import logging
 from subprocess import Popen, list2cmdline, check_call, CalledProcessError, STDOUT
 from tempfile import TemporaryFile
-from holland.core.util import mkdir_parents, relpath
+from holland.core.util.path import relpath
 from holland.core.plugin import plugin_registry
 from holland.core.archive.plugin import ArchiverBase, ArchiveError
 from holland.core.stream import open_stream, load_stream_plugin
@@ -51,8 +51,11 @@ signum_to_name = {0: 'SIG_DFL',
  34: 'SIGRTMIN',
  64: 'SIGRTMAX'}
 
-@plugin_registry.registercls('holland.archiver', 'tar')
+@plugin_registry.register
 class TarArchiver(ArchiverBase):
+
+    name = 'tar'
+
     tar_process = None
 
     def bind(self, context):
@@ -146,8 +149,11 @@ class TarArchiver(ArchiverBase):
             plugin_version='1.0',
         )
 
-@plugin_registry.registercls('holland.archiver', 'rsync')
+@plugin_registry.register
 class RsyncArchiver(ArchiverBase):
+
+    name = 'rsync'
+
     def archive(self, dstdir):
         join = os.path.join
         dst_path = join(dstdir)
@@ -177,8 +183,10 @@ class RsyncArchiver(ArchiverBase):
         additional-args = cmdline(default='')
         """
 
-@plugin_registry.registercls('holland.archiver', 'shell')
+@plugin_registry.register
 class ShellCmdArchiver(ArchiverBase):
+    name = 'shell'
+
     def archive(self, srcdir, dstdir):
         join = os.path.join
         shell_cmd = self.config['command-line'].format(
@@ -202,8 +210,11 @@ class ShellCmdArchiver(ArchiverBase):
         command-line = string(default='/bin/true')
         """
 
-@plugin_registry.registercls('holland.archiver', 'copytree')
-class CopyTreeArchiver(ArchiverBase):
+@plugin_registry.register
+class DirCopyArchiver(ArchiverBase):
+
+    name = 'dircopy'
+
     def archive(self, dstdir):
         join = os.path.join
         dirname = os.path.dirname
@@ -216,7 +227,7 @@ class CopyTreeArchiver(ArchiverBase):
             srcpath = normpath(join(parent, rpath))
             dstpath = normpath(join(dstdir, rpath))
             if not os.path.isdir(srcpath):
-                mkdir_parents(dirname(dstpath))
+                os.makedirs(dirname(dstpath))
                 LOG.info("Copy requested file %s -> %s", srcpath, dstpath)
                 LOG.info("  + mkdir -P %s", dirname(dstpath))
                 with stream.open(dstpath, 'wb') as fileobj:
@@ -229,10 +240,10 @@ class CopyTreeArchiver(ArchiverBase):
                 target_base_path = normpath(join(dstpath, rpath))
                 if not os.path.exists(target_base_path):
                     LOG.info("Creating directory '%s'", target_base_path)
-                    mkdir_parents(target_base_path)
+                    os.makedirs(target_base_path)
                 for name in dirnames:
                     LOG.info("Creating directory '%s'", join(target_base_path, name))
-                    mkdir_parents(join(target_base_path, name))
+                    os.makedirs(join(target_base_path, name))
                 for name in filenames:
                     csrcpath = join(dirpath, name)
                     cdstpath = join(target_base_path, name)
