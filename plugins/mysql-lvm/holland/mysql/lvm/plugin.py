@@ -11,8 +11,9 @@ import time
 import errno
 import logging
 from contextlib import contextmanager
-from holland.core import getmount, relpath, human_duration, directory_size
-from holland.lvm import LVMSnapshot
+from holland.core.util.path import getmount, relpath, directory_size
+from holland.core.util.fmt import format_interval
+from holland.lvm.plugin import LVMSnapshot
 from holland.mysql.client import MySQL, MySQLFlushLock, generate_defaults_file
 from holland.mysql.server import MySQLServer
 from holland.mysql.lvm import util
@@ -86,7 +87,7 @@ class MyLVMSnapshot(LVMSnapshot):
                          self.slave_status.relay_master_log_file,
                          self.slave_status.exec_master_log_pos)
             LOG.info("Replication info collected in %s",
-                    human_duration(time.time() - start_time))
+                    format_interval(time.time() - start_time))
             with super(MyLVMSnapshot, self).create_snapshot(volume) as snapshot:
                 # release the lock early
                 lock.unlock()
