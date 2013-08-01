@@ -140,7 +140,6 @@ class StreamPlugin(ConfigurablePlugin):
 @plugin_registry.register
 class FileStreamPlugin(StreamPlugin):
     """Stream plugin that opens standard files"""
-    name = 'none'
-    aliases = tuple(['file'])
-    summary = 'uncompressed file stream'
+    name = 'file'
     aliases = tuple(['none'])
+    summary = 'uncompressed file stream'

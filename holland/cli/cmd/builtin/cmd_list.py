@@ -63,39 +63,37 @@ class ListPlugins(ArgparseCommand):
     """
 
     def execute(self, namespace, parser):
-        self.stdout("%-12s %-14s %11s", 'Plugin Type', 'Name', 'Description')
-        self.stdout("%12s %14s %11s", "="*12, "="*14, "="*11)
         for group in ('backup', 'stream', 'hooks', 'commands'):
             plugin_list = list(iterate_plugins('holland.%s' % group))
-            plugin_list.sort()
+            #plugin_list.sort()
+            header = "%s plugins" % group.title()
+            header_output = False
+            seen = {}
             for plugin in plugin_list:
-                try:
-                    info = plugin.plugin_info()
-                except (SystemExit, KeyboardInterrupt):
-                    raise
-                except:
-                    self.debug("Broken plugin %r - plugin_info() fails.",
-                               plugin, exc_info=True)
+                if plugin.name in seen:
                     continue
+                seen[plugin.name] = True
+                if not header_output:
+                    print header
+                    print "-"*len(header)
+                    header_output = True
                 wrap = textwrap.wrap
-                summary = wrap(info.get('summary') or '',
-                               initial_indent=' '*28,
-                               subsequent_indent=' '*28,
-                               width=79)
-                self.stdout("%-12s %-14s %s", group,
-                            plugin.name or '',
-                            '\n'.join(summary).lstrip())
+                summary = getattr(plugin, 'summary') or ''
+                fmt_summary = '\n'.join(wrap(summary,
+                                             initial_indent=' '*28,
+                                             subsequent_indent=' '*28,
+                                             width=79))
+                name = plugin.name
+                aliases = getattr(plugin, 'aliases')
+                for alias in aliases:
+                    seen[alias] = True
+                extra = ''
+                if aliases:
+                    extra = '(aliases: %s)' % (' '.join(aliases),)
+                print "%-14s%-18s - %s" % (name, extra, summary)
+            if seen:
+                print
         return 0
-
-    def plugin_info(self):
-        return dict(
-            name=self.name,
-            summary=self.summary,
-            description=self.description,
-            author='Rackspace',
-            version='1.1.0',
-            holland_version='1.1.0'
-        )
 
 class ListBackups(ArgparseCommand):
     """List backups stored in the backup directory
