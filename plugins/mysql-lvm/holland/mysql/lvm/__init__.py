@@ -1,1 +1,6 @@
-from holland.mysql.lvm.plugin import MysqlLVMBackup
+"""
+holland.mysql.lvm
+~~~~~~~~~~~~~~~~~
+
+MySQL backup support via LVM snapshots
+"""
