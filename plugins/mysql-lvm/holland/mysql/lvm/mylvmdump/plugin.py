@@ -33,12 +33,13 @@ from holland.core.backup.plugin import load_backup_plugin
 from holland.mysql.server import MySQLServer
 from holland.mysql.lvm import util
 from holland.mysql.lvm.plugin import MyLVMSnapshot
-from holland.mysql.lvm.mylvmsnapshot.util import prepare_binlogs
+from holland.mysql.lvm.mylvmdump.util import prepare_binlogs
 
 LOG = logging.getLogger(__name__)
 
 class MyLVMDump(MyLVMSnapshot):
     summary = 'mysqldump backups using an LVM snapshot'
+    aliases = tuple(['mysqldump-lvm'])
 
     def __init__(self, name):
         super(MyLVMDump, self).__init__(name)
