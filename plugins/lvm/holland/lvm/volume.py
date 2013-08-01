@@ -8,7 +8,10 @@ API for manipulating logical volumes
 import collections
 import contextlib
 import logging
+import os
+import re
 import subprocess
+
 from holland.core.exc import HollandError
 
 LOG = logging.getLogger()
@@ -34,11 +37,11 @@ class LVMSnapshotExistsError(LVMError):
 def capture_stdout(argv):
     with open(os.devnull, 'rb') as stdin:
         try:
-            process = Popen(argv,
-                            stdin=stdin,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT,
-                            close_fds=True)
+            process = subprocess.Popen(argv,
+                                       stdin=stdin,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.STDOUT,
+                                       close_fds=True)
             stdout, _ = process.communicate()
             return stdout
         except OSError, exc:
