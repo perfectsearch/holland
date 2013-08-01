@@ -27,4 +27,5 @@ setup(name='holland.mysql.lvm',
       mysqldump-lvm = holland.mysql.lvm.mylvmdump.plugin:MyLVMDump
       mylvmdump     = holland.mysql.lvm.mylvmdump.plugin:MyLVMDump
       """,
+      namespace_packages=['holland', 'holland.mysql']
 )
