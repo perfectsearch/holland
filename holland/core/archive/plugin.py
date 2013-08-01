@@ -8,12 +8,12 @@ Archiver plugin interface
 import os
 import logging
 from subprocess import Popen, list2cmdline
-from holland.core.error import HollandError
+from holland.core.exc import HollandError
 from holland.core.plugin import (ConfigurablePlugin,
                                  plugin_registry,
                                  load_plugin,
                                  iterate_plugins)
-from holland.core.config.validators import BaseValidator, ValidationError
+from holland.core.config.validators import AbstractValidator, ValidatorError
 
 LOG = logging.getLogger(__name__)
 
@@ -21,6 +21,9 @@ class ArchiveError(HollandError):
     "Base exception for errors that occur during archiving"
 
 class ArchiverBase(ConfigurablePlugin):
+
+    namespace = 'holland.archiver'
+
     config = None
 
     def __init__(self, name):
@@ -53,9 +56,11 @@ def available_archivers():
 def load_archiver(name):
     return load_plugin('holland.archiver', name)
 
-@plugin_registry.registercls('holland.config.validators', 'archive_method')
-class ArchiveValidator(BaseValidator):
+@plugin_registry.register
+class ArchiveValidator(AbstractValidator):
     """Validate a compression method"""
+
+    name = 'archive_method'
 
     def convert(self, value):
         """Verify an archiving method is available"""
