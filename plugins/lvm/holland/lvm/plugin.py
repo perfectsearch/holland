@@ -13,8 +13,11 @@ import os
 import tempfile
 import time
 
-from holland.core import BackupPlugin, TemporaryDirectory, relpath, getmount
-from holland.core import load_archiver, format_interval, format_bytes
+from holland.core.archive import load_archiver
+from holland.core.backup.plugin import BackupPlugin
+from holland.core.util.path import TemporaryDirectory, relpath, getmount
+from holland.core.util.fmt import format_interval, format_bytes
+
 from holland.lvm.volume import LogicalVolume, LVMSnapshotExistsError, getmount
 
 LOG = logging.getLogger()
