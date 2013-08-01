@@ -1,0 +1,35 @@
+[lvm]
+target-path = string(default=None)
+
+# These are auto-calculated from target-path by default
+source-volume  = string(default=None)
+relative-paths = set(default=list())
+
+snapshot-name = string(default='holland_snapshot')
+snapshot-size = string(default='100%FREE')
+# defaults to mkdtemp under $TEMPDIR
+snapshot-mountpoint = string(default=None)
+# additional options to pass to lvcreate -s
+snapshot-create-options = cmdline(default='')
+# additional options to pass to mount when mounting
+# the created snapshot
+snapshot-mount-options = force_list(default=list())
+
+skip-unmount = boolean(default=False)
+
+archive-method = archive_method(default=tar)
+
+[tar]
+pre-args = force_list(default=list())
+post-args = force_list(default=list())
+exclude = force_list(default=list('./mysql.sock'))
+
+[rsync]
+
+[copytree]
+
+[shell]
+
+[compression]
+method = compression(default='gzip')
+level = integer(min=0, max=9, default=None)
