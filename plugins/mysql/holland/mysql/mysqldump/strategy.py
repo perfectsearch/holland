@@ -94,6 +94,12 @@ def mysqldump_per_database(mysqldump, schema, config):
 
 def mysqldump_per_table(mysqldump, schema, config):
     for schema_name in schema.databases():
+        yield (join(schema_name, 'createdb.ddl'),
+               mysqldump('--no-data',
+                         '--no-create-info',
+                         '--skip-triggers',
+                         '--databases',
+                         schema_name))
         yield (join(schema_name, 'routines.ddl'),
                mysqldump('--no-data',
                          '--no-create-info',
