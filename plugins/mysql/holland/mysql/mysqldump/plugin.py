@@ -121,10 +121,13 @@ class MySQLDumpBackupPlugin(BackupPlugin):
         util.generate_mysqldump_options(defaults_file, config, mysqldump_version)
         util.generate_table_exclusions(defaults_file, self.ischema)
         if config.exclude_invalid_views:
+            start_time = time.time()
             invalid_views_path = join(backup_datadir, 'invalid_views.sql')
             views.dump_and_exclude_invalid_views(invalid_views_path,
                                                  defaults_file,
                                                  self.ischema)
+            LOG.info("Discovered invalid views in %s",
+                     format_interval(time.time() - start_time))
 
         compression = load_stream_plugin(self.config.compression)
 
