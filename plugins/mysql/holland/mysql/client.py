@@ -13,9 +13,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import SingletonThreadPool
-from sqlalchemy.exc import DatabaseError, DBAPIError
+from sqlalchemy.exc import DatabaseError, DBAPIError, OperationalError
 from holland.core import HollandError
 from holland.core.util import format_interval
+from holland.mysql.util import render_template
 
 LOG = logging.getLogger(__name__)
 
@@ -244,6 +245,37 @@ class MySQL(object):
             ddl[1],
             '/*!40101 SET character_set_client = @saved_cs_client */;'
             ])
+
+    def show_create_view(self, name, schema):
+        sql = "SHOW CREATE VIEW `{0}`.`{1}`".format(schema, name)
+        try:
+            ddl = first(self.execute(sql))
+            params = {}
+            if ddl:
+                params['view_ddl'] = ddl[1]
+                if ddl.has_key('character_set_client'):
+                    params['character_set_client'] = ddl.character_set_client
+                if ddl.has_key('collation_connection'):
+                    params['collation_connection'] = ddl.collation_connection
+            return render_template('create_view', **params)
+                            
+        except OperationalError, exc:
+            sql = ('SELECT * '
+                   'FROM INFORMATION_SCHEMA.VIEWS '
+                   'WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s')
+            ddl = first(self.execute(sql, schema, name))
+            params = {}
+            if ddl:
+                params['definer'] = ddl.definer
+                params['security_type'] = ddl.security_type
+                params['view_name'] = ddl.table_name
+                params['view_definition'] = ddl.view_definition
+                params['check_option'] = ddl.check_option
+                if ddl.has_key('character_set_client'):
+                    params['character_set_client'] = ddl.character_set_client
+                if ddl.has_key('collation_connection'):
+                    params['collation_connection'] = ddl.collation_connection
+            return render_template('create_view', **params)
 
     def flush_tables(self):
         """Execute a FLUSH TABLES query"""

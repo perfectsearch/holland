@@ -235,7 +235,12 @@ class InformationSchema(object):
                                     code, message
                               )
             except OperationalError, exc:
-                if exc.orig.args[0] in (1142, 1143, 1356, 1449):
+                # 1142 : ER_TABLEACCESS_DENIED_ERROR
+                # 1143 : ER_COLUMNACCESS_DENIED_ERROR
+                # 1267 : ER_CANT_AGGREGATE_2COLLATIONS
+                # 1356 : ER_VIEW_INVALID
+                # 1449 : ER_NO_SUCH_USER
+                if exc.orig.args[0] in (1142, 1143, 1267, 1356, 1449):
                     message = "[{0}] {1}".format(*exc.orig.args)
                     yield table_schema, table_name, message
                 else:

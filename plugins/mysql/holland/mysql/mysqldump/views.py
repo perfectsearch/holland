@@ -59,13 +59,13 @@ def dump_and_exclude_invalid_views(output_path, defaults_file, information_schem
     LOG.info("Discovering invalid views")
     databases = information_schema.databases()
     invalid_views = information_schema.broken_views
-    show_create_table = information_schema.mysql.show_create_table
+    show_create_view = information_schema.mysql.show_create_view
     invalid_view_count = 0
     with codecs.open(defaults_file, 'ab', encoding='utf8') as fileobj:
         with codecs.open(output_path, 'wb', encoding='utf8') as sqlf:
             LOG.info("Writing invalid view definitions to %s", sqlf.name)
             # start option file config section
-            print >>fileobj, u"# Brokens views detected by holland"
+            print >>fileobj, u"# Invalid views detected by holland"
             print >>fileobj, u"[mysqldump]"
             # output header for .sql file
             print >>sqlf, generate_sqlfile_header(information_schema.mysql)
@@ -87,14 +87,14 @@ def dump_and_exclude_invalid_views(output_path, defaults_file, information_schem
                     print >>fileobj, u"ignore-table=%s.%s" % \
                                      (table_schema,table_name)
                     print >>sqlf, u"--"
-                    print >>sqlf, u"-- Broken View `%s`.`%s`" % (table_schema,
-                                                                table_name)
+                    print >>sqlf, u"-- Invalid View `%s`.`%s` : %s" % \
+                                  (table_schema, table_name, message)
                     print >>sqlf, u"--"
                     try:
-                        print >>sqlf, show_create_table(table_name, table_schema)
+                        print >>sqlf, show_create_view(table_name, table_schema)
                     except:
-                        print >>sqlf, (u"-- SHOW CREATE TABLE on invalid views"
-                                       u" only works on MySQL 5.5+")
+                        LOG.info("View defintion retrieval failed.", exc_info=True)
+                        print >>sqlf, "-- Failed to load invalid view definition"
                     print >>sqlf # newline
                     invalid_view_count += 1
 
