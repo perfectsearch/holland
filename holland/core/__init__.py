@@ -12,7 +12,6 @@ from holland.core.exc import HollandError
 from holland.core.plugin import load_plugin, iterate_plugins
 from holland.core.plugin import BasePlugin, PluginError
 from holland.core.config import Config, ConfigError, Configspec
-from holland.core.hooks import BaseHook
 from holland.core.stream import open_stream
 # spool management
 from holland.core.backup import BackupSpool
@@ -30,7 +29,6 @@ __all__ = [
     'Config',
     'ConfigError',
     'Configspec',
-    'BaseHook',
     'open_stream',
     'BackupSpool',
     'BackupController',
