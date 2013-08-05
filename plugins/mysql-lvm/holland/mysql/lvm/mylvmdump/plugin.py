@@ -61,6 +61,7 @@ class MyLVMDump(MyLVMSnapshot):
         LOG.info("Remapping mysqld options against mountpoint '%s'",
                  mountpoint)
         options = util.remap_options(self.mysql, mountpoint)
+        options['engines'] = self.mysql.show_engines()
         mysql_user = path_owner(options['datadir'])
         if mysql_user:
             options['user'] = mysql_user
