@@ -7,18 +7,26 @@ MySQL client connection wrapper
 import time
 import logging
 import codecs
+import collections
 from os.path import basename, splitext, expanduser, abspath
 from contextlib import contextmanager
+
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import SingletonThreadPool
 from sqlalchemy.exc import DatabaseError, DBAPIError, OperationalError
+
 from holland.core import HollandError
 from holland.core.util import format_interval
+
 from holland.mysql.util import render_template
 
 LOG = logging.getLogger(__name__)
+
+EngineInfo = collections.namedtuple('EngineInfo',
+                                    'name support comment transactions xa '
+                                    'savepoints is_enabled')
 
 # XXX: Deprecate once sqlalchemy < 0.6 no longer supported
 def first(result):
@@ -302,6 +310,25 @@ class MySQL(object):
         the MySQL server
         """
         return sessionmaker(bind=self._engine, autocommit=True)()
+
+    def show_engines(self):
+        """Retrieve current available engines from a MySQL instances
+
+        :returns: a dict of name to ``EngineInfo`` instance
+        """
+        info = {}
+        for row in self.execute("SHOW ENGINES"):
+            engine_info = EngineInfo(
+                name=row.engine,
+                support = row.support,
+                comment=row.comment,
+                transactions=row.transactions if row.has_key('transactions') else None,
+                xa=row.xa if row.has_key('xa') else None,
+                savepoints=row.savepoints if row.has_key('savepoints') else None,
+                is_enabled=row.support in ('DEFAULT', 'YES')
+            )
+            info[engine_info.name] = engine_info
+        return info
 
     def binary_log_basename(self):
         """Determine the basename of the binary log in use by
