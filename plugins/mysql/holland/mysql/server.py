@@ -34,6 +34,7 @@ from subprocess import Popen, STDOUT, list2cmdline
 from jinja2 import Environment, PackageLoader
 from holland.core import HollandError
 from holland.core.util import format_interval
+from holland.mysql.util import render_template
 
 LOG = logging.getLogger(__name__)
 info = LOG.info
@@ -102,10 +103,9 @@ class MySQLServer(object):
         self.options['log_error'] = self.error_log
         self.options['socket'] = self.socket
         self.options['pid_file'] = self.pid_file
-        env = Environment(loader=PackageLoader(__name__, 'templates'))
-        template = env.get_template('server.defaults')
+        defaults = render_template('server.defaults', self.options)
         with open(self.defaults_file, 'wb') as fileobj:
-            template.stream(self.options).dump(fileobj)
+            fileobj.write(defaults)
 
 
     def to_argv(self):
