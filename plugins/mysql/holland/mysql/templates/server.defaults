@@ -38,7 +38,7 @@ relay-log-info-file         = {{relay_log_info_file|default('relay-log.info')}}
 
 plugin-load                 = {{plugin_load}}
 {%- endif -%}
-{%- if have_innodb == 'YES' %}
+{%- if engines.InnoDB.is_enabled %}
 
 ## InnoDB
 innodb-buffer-pool-size     = {{innodb_buffer_pool_size|default('128M')}}
