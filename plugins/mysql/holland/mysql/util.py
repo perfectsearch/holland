@@ -2,11 +2,11 @@ from jinja2 import Environment, PackageLoader
 
 def format_binlog_info(filename, position, source):
     return render_template('replication.change_master',
-                           name=filename,
-                           position=position,
-                           source=source)
+                           dict(name=filename,
+                                position=position,
+                                source=source))
 
-def render_template(name, **kwargs):
+def render_template(template_name, params):
     """Load a named template and render it with ``kwargs``
 
     :returns: text of rendered template
@@ -14,5 +14,5 @@ def render_template(name, **kwargs):
     env = Environment(loader=PackageLoader(__name__, 'templates'),
                       trim_blocks=True,
                       lstrip_blocks=True)
-    template = env.get_template(name)
-    return template.render(**kwargs)
+    template = env.get_template(template_name)
+    return template.render(**params)

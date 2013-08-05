@@ -257,7 +257,7 @@ class MySQL(object):
                     params['character_set_client'] = ddl.character_set_client
                 if ddl.has_key('collation_connection'):
                     params['collation_connection'] = ddl.collation_connection
-            return render_template('create_view', **params)
+            return render_template('create_view', params)
                             
         except OperationalError, exc:
             sql = ('SELECT * '
@@ -275,7 +275,7 @@ class MySQL(object):
                     params['character_set_client'] = ddl.character_set_client
                 if ddl.has_key('collation_connection'):
                     params['collation_connection'] = ddl.collation_connection
-            return render_template('create_view', **params)
+            return render_template('create_view', params)
 
     def flush_tables(self):
         """Execute a FLUSH TABLES query"""
