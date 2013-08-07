@@ -25,4 +25,5 @@ entry_points="""
 [holland.backup]
 lvmsnapshot = holland.lvm.plugin:LVMSnapshot
 """,
+namespace_packages=['holland']
 )
