@@ -14,9 +14,6 @@ snapshot-create-options = cmdline(default='')
 # additional options to pass to mount when mounting
 # the created snapshot
 snapshot-mount-options = force_list(default=list())
-
-skip-unmount = boolean(default=False)
-
 archive-method = archive_method(default=tar)
 
 [tar]
