@@ -1,2 +1,3 @@
 recursive-exclude tests *
 recursive-include holland *.configspec
+recursive-include holland/mysql/templates/ *
