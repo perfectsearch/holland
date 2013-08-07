@@ -32,6 +32,6 @@ setup(
     [console_scripts]
     holland = holland.cli.main:holland
     """,
-    namespace_packages=[],
+    namespace_packages=['holland'],
     **extra
 )
