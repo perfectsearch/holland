@@ -146,6 +146,9 @@ using a variety of backup strategies, including:
 
 
 %build
+
+find . -type f -name setup.py | xargs sed -i '/namespace_packages/d'
+
 %{__python} setup.py build
 
 %if %{with mysql}
@@ -229,7 +232,6 @@ cd plugins/mongodb
 %{__python} setup.py install -O1 --skip-build --root %{buildroot}
 cd -
 %endif
-
  
 %clean
 rm -rf %{buildroot}
@@ -241,6 +243,8 @@ rm -rf %{buildroot}
 %dir %{python_sitelib}/%{name}
 %{python_sitelib}/%{name}/core
 %{python_sitelib}/%{name}/cli
+%{python_sitelib}/%{name}/version.py*
+%{python_sitelib}/%{name}/__init__.py*
 %{python_sitelib}/%{name}-%{version}-py*.egg-info
 %{_bindir}/holland
 %dir %{_sysconfdir}/holland
@@ -253,9 +257,19 @@ rm -rf %{buildroot}
 %if %{with mysql}
 %files mysql
 %doc plugins/mysql/{README,LICENSE}
-%{python_sitelib}/%{name}/mysql/
+%{python_sitelib}/%{name}/mysql/__init__.py*
+%{python_sitelib}/%{name}/mysql/client.py*
+%{python_sitelib}/%{name}/mysql/pathinfo.py*
+%{python_sitelib}/%{name}/mysql/schema.py*
+%{python_sitelib}/%{name}/mysql/server.py*
+%{python_sitelib}/%{name}/mysql/util.py*
+%{python_sitelib}/%{name}/mysql/templates/
+%{python_sitelib}/%{name}/mysql/delphini/
+%{python_sitelib}/%{name}/mysql/mysqldump/
+%{python_sitelib}/%{name}/mysql/xtrabackup/
+
+
 %{python_sitelib}/%{name}.mysql-%{version}-py*.egg-info
-%{python_sitelib}/%{name}.mysql-%{version}-py*-nspkg.pth
 %endif
 
 %if %{with lvm} && %{with mysql}
@@ -263,7 +277,6 @@ rm -rf %{buildroot}
 %doc plugins/mysql-lvm/{README,LICENSE}
 %{python_sitelib}/%{name}/mysql/lvm/
 %{python_sitelib}/%{name}.mysql.lvm-%{version}-py*.egg-info
-%{python_sitelib}/%{name}.mysql.lvm-%{version}-py*-nspkg.pth
 %endif
 
 %if %{with pgsql}
@@ -271,7 +284,6 @@ rm -rf %{buildroot}
 %doc plugins/pgsql/{README,LICENSE}
 %{python_sitelib}/%{name}/pgsql/
 %{python_sitelib}/%{name}.pgsql-%{version}-py*.egg-info
-%{python_sitelib}/%{name}.pgsql-%{version}-py*-nspkg.pth
 %endif
 
 %if %{with lvm}
@@ -279,7 +291,6 @@ rm -rf %{buildroot}
 %doc plugins/lvm/{README,LICENSE}
 %{python_sitelib}/%{name}/lvm/
 %{python_sitelib}/%{name}.lvm-%{version}-py*.egg-info
-%{python_sitelib}/%{name}.lvm-%{version}-py*-nspkg.pth
 %endif
 
 %if %{with mongodb}
@@ -287,7 +298,6 @@ rm -rf %{buildroot}
 %doc plugins/mongodb/{README,LICENSE}
 %{python_sitelib}/%{name}/mongodb/
 %{python_sitelib}/%{name}.mongodb-%{version}-py*.egg-info
-%{python_sitelib}/%{name}.mongodb-%{version}-py*-nspkg.pth
 %endif
 
 %changelog
