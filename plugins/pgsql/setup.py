@@ -24,4 +24,5 @@ setup(name='holland.pgsql',
       [holland.backup]
       pgdump = holland.pgsql.pgdump:PgDump
       """,
+      namespace_packages=["holland"],
 )
