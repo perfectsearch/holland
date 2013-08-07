@@ -12,7 +12,6 @@ def render_template(template_name, params):
     :returns: text of rendered template
     """
     env = Environment(loader=PackageLoader(__name__, 'templates'),
-                      trim_blocks=True,
-                      lstrip_blocks=True)
+                      trim_blocks=True)
     template = env.get_template(template_name)
     return template.render(**params)
