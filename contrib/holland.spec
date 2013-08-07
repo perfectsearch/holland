@@ -252,7 +252,7 @@ rm -rf %{buildroot}
 
 %if %{with mysql}
 %files mysql
-%doc plugins/mysql/{README,LICENSE,examples}
+%doc plugins/mysql/{README,LICENSE}
 %{python_sitelib}/%{name}/mysql/
 %{python_sitelib}/%{name}.mysql-%{version}-py*.egg-info
 %{python_sitelib}/%{name}.mysql-%{version}-py*-nspkg.pth
@@ -260,7 +260,7 @@ rm -rf %{buildroot}
 
 %if %{with lvm} && %{with mysql}
 %files mysql-lvm
-%doc plugins/mysql-lvm/{README,LICENSE,examples}
+%doc plugins/mysql-lvm/{README,LICENSE}
 %{python_sitelib}/%{name}/mysql/lvm/
 %{python_sitelib}/%{name}.mysql.lvm-%{version}-py*.egg-info
 %{python_sitelib}/%{name}.mysql.lvm-%{version}-py*-nspkg.pth
@@ -268,7 +268,7 @@ rm -rf %{buildroot}
 
 %if %{with pgsql}
 %files pgsql
-%doc plugins/pgsql/{README,LICENSE,examples}
+%doc plugins/pgsql/{README,LICENSE}
 %{python_sitelib}/%{name}/pgsql/
 %{python_sitelib}/%{name}.pgsql-%{version}-py*.egg-info
 %{python_sitelib}/%{name}.pgsql-%{version}-py*-nspkg.pth
@@ -276,7 +276,7 @@ rm -rf %{buildroot}
 
 %if %{with lvm}
 %files lvm
-%doc plugins/lvm/{README,LICENSE,examples}
+%doc plugins/lvm/{README,LICENSE}
 %{python_sitelib}/%{name}/lvm/
 %{python_sitelib}/%{name}.lvm-%{version}-py*.egg-info
 %{python_sitelib}/%{name}.lvm-%{version}-py*-nspkg.pth
@@ -284,7 +284,7 @@ rm -rf %{buildroot}
 
 %if %{with mongodb}
 %files mongodb
-%doc plugins/mongodb/{README,LICENSE,examples}
+%doc plugins/mongodb/{README,LICENSE}
 %{python_sitelib}/%{name}/mongodb/
 %{python_sitelib}/%{name}.mongodb-%{version}-py*.egg-info
 %{python_sitelib}/%{name}.mongodb-%{version}-py*-nspkg.pth
