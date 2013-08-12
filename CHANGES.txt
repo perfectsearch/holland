@@ -11,10 +11,10 @@ holland
 - holland now requires python 2.6 or above, but holland 2.0.0
   does not yet work with python3
 - holland now has a few external dependencies:
-    * python-argparse (or python2.7+)
-    * python-sqlalchemy
-    * MySQL-python    (required by holland-mysql)
-    * python-jinja2   (required by holland-mysql)
+    * python-argparse >= 1.2.1 (or python2.7+)
+    * python-sqlalchemy >= 0.5.5
+    * MySQL-python    >= 1.2.3 (required by holland-mysql)
+    * python-jinja2   >= 2.2.1 (required by holland-mysql)
 - Plugins distributed with the holland source have now been significantly
   restructured:
     * plugins/mysql -> holland mysql support and base mysql plugins
