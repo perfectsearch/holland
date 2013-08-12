@@ -27,7 +27,7 @@ class BaseCommand(BasePlugin):
 
     #: Namespace for this command
     #: This should be holland.commands for the standard holland cli
-    namespace = 'holland.commands'
+    namespace = 'holland.cli.command'
 
     #: Name of this command
     #: :type: str
@@ -114,7 +114,7 @@ class BaseCommand(BasePlugin):
         :returns: BaseCommand instance
         :raises: CommandNotFoundError
         """
-        for cmd in list(iterate_plugins('holland.commands')):
+        for cmd in list(iterate_plugins(self.namespace)):
             if cmd.matches(name):
                 cmd.setup(self)
                 cmd.configure(self.config)

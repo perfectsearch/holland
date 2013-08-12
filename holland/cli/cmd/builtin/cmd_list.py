@@ -26,7 +26,7 @@ class ListCommands(ArgparseCommand):
         """Run list-commands"""
         self.stdout("")
         self.stdout("Available commands:")
-        commands = list(iterate_plugins('holland.commands'))
+        commands = list(iterate_plugins(self.namespace))
         commands.sort()
         for cmd in commands:
             aliases = ''
