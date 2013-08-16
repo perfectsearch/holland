@@ -1,23 +1,57 @@
-This package was debianized by BJ Dierkes <wdierkes@rackspace.com> on
-Sat, 02 May 2009 13:41:21 -0500.
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: holland
+Upstream-Contact: Andrew Garner <andrew.garner@rackspace.com>
+Source: http://hollandbackup.org/releases/
 
-It was downloaded from <http://gforge.rackspace.com/svn/holland/>
+Files: *
+Copyright: 2012-2013, Andrew Garner <andrew.garner@rackspace.com> and contributors.
+License: BSD-Style
+ Permission is hereby granted, free of charge, to any person obtaining a
+ copy of this software and associated documentation files (the
+ "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish,
+ distribute, sublicense, and/or sell copies of the Software, and to
+ permit persons to whom the Software is furnished to do so, subject to
+ the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included
+ in all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ DEALINGS IN THE SOFTWARE.
 
-Upstream Authors:
 
-    Andrew Garner <andrew.garner@rackspace.com>
-    Jason Koelker <jason.koelkder@rackspace.com>
-    BJ Dierkes <wdierkes@rackspace.com>
-    Tim Soderstrom <tsoderst@rackspace.com> 
+Files: plugins/*
+Copyright: 2012-2013, Andrew Garner <andrew.garner@rackspace.com> and contributors
+License: GPL-2+
+ You can redistribute this software and/or modify it under the terms of
+ the GNU General Public License as published by the Free Software
+ Foundation; version 2 or any later version.
+ .
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ can be found in /usr/share/common-licenses/GPL-2 file.
 
-Copyright:
-
-    <Copyright (C) 2009 Rackspace US, Inc.>
-
-License:
-
-    Proprietary/None 
-
-The Debian packaging is copyright 2009, Rackspace US, Inc. and is currently
-not licensed.
-
+Files: debian/*
+Copyright: Copyright 2013, Andrew Garner <andrew.garner@rackspace.com>
+License: GPL-2+
+ You can redistribute this software and/or modify it under the terms of
+ the GNU General Public License as published by the Free Software
+ Foundation; version 2 or any later version.
+ .
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ can be found in /usr/share/common-licenses/GPL-2 file.

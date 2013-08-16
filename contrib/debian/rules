@@ -1,105 +1,40 @@
 #!/usr/bin/make -f
-# -*- makefile -*-
 
-# Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
--include /usr/share/python/python.mk
-
-PYTHON=python
-PLUGINDIR=/usr/share/holland/plugins
-SBINDIR=/usr/sbin
-HOLLAND_CORE=$(CURDIR)
-
-configure: configure-stamp
-configure-stamp:
-	dh_testdir
-	touch configure-stamp
+# Lucid does not have dh_python2, but we would like to be able to use this
+# rules file to build on lucid as well. Thus the branching logic.
+WITH_PYTHON2 = $(shell test -f /usr/bin/dh_python2 && echo "--with python2")
+WITH_SPHINXDOC = $(shell test -f /usr/bin/dh_sphinxdoc && echo "--with sphinxdoc")
 
 
-build: build-stamp
-build-stamp: configure-stamp  
-	dh_testdir
-	touch $@
+%:
+	dh $@ \
+		${WITH_SPHINXDOC} \
+		${WITH_PYTHON2} \
+		--with-quilt \
+		--buildsystem=python_distutils
 
-clean: 
-	dh_testdir
-	dh_testroot
-	rm -f build-stamp configure-stamp
+override_dh_auto_clean:
+	make -C docs clean
+	rm -fr dist build
+	rm -fr plugins/mysql/dist plugins/mysql/build
+	rm -fr plugins/lvm/dist plugins/lvm/build
+	dh_auto_clean
 
-	@for ADDON in $(HOLLAND_CORE); \
-	do cd $$ADDON ; \
-		$(PYTHON) setup.py $(if $(DH_VERBOSE),,-q) clean; \
-	done
+override_dh_auto_build:
+	dh_auto_build
+	dh_auto_build -Dplugins/mysql
+	dh_auto_build -Dplugins/lvm
+	dh_auto_build -Dplugins/mysql-lvm
+	dh_auto_build -Dplugins/pgsql
 
-	@for PLUGIN in $(shell ls -d $(CURDIR)/plugins/*/); \
-	do cd $$PLUGIN ; \
-	    $(PYTHON) setup.py $(if $(DH_VERBOSE),,-q) clean; \
-	done
-	find $(CURDIR) -name '*\.py[co]' -delete
-	dh_clean 
+    # Build the HTML documentation.
+	make -C docs html man
 
-install: build 
-	dh_testdir
-	dh_testroot
-	dh_clean -k
-	dh_installdirs
-
-	# remove sphinx's jquery.js as we will symlink debian's
-	rm -f docs/html/_static/jquery.js*
-	@for ADDON in $(HOLLAND_CORE); \
-	do cd $$ADDON ; \
-		$(PYTHON) setup.py $(if $(DH_VERBOSE),,-q) install \
-			--no-compile \
-			--prefix=/usr \
-			--root=$(CURDIR)/debian/tmp \
-			--install-scripts=$(SBINDIR) \
-			--single-version-externally-managed \
-			$(py_setup_install_args); \
-	done
-
-	@for PLUGIN in $(shell ls -d $(CURDIR)/plugins/*/); \
-	do cd $$PLUGIN ; \
-	    $(PYTHON) setup.py $(if $(DH_VERBOSE),,-q) install \
-			--no-compile \
-			--prefix=/usr \
-			--root=$(CURDIR)/debian/tmp \
-			--install-scripts=$(SBINDIR) \
-			--single-version-externally-managed \
-			$(py_setup_install_args); \
-	done
-    
-	mkdir -p $(CURDIR)/debian/tmp/etc/holland
-	mkdir -p $(CURDIR)/debian/tmp/etc/holland/backupsets
-	mkdir -p $(CURDIR)/debian/tmp/etc/holland/providers
-	@for name in $(shell ls $(CURDIR)/config/); \
-	do cp -a $(CURDIR)/config/$$name $(CURDIR)/debian/tmp/etc/holland; \
-	done
-# This should probably be a patch
-	@sed -i 's/^backupsets = default/backupsets = /g' $(CURDIR)/debian/tmp/etc/holland/holland.conf
-
-binary-indep: install
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs
-	dh_installdocs
-	dh_installexamples
-	dh_install
-	dh_movefiles
-	dh_installlogrotate
-#	dh_installcron
-	dh_installman
-	dh_pysupport
-	dh_link
-	dh_link usr/share/javascript/jquery/jquery.js \
-		usr/share/doc/holland-doc/html/_static/jquery.js
-	dh_strip
-	dh_compress
-	dh_fixperms -X etc/holland/backupsets -X var/log/holland
-	dh_installdeb
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary: binary-indep
-.PHONY: build clean binary install configure
+override_dh_auto_install:
+	dh_auto_install -O--buildsystem=python_distutils
+	dh_auto_install -O--buildsystem=python_distutils -Dplugins/mysql
+	dh_auto_install -O--buildsystem=python_distutils -Dplugins/lvm
+	dh_auto_install -O--buildsystem=python_distutils -Dplugins/mysql-lvm
+	dh_auto_install -O--buildsystem=python_distutils -Dplugins/pgsql

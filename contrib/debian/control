@@ -2,95 +2,64 @@ Source: holland
 Section: utils
 Priority: optional
 Maintainer: Andrew Garner <andrew.garner@rackspace.com>
-Build-Depends: 
- debhelper (>= 5), 
- python (>= 2.3.5-11),
- python-setuptools (>= 0.6b3-1~)
-Build-Depends-Indep: python-support (>= 0.5.6)
-Standards-Version: 3.8.0
-XS-Homepage: https://gforge.rackspace.com/gf/project/holland/
+Build-Depends: debhelper (>= 7.0.50)
+Build-Depends-Indep: python (>= 2.6.6-3),
+                     python-setuptools (>= 0.6b3-1~),
+                     python-sphinx,
+                     python-sqlalchemy,
+                     python-jinja2,
+                     python-argpase | python (>= 2.7)
+Homepage: http://hollandbackup.org
+Standards-Version: 3.9.2
 
 Package: holland
-Architecture: all 
-Depends: ${misc:Depends}, ${python:Depends}, python-pkg-resources (>= 0.6b3-1~)
-Description: A pluggable backup utility
- A pluggable backup framework which focuses on, but is not limited to, highly 
+Architecture: all
+Replaces: holland-common (<< 2.0)
+Depends: ${python:Depends},
+         ${misc:Depends},
+         python-pkg-resources,
+         python-sqlalchemy,
+         python-argparse
+Description: pluggable backup manager
+ Pluggable backup framework which focuses on, but is not limited to, highly
  configurable database backups.
- .
- Holland Mythos
- .
- The group came up with the name Holland in allusion to the fictional story of 
- Hans Brinker, a dutch boy who saved Holland by sticking his thumb in a leaking 
- dike hole overnight.
- .
- The Holland Skunk Works Dev Team represent the little boy, stopping the
- inevitable flood.
- .
- The ocean represents our customers, and the rising tide of MySQL backup needs 
- at Rackspace.
- .
- The dike represents Rackspace.
 
-Package: holland-doc
-Section: doc
+Package: holland-mysql
 Architecture: all
-Depends: libjs-query, ${misc:Depends}
-Recommends: holland
-Description: documentation for the Holland Backup Framework
- Holland is a pluggable backup framework with focuses on highly configurable
- database backups.
- .
- This package contains the documentation for Holland in HTML and
- reStructured Text formats.
-
-Package: holland-common
-Architecture: all
-Depends: ${misc:Depends}, ${python:Depends}, holland (>= ${source:Version}), python-mysqldb (>= 1.2)
-Recommends: mysql-client (>= 4.1)
-Description: Holland Common Library Plugins
- This package provides the common holland plugins that are generally used by
- other plugins.
-
-Package: holland-mysqldump
-Architecture: all
-Depends: ${misc:Depends}, ${python:Depends}, holland (>= ${source:Version}), holland-common(>= ${source:Version}), mysql-client (>= 4.1)
-Description: Holland MySQL Dump Backup Plugin
- This package provides the holland mysqldump plugin. 
- 
-Package: holland-mysqlhotcopy
-Architecture: all
-Depends: ${misc:Depends}, ${python:Depends}, holland (>= ${source:Version}), holland-common (>= ${source:Version})
-Description: Holland MySQL Hot Copy Backup Plugin 
- This package provides the Holland mysqlhotcopy plugin. 
+Replaces: holland-mysqldump (<< 2.0),
+          holland-xtrabackup (<< 2.0)
+Depends: ${python:Depends},
+         ${misc:Depends},
+         holland (>= ${source:Version}),
+         python-sqlalchemy
+Description: Holland MySQL backup and utility plugins
+ This package provides the holland mysql plugins.
 
 Package: holland-lvm
 Architecture: all
-Depends: ${misc:Depends}, ${python:Depends}, holland (>= ${source:Version}), holland-common (>= ${source:Version})
-Replaces: holland-mysql-lvm, holland-mysqllvm
-Description: Holland MySQL Hot Copy Backup Plugin 
- This package provides the Holland mysql-lvm plugin. 
+Depends: ${python:Depends},
+         ${misc:Depends},
+         holland (>= ${source:Version})
+Description: Holland LVM backup and utility plugins
+ This package provides plugins for generating backups via lvm snapshots.
 
-Package: holland-xtrabackup
+Package: holland-mysql-lvm
 Architecture: all
-Depends: ${misc:Depends}, ${python:Depends}, holland (>= ${source:Version}), holland-common (>= ${source:Version}), mysql-client (>= 4.1)
-Description: Holland xtrabackup Backup plugin
- This package provides the holland xtrabackup plugin.
- 
-Package: holland-pgdump
+Replaces: holland-mysqllvm (<< 2.0)
+Depends: ${python:Depends},
+         ${misc:Depends},
+         holland (>= ${source:Version}),
+         holland-lvm (>= ${source:Version}),
+         holland-mysql (>= ${source:Version})
+Description: Holland LVM backup plugins for MySQL databases
+ This package provides plugins for generating MySQL backups via lvm snapshots.
+
+Package: holland-pgsql
 Architecture: all
-Depends: ${misc:Depends}, ${python:Depends}, holland (>= ${source:Version}), holland-common(>= ${source:Version})
-Description: Holland Postgres Backup Plugin
- This package provides the holland pgdump plugin. 
- 
-Package: holland-script
-Architecture: all
-Depends: ${misc:Depends}, ${python:Depends}, holland (>= ${source:Version}), holland-common(>= ${source:Version})
-Description: Holland Script Backup Plugin
- This package provides the holland script plugin.
- 
-#Package: holland-delphini
-#Architecture: all
-#Depends: ${misc:Depends}, ${python:Depends}, holland (>= ${source:Version}), holland-common(>= ${source:Version}),
-#  mysql-cluster-client (>= 5.1)
-#Description: Holland Delphini Backup Plugin
-# This package provides the holland delphini plugin.
+Replaces: holland-pgdump (<< 2.0)
+Depends: ${python:Depends},
+         ${misc:Depends},
+         holland (>= ${source:Version}),
+         python-psycopg2 (>= 2.0.13)
+Description: Holland Postgresql backup and utility plugins
+ This package provides the holland postgres plugins.

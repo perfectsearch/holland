@@ -1,0 +1,2 @@
+debian/tmp/usr/lib/python*.*/*-packages/holland.mysql.lvm-*.egg-info
+debian/tmp/usr/lib/python*.*/*-packages/holland/mysql/lvm/

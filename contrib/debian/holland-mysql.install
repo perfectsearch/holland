@@ -1,0 +1,9 @@
+debian/tmp/usr/lib/python*.*/*-packages/holland.mysql-*.egg-info
+debian/tmp/usr/lib/python*.*/*-packages/holland/mysql/client.py
+debian/tmp/usr/lib/python*.*/*-packages/holland/mysql/pathinfo.py
+debian/tmp/usr/lib/python*.*/*-packages/holland/mysql/schema.py
+debian/tmp/usr/lib/python*.*/*-packages/holland/mysql/server.py
+debian/tmp/usr/lib/python*.*/*-packages/holland/mysql/util.py
+debian/tmp/usr/lib/python*.*/*-packages/holland/mysql/mysqldump/
+debian/tmp/usr/lib/python*.*/*-packages/holland/mysql/xtrabackup/
+debian/tmp/usr/lib/python*.*/*-packages/holland/mysql/delphini/

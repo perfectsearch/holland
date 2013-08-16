@@ -1,0 +1,2 @@
+debian/tmp/usr/lib/python*.*/*-packages/holland.pgsql-*.egg-info
+debian/tmp/usr/lib/python*.*/*-packages/holland/pgsql/

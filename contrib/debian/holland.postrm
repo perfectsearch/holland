@@ -20,9 +20,9 @@ set -e
 
 case "$1" in
         purge)
-                rm -rf /etc/holland
-                rm -rf /var/log/holland
-                rm -fr /var/spool/holland
+                rm -f /etc/holland/holland.conf
+                rm -f /var/log/holland/holland.log*
+                rmdir --ignore-fail-on-non-empty /var/spool/holland /etc/holland/backupsets /etc/holland
         ;;
 
         remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
