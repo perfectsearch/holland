@@ -5,13 +5,20 @@ from collections import namedtuple
 from ..config import Config
 from .plugin import BackupPlugin, load_backup_plugin
 from .hooks import HookExecutor
+from .exc import BackupError
 
 LOG = logging.getLogger(__name__)
 
 def validate(config):
     """Validate a backup config and return the configured backup plugin instance"""
-    basecfg = config['holland:backup']
+    basecfg = config.get('holland:backup')
+    if not basecfg:
+        raise BackupError("Missing [holland:backup] section in %s" % config.path)
     BackupPlugin.base_configspec()['holland:backup'].validate(basecfg)
+
+    if not basecfg.backup_plugin:
+        raise BackupError("No backup-plugin specified in [holland:backup] in %s" % config.path)
+
     plugin = load_backup_plugin(basecfg.backup_plugin)
     plugin.configspec().validate(config)
     return plugin, config
