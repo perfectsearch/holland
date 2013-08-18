@@ -213,6 +213,7 @@ class SaveConfigHook(HookPlugin):
     saved_config = None
 
     def update_config(self):
+        self.context.backup.config = self.context.config.text
         from tempfile import NamedTemporaryFile
         config = self.context.config
         backup_directory = self.context.backup.backup_directory
