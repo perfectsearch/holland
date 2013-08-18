@@ -2,13 +2,6 @@ from setuptools import setup, find_packages
 import sys, os
 from holland.version import __version__
 
-extra = {}
-if sys.version_info >= (3, 0):
-    extra.update(
-        use_2to3=True,
-        use_2to3_fixers=[]
-    )
-
 setup(
     name="holland",
     version=__version__,
@@ -32,6 +25,5 @@ setup(
     [console_scripts]
     holland = holland.cli.main:holland
     """,
-    namespace_packages=['holland'],
-    **extra
+    namespace_packages=['holland']
 )
