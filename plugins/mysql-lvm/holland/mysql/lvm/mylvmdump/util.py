@@ -26,7 +26,7 @@ def path_owner(path):
 
     try:
         pw_st = pwd.getpwuid(st.st_uid)
-    except KeyError, exc:
+    except KeyError as exc:
         LOG.debug("getwuid(%r) failed.", st.st_uid)
         return None
     else:

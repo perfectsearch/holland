@@ -51,7 +51,7 @@ class MySQLPathInfo(_AbstractMySQLPathInfo):
             try:
                 sql = 'SELECT @@global.innodb_data_home_dir'
                 abs_tablespace_paths = bool(mysql.execute(sql).scalar())
-            except mysql.DatabaseError, exc:
+            except mysql.DatabaseError as exc:
                 # either mysql 5.0 or we had a connection failure
                 # here we will just assume 'yes'
                 abs_tablespace_paths = True

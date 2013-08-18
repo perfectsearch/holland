@@ -157,7 +157,7 @@ def generate_manifest(backups, path):
         try:
             print >>manifest, "%s\t%s" % (dbname.encode('utf8'),
                                           os.path.basename(dumpfile))
-        except UnicodeError, exc:
+        except UnicodeError as exc:
             LOG.error("Failed to encode dbname %s: %s", dbname, exc)
     manifest.close()
 

@@ -183,15 +183,15 @@ class EntrypointPluginLoader(AbstractPluginLoader):
                 return plugin.load()(plugin.name)
             except (SystemExit, KeyboardInterrupt):
                 raise
-            except pkg_resources.DistributionNotFound, exc:
+            except pkg_resources.DistributionNotFound as exc:
                 raise EntrypointDependencyError(namespace, name,
                                                 entrypoint=plugin,
                                                 req=exc.args[0])
-            except pkg_resources.VersionConflict, exc:
+            except pkg_resources.VersionConflict as exc:
                 raise EntrypointVersionConflictError(namespace, name,
                                                      entrypoint=plugin,
                                                      req=exc.args[1])
-            except Exception, exc:
+            except Exception as exc:
                 LOG.exception("Exception when loading plugin")
                 raise PluginLoadError(namespace, name, exc)
         raise PluginNotFoundError(namespace, name)
@@ -260,7 +260,7 @@ class ChainedPluginLoader(AbstractPluginLoader):
         for loader in self.loaders:
             try:
                 return loader.load(namespace, name)
-            except PluginLoadError, exc:
+            except PluginLoadError as exc:
                 continue
         raise PluginNotFoundError(namespace, name)
 

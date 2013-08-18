@@ -130,7 +130,7 @@ class InformationSchema(object):
         try:
             return [name
                     for name, in query.filter(and_(*self.database_clauses)).all()]
-        except DBAPIError, exc:
+        except DBAPIError as exc:
             raise exc.orig
 
     def data_size(self, name, additional_exclusions=()):
@@ -234,7 +234,7 @@ class InformationSchema(object):
                         yield table_schema, table_name, "[{0}] {1}".format(
                                     code, message
                               )
-            except OperationalError, exc:
+            except OperationalError as exc:
                 # 1142 : ER_TABLEACCESS_DENIED_ERROR
                 # 1143 : ER_COLUMNACCESS_DENIED_ERROR
                 # 1267 : ER_CANT_AGGREGATE_2COLLATIONS

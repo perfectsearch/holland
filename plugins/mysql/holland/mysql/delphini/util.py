@@ -38,7 +38,7 @@ def run_command(args, stdout=PIPE, stderr=PIPE):
             stderr=stderr,
             close_fds=True
         )
-    except OSError, exc:
+    except OSError as exc:
         raise ClusterError("Could not run %s: %s" %
                           (args[0], exc))
 

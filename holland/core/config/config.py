@@ -179,7 +179,7 @@ class Config(OrderedDict):
         for path in filenames:
             try:
                 fileobj = codecs.open(path, 'r', encoding=encoding)
-            except IOError, exc:
+            except IOError as exc:
                 raise ConfigFileError(exc.errno, exc.strerror, exc.filename)
             try:
                 cfg = cls.from_iterable(fileobj)

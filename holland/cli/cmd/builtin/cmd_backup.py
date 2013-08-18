@@ -80,7 +80,7 @@ class Backup(ArgparseCommand):
                     controller.backup(cfg, name=name)
         except (KeyboardInterrupt, SystemExit):
             raise
-        except HollandError, exc:
+        except HollandError as exc:
             self.debug("Failed backup", exc_info=True)
             self.stderr("%s", exc)
         except:
@@ -93,7 +93,7 @@ class Backup(ArgparseCommand):
         "Run a single backup"
         try:
             return self.config.load_backupset(name)
-        except IOError, exc:
+        except IOError as exc:
             raise HollandError("Failed to load backup config %s: %s" %
                                 (name, exc))
 

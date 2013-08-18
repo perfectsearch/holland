@@ -113,7 +113,7 @@ class EstimationHook(HookPlugin):
             from holland.core.util import directory_size
             try:
                 backup.real_size = directory_size(backup.backup_directory)
-            except OSError, exc:
+            except OSError as exc:
                 if exc.errno != errno.ENOENT:
                     raise # XXX: convert to holland error
                 # backup-directory no longer exists

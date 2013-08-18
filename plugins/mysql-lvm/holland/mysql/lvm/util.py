@@ -93,7 +93,7 @@ def find_mysqld(candidates):
     for name in candidates:
         try:
             return which(name)
-        except OSError, exc:
+        except OSError as exc:
             continue
     else:
         raise HollandError("Failed to find suitable mysqld process")

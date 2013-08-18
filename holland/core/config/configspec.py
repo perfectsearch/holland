@@ -94,12 +94,12 @@ class Configspec(Config):
             if isinstance(value, dict):
                 try:
                     self._validate_section(key, config)
-                except ValidateError, exc:
+                except ValidateError as exc:
                     errors.extend(exc.errors)
             else:
                 try:
                     self.validate_option(key, config)
-                except ValidatorError, exc:
+                except ValidatorError as exc:
                     errors.append((exc, config.source.get(key, None)))
 
         if not suppress_missing:
@@ -158,7 +158,7 @@ class Configspec(Config):
 
         try:
             value = validator.validate(value)
-        except ValidatorError, exc:
+        except ValidatorError as exc:
             raise ValidatorError("[%s] -> %s : %s" % (
                                     config.section,
                                     key,
@@ -222,7 +222,7 @@ class Configspec(Config):
         value = config.get(key, check.default)
         try:
             value = validator.validate(value)
-        except ValidatorError, exc:
+        except ValidatorError as exc:
             raise ValidatorError("%s.%s : %s" % (config.section, key, exc),
                                   exc.value)
         config[key] = value

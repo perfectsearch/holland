@@ -105,7 +105,7 @@ class BaseCompressionPlugin(StreamPlugin):
         cfg = self.config
         try:
             cmd = which(cfg['method'])
-        except OSError, exc:
+        except OSError as exc:
             raise IOError(errno.ENOENT,
                           "Could not find '%s' on path" %
                           cfg['method'])

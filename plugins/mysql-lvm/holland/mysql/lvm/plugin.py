@@ -35,7 +35,7 @@ class MyLVMSnapshot(LVMSnapshot):
     def load_volume(self):
         try:
             self.lvm_config.target_path = self.mysql.var('datadir')
-        except self.mysql.DatabaseError, exc:
+        except self.mysql.DatabaseError as exc:
             self.fail("Error discovering datadir: [%d] %s" % exc.args)
         LOG.info("Set target-path to datadir: %s",
                  self.lvm_config.target_path)
@@ -49,9 +49,9 @@ class MyLVMSnapshot(LVMSnapshot):
         try:
             datadir = self.mysql.var('datadir')
             return directory_size(self.mysql.var('datadir'))
-        except OSError, exc:
+        except OSError as exc:
             self.fail("Error calculating size of '%s'", datadir)
-        except self.mysql.DatabaseError, exc:
+        except self.mysql.DatabaseError as exc:
             self.fail("Error discovering datadir: [%d] %s", *exc.args)
 
     def setup(self):
@@ -113,7 +113,7 @@ class MyLVMSnapshot(LVMSnapshot):
             options['log_error'] = None
             try:
                 os.unlink(os.path.join(options['datadir'], 'master.info'))
-            except OSError, exc:
+            except OSError as exc:
                 if exc.errno != errno.ENOENT:
                     raise
             with MySQLServer(options, mysqld='/usr/sbin/mysqld') as server:

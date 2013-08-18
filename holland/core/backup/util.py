@@ -40,7 +40,7 @@ def execute_backup(context):
                     plugin.backup()
             finally:
                 backup.stop_time = datetime.now()
-        except BaseException, exc:
+        except BaseException as exc:
             LOG.debug("Failed backup.  Stacktrace:", exc_info=True)
             backup.status = 'failed'
             backup.message = unicode(exc)

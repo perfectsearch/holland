@@ -53,7 +53,7 @@ class MySQLDumpBackupPlugin(BackupPlugin):
                 schema_size = self.ischema.data_size(schema)
                 total_size += schema_size
                 LOG.info("Estimated size for `%s`: %s", schema, format_bytes(schema_size))
-        except self.mysql.DatabaseError, exc:
+        except self.mysql.DatabaseError as exc:
             LOG.error("MySQL error during estimation: [%d] %s", *exc.args)
             self.fail("MySQL error during estimation: [%d] %s" %
                        exc.args)
@@ -111,7 +111,7 @@ class MySQLDumpBackupPlugin(BackupPlugin):
         backup_datadir = join(self.backup_directory, 'backup_data')
         try:
             os.makedirs(backup_datadir)
-        except OSError, exc:
+        except OSError as exc:
             if exc.errno != errno.EEXIST:
                 self.fail("Unable to create %s: [%d] %s" % (
                             backup_datadir,
@@ -163,11 +163,11 @@ class MySQLDumpBackupPlugin(BackupPlugin):
                                      relpath(stdout.name,
                                              self.backup_directory),
                                      format_interval(time.time() - start_time))
-                        except OSError, exc:
+                        except OSError as exc:
                             LOG.info("[%d] %s", exc.errno, exc.strerror)
                             self.fail("Failed to run mysqldump [%d] %s" %
                                     (exc.errno, exc.strerror))
-                        except CalledProcessError, exc:
+                        except CalledProcessError as exc:
                             stderr.seek(0)
                             stderr.flush()
                             for line in stderr:

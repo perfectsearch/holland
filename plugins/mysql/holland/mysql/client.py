@@ -102,7 +102,7 @@ def pause_mysql_slave(mysql, wrap_exception=None):
     else:
         try:
             mysql.stop_slave(sql_thread=True, io_thread=False)
-        except mysql.DatabaseError, exc:
+        except mysql.DatabaseError as exc:
             if wrap_exception:
                 exc = wrap_exception(exc)
             raise exc
@@ -133,7 +133,7 @@ class MySQL(object):
         """Execute an arbitrary query"""
         #try:
         return self._engine.execute(sql, *multiparams, **params)
-        #except DBAPIError, exc:
+        #except DBAPIError as exc:
         #    raise exc.orig
 
 
@@ -267,7 +267,7 @@ class MySQL(object):
                     params['collation_connection'] = ddl.collation_connection
             return render_template('create_view', params)
                             
-        except OperationalError, exc:
+        except OperationalError as exc:
             sql = ('SELECT * '
                    'FROM INFORMATION_SCHEMA.VIEWS '
                    'WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s')

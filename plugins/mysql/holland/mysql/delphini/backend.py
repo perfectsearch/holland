@@ -43,7 +43,7 @@ def archive_data_nodes(dsn,
             ssh(host,
                 'ls -lah ' + list2cmdline([remote_path]),
                 keyfile=keyfile)
-        except ClusterCommandError, exc:
+        except ClusterCommandError as exc:
             raise
 
     rsync(host, keyfile, list2cmdline([remote_path]), target_path)

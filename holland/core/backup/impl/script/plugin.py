@@ -51,7 +51,7 @@ class ScriptPlugin(BackupPlugin):
             pid.wait()
             if pid.returncode != 0:
                 raise CalledProcessError("script with exited non-zero status")
-        except OSError, exc:
+        except OSError as exc:
             raise BackupError("%s failed: %s" % (cmd, exc))
 
     def dryrun(self):

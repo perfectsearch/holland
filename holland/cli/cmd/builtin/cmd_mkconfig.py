@@ -28,7 +28,7 @@ class MakeConfig(ArgparseCommand):
         """Run the mkconfig command"""
         try:
             plugin = load_plugin('holland.backup', namespace.plugin)
-        except PluginError, exc:
+        except PluginError as exc:
             self.stderr("%s", exc)
             return 1
 
@@ -48,7 +48,7 @@ class MakeConfig(ArgparseCommand):
             namespace.file = sys.stdout
         try:
             config.write(namespace.file)
-        except IOError, exc:
+        except IOError as exc:
             self.stderr("Failed to write config file: %s", exc)
             return 1
         return 0

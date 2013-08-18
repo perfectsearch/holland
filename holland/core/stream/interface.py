@@ -43,7 +43,7 @@ class StreamManager(object):
         for stream in self.streams:
             try:
                 stream.close()
-            except IOError, exc:
+            except IOError as exc:
                 error_count += 1
                 LOG.error('Failed to close %s: %s', stream.name, exc)
                 continue
@@ -126,14 +126,14 @@ def open_stream(filename, mode='r', method=None, config=()):
 
     try:
         stream = load_stream_plugin(config)
-    except PluginError, exc:
+    except PluginError as exc:
         raise IOError("Stream plugin '%s' not found" % method)
 
     Configspec.from_string(stream.configspec()).validate(cfg)
     stream.configure(cfg)
     try:
         return stream.open(filename, mode)
-    except IOError, exc:
+    except IOError as exc:
         fancy_mode = ('r' in mode and 'reading' or
                       'w' in mode and 'writing' or
                       'a' in mode and 'appending' or

@@ -55,7 +55,7 @@ def test_unix_socket(path):
     fd = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     try:
         fd.connect(path)
-    except IOError, exc:
+    except IOError as exc:
         LOG.debug("connection to '%s' failed: (%d) %s", path, exc.errno, exc.strerror)
         return False
     else:
@@ -234,7 +234,7 @@ class MySQLServer(object):
         try:
             info("Stopping the MySQL server '%s'", self.datadir)
             self.stop()
-        except Exception, exc:
+        except Exception as exc:
             # suppress the Timeout exception from stop() unless
             # no other exception is active.  This avoids overwriting
             # an active exception with our own

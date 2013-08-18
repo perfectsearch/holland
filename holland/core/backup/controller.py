@@ -142,7 +142,7 @@ class BackupController:
                     path = os.path.join(self.spool.path, name, link)
                     try:
                         os.unlink(path)
-                    except OSError, exc:
+                    except OSError as exc:
                         if exc.errno != errno.ENOENT:
                             raise
 

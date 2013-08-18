@@ -57,10 +57,10 @@ def capture_stdout(argv):
                                       ' '.join(argv),
                                       stdout)
             return stdout
-        except OSError, exc:
+        except OSError as exc:
             # EPERM, ENOENT, etc.
             raise #XXX: raise something more useful here
-        except LVMCommandError, exc:
+        except LVMCommandError as exc:
             for line in exc.output.splitlines():
                 LOG.error("! %s", line)
             raise
@@ -79,7 +79,7 @@ def lvsnapshot(device, name, extents, extra_options=(), lvcreate='lvcreate'):
         LOG.info("$ %s", subprocess.list2cmdline(argv))
         for line in capture_stdout(argv).splitlines():
             LOG.info("%s", line.strip())
-    except subprocess.CalledProcessError, exc:
+    except subprocess.CalledProcessError as exc:
         raise LVMError("Snapshotting logical volume '%s' failed." % device,
                        context=exc.output)
     return device
@@ -94,7 +94,7 @@ def lvremove(device, lvremove='lvremove'):
         LOG.info("$ %s", subprocess.list2cmdline(argv))
         for line in capture_stdout(argv).splitlines():
             LOG.info("%s", line.strip())
-    except subprocess.CalledProcessError, exc:
+    except subprocess.CalledProcessError as exc:
         raise LVMError("Removing logical volume '%s' failed." % device,
                        context=exc.output)
 
@@ -111,7 +111,7 @@ def mount(device, path, options=(), mount='mount'):
     try:
         for line in capture_stdout(argv).splitlines():
             LOG.info("%s", line)
-    except subprocess.CalledProcessError, exc:
+    except subprocess.CalledProcessError as exc:
         raise LVMError("Mounting device '%s' failed." % device,
                        context=exc.output)
 
@@ -123,7 +123,7 @@ def unmount(device, unmount='umount'):
     try:
         for line in capture_stdout(argv).splitlines():
             LOG.info("%s", line)
-    except subprocess.CalledProcessError, exc:
+    except subprocess.CalledProcessError as exc:
         raise LVMError("Unmounting device '%s' failed." % device,
                        context=exc.output)
 
@@ -171,7 +171,7 @@ def lvs(pathspec=None, extra_columns=(), lvs='lvs'):
                 elif name.endswith('percent'):
                     values[idx] = float(values[idx]) / 100.0
             yield VolumeInfo(*values)
-    except subprocess.CalledProcessError, exc:
+    except subprocess.CalledProcessError as exc:
         raise LVMError("LVM command: lvs '%s' failed." % pathspec,
                        context=exc.output)
 
@@ -260,7 +260,7 @@ class LogicalVolume(object):
                     dev, mountpoint = line.split()[0:2]
                     if os.path.realpath(dev) == real_device_path:
                         yield mountpoint
-        except IOError, exc:
+        except IOError as exc:
             raise
 
     def is_mounted(self):
@@ -301,7 +301,7 @@ class LogicalVolume(object):
                        name=name,
                        extents=extents,
                        extra_options=extra_options)
-        except LVMError, exc:
+        except LVMError as exc:
             snapshot_volume = LogicalVolume.from_device(snapshot_device)
             if snapshot_volume:
                 raise LVMSnapshotExistsError(snapshot_volume)

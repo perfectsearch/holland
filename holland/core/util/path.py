@@ -111,7 +111,7 @@ def ensure_directory(path):
     try:
         os.makedirs(path)
         return True
-    except OSError, exc:
+    except OSError as exc:
         if exc.errno != errno.EEXIST:
             raise
     return False

@@ -8,7 +8,7 @@ import os
 import errno
 import fcntl
 import shutil
-from itertools import tee, izip
+from itertools import tee
 from datetime import datetime
 from contextlib import contextmanager
 try:
@@ -22,7 +22,7 @@ def pairwise(iterable):
     "s -> (s0,s1), (s1,s2), (s2, s3), ..."
     item_a, item_b = tee(iterable)
     next(item_b, None)
-    return izip(item_a, item_b)
+    return zip(item_a, item_b)
 
 class SpoolError(HollandError):
     """Raised if an exception occurs during a spool operation"""
@@ -55,7 +55,7 @@ class BackupSpool(object):
         try:
             info = os.statvfs(self.path)
             return info.f_bavail*info.f_frsize
-        except OSError, exc:
+        except OSError as exc:
             raise SpoolError("Unable to stat spool (%d) %s" %
                              (exc.errno, exc.strerror))
 
@@ -75,7 +75,7 @@ class BackupSpool(object):
         namespace_path = join(self.path, namespace)
         try:
             makedirs(join(namespace_path, '.holland'))
-        except OSError, exc:
+        except OSError as exc:
             if exc.errno != errno.EEXIST:
                 raise SpoolError("Failed to initialize '%s'" % namespace_path)
 
@@ -107,7 +107,7 @@ class BackupSpool(object):
             lock_path = os.path.join(self.path, namespace, '.holland', 'lock')
             try:
                 os.makedirs(os.path.dirname(lock_path))
-            except OSError, exc:
+            except OSError as exc:
                 if exc.errno != errno.EEXIST:
                     raise
             with open(lock_path, 'a+b') as lockf:
@@ -162,7 +162,7 @@ class BackupSpool(object):
 
         try:
             entries = os.listdir(namespace_path)
-        except OSError, exc:
+        except OSError as exc:
             if exc.errno != errno.ENOENT:
                 raise
         else:
@@ -238,7 +238,7 @@ class BackupNode(object):
         """Summarize the size of this backup node"""
         try:
             return directory_size(self.path)
-        except OSError, exc:
+        except OSError as exc:
             if exc.errno != errno.ENOENT:
                 raise SpoolError(
                     "Unable to determine size of '{path}': ({errno}) {msg}".format(
@@ -253,7 +253,7 @@ class BackupNode(object):
         """Purge the data in this node's path"""
         try:
             shutil.rmtree(self.path)
-        except OSError, exc:
+        except OSError as exc:
             raise SpoolError("Failed to purge node: (%s) %s" %
                              (exc.errno, exc.strerror))
 

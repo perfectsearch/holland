@@ -82,7 +82,7 @@ class LVMSnapshot(BackupPlugin):
                 snap_total = format_bytes(snapshot.lv_size)
                 LOG.info("Snapshot used %s of %s allocated",
                          snap_used, snap_total)
-            except LVMSnapshotExistsError, exc:
+            except LVMSnapshotExistsError as exc:
                 # This is only raised on lvcreate, if we detect another
                 # snapshot exists
                 # XXX: this can fail and will raise another exception
@@ -101,7 +101,7 @@ class LVMSnapshot(BackupPlugin):
         else:
             try:
                 os.makedirs(snapshot_mountpoint)
-            except OSError, exc:
+            except OSError as exc:
                 if exc.errno != errno.EEXIST:
                     raise
             os.chmod(snapshot_mountpoint, 0755)

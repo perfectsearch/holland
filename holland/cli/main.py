@@ -86,7 +86,7 @@ class HollandCli(interface.ArgparseCommand):
         """
         try:
             config = util.load_global_config(opts.config)
-        except (IOError, ValueError), exc:
+        except (IOError, ValueError) as exc:
             self.stderr("Failed to load config file %s: %s", opts.config, exc)
             return 1
 
@@ -119,7 +119,7 @@ class HollandCli(interface.ArgparseCommand):
             self.stderr("Interrupted")
         except SystemExit:
             self.stderr("Terminated")
-        except interface.CommandNotFoundError, exc:
+        except interface.CommandNotFoundError as exc:
             self.stderr("'%s' is not a valid holland command. "
                         "See holland help for valid commands.", exc.name)
         except: # unexpected command failure

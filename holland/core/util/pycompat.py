@@ -12,10 +12,7 @@ provide support for older python versions
 # and pypy.
 # Passes Python2.7's test suite and incorporates all the latest updates.
 
-try:
-    from thread import get_ident as _get_ident
-except ImportError:
-    from dummy_thread import get_ident as _get_ident
+import threading
 
 try:
     from _abcoll import KeysView, ValuesView, ItemsView
@@ -237,7 +234,7 @@ class OrderedDict(dict):
 
     def __repr__(self, _repr_running={}):
         'od.__repr__() <==> repr(od)'
-        call_key = id(self), _get_ident()
+        call_key = id(self), threading.current_thread().ident
         if call_key in _repr_running:
             return '...'
         _repr_running[call_key] = 1
@@ -304,7 +301,10 @@ class OrderedDict(dict):
 
 import functools
 import collections
-from itertools import ifilterfalse
+try:
+    from itertools import ifilterfalse
+except ImportError:
+    from itertools import filterfalse as ifilterfalse
 
 def lru_cache(maxsize=100):
     '''Least-recently-used cache decorator.

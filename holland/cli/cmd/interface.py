@@ -222,7 +222,7 @@ class ArgparseCommand(BaseCommand):
 
         try:
             optns = parser.parse_args(args)
-        except ArgparseError, exc:
+        except ArgparseError as exc:
             if exc.message:
                 self.stderr("%s", exc.message)
                 self.stderr("%s", parser.format_help())

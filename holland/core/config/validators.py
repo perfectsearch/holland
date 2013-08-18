@@ -182,7 +182,7 @@ class PercentValidator(AbstractValidator):
             percent = percent[0:-1]
         try:
             return float(percent) / 100.0
-        except ValueError, exc:
+        except ValueError as exc:
             raise ValidationError("Invalid format for percent: %s (%s)" %
                     (value, exc),
                     value)

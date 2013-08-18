@@ -24,7 +24,7 @@ def run_xtrabackup(args, stdout, stderr):
     LOG.info("  > %s 2 > %s", stdout.name, stderr.name)
     try:
         process = Popen(args, stdout=stdout, stderr=stderr, close_fds=True)
-    except OSError, exc:
+    except OSError as exc:
         # Failed to find innobackupex executable
         raise BackupError("%s failed: %s" % (args[0], exc.strerror))
 
@@ -58,7 +58,7 @@ def apply_xtrabackup_logfile(xb_cfg, backupdir):
     if not isabs(innobackupex):
         try:
             innobackupex = which(innobackupex)
-        except OSError, exc:
+        except OSError as exc:
             raise BackupError("Failed to find innobackupex script: %s" % exc)
 
     args = [
@@ -71,7 +71,7 @@ def apply_xtrabackup_logfile(xb_cfg, backupdir):
     LOG.info("Executing: %s", cmdline)
     try:
         process = Popen(args, stdout=PIPE, stderr=STDOUT, close_fds=True)
-    except OSError, exc:
+    except OSError as exc:
         raise BackupError("Failed to run %s: [%d] %s",
                           cmdline, exc.errno, exc.strerror)
 
@@ -116,7 +116,7 @@ def execute_pre_command(pre_command, **kwargs):
                         stderr=STDOUT,
                         shell=True,
                         close_fds=True)
-    except OSError, exc:
+    except OSError as exc:
         # missing executable
         raise BackupError("pre-command %s failed: %s" %
                           (pre_command, exc.strerror))
@@ -138,7 +138,7 @@ def add_xtrabackup_defaults(defaults_path, **kwargs):
             print >>fileobj, "[xtrabackup]"
             for key, value in kwargs.iteritems():
                 print >>fileobj, "%s = %s" % (key, value)
-    except IOError, exc:
+    except IOError as exc:
         raise BackupError("Error writing xtrabackup defaults to %s" % defaults_path)
 
 def build_xb_args(config, basedir, defaults_file=None):

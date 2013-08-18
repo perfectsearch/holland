@@ -39,19 +39,19 @@ class XtrabackupPlugin(BackupPlugin):
     def estimate(self):
         try:
             client = MySQL.from_defaults(self.defaults_path)
-        except MySQL.MySQLError, exc:
+        except MySQL.MySQLError as exc:
             raise BackupError('Failed to connect to MySQL [%d] %s' % exc.args)
 
         try:
             try:
                  datadir = client.var('datadir')
-            except MySQL.DatabaseError, exc:
+            except MySQL.DatabaseError as exc:
                 raise BackupError("Failed to find mysql datadir: [%d] %s" %
                                   exc.orig.args)
 
             try:
                 return directory_size(datadir)
-            except OSError, exc:
+            except OSError as exc:
                 raise BackupError('Failed to calculate directory size: [%d] %s'
                                   % (exc.errno, exc.strerror))
         finally:
@@ -64,7 +64,7 @@ class XtrabackupPlugin(BackupPlugin):
         try:
             with open(path, 'ab') as fileobj:
                 yield fileobj
-        except IOError, exc:
+        except IOError as exc:
             raise BackupError('[%d] %s' % (exc.errno, exc.strerror))
 
     @contextlib.contextmanager
@@ -84,7 +84,7 @@ class XtrabackupPlugin(BackupPlugin):
             try:
                 with compression.open(archive_path, 'wb') as fileobj:
                     yield fileobj
-            except OSError, exc:
+            except OSError as exc:
                 raise BackupError("Unable to create output file: %s" % exc)
         else:
             with open('/dev/null', 'wb') as fileobj:
@@ -106,7 +106,7 @@ class XtrabackupPlugin(BackupPlugin):
         LOG.debug("* Verifying via command: %s", cmdline)
         try:
             process = Popen(args, stdout=PIPE, stderr=STDOUT, close_fds=True)
-        except OSError, exc:
+        except OSError as exc:
             raise BackupError("%s failed: [%d] %s" % (
                                args[0], exc.errno, exc.strerror))
 
@@ -132,7 +132,7 @@ class XtrabackupPlugin(BackupPlugin):
             with self.open_xb_stdout() as stdout:
                 try:
                     util.run_xtrabackup(args, stdout, stderr)
-                except Exception, exc:
+                except Exception as exc:
                     LOG.info("!! %s", exc)
                     for line in open(join(self.backup_directory, 'xtrabackup.log'), 'r'):
                         LOG.error("    ! %s", line.rstrip())

@@ -37,7 +37,7 @@ class DelphiniPlugin(BackupPlugin):
         target_path = os.path.join(self.backup_directory, 'data')
         try:
             os.mkdir(target_path)
-        except OSError, exc:
+        except OSError as exc:
             raise BackupError("Failed to create %s: %s", (target_path, exc))
 
         try:
@@ -45,21 +45,21 @@ class DelphiniPlugin(BackupPlugin):
                                          ssh_user,
                                          ssh_keyfile,
                                          target_path)
-        except ClusterError, exc:
+        except ClusterError as exc:
             raise BackupError(exc)
 
         cluster_info = os.path.join(self.backup_directory,
                                     'cluster_backup.info')
         try:
             fileobj = open(cluster_info, 'w')
-        except IOError, exc:
+        except IOError as exc:
             raise BackupError("Failed to create %s: %s", (cluster_info, exc))
 
         try:
             try:
                 fileobj.write("stopgcp = %s\n" % stop_gcp)
                 fileobj.write("backupid = %s\n" % backup_id)
-            except IOError, exc:
+            except IOError as exc:
                 raise BackupError("Failed to write %s: %s",
                                   (cluster_info, exc))
         finally:

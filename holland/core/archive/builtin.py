@@ -131,7 +131,7 @@ class TarArchiver(ArchiverBase):
                         else:
                             message = "tar exited with non-zero status [%d]" % retcode
                         raise ArchiveError(message)
-        except IOError, exc:
+        except IOError as exc:
             raise ArchiveError(unicode(exc))
 
     def configspec(self):
@@ -179,7 +179,7 @@ class RsyncArchiver(ArchiverBase):
                     check_call(argv,
                                # stdout=stdout, stderr=STDOUT,
                                close_fds=True)
-                except CalledProcessError, exc:
+                except CalledProcessError as exc:
                     raise ArchiveError()
 
     def configspec(self):
@@ -207,7 +207,7 @@ class ShellCmdArchiver(ArchiverBase):
         with open(join(dstdir, 'archive.log'), 'w') as stdout:
             try:
                 check_call(args, stdout=stdout, stderr=STDOUT, close_fds=True)
-            except CalledProcessError, exc:
+            except CalledProcessError as exc:
                 raise ArchiveError()
 
     def configspec(self):
