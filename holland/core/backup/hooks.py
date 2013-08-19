@@ -85,6 +85,7 @@ class EstimationHook(HookPlugin):
         LOG.info("Estimation took %s",
                  format_interval(time.time() - start_time))
 
+        self.context.backup.estimated_size = estimated_bytes
         adjust_by_percent = self.config.estimated_size_adjust_by_percent
         adj_estimated_bytes = estimated_bytes*adjust_by_percent
 
