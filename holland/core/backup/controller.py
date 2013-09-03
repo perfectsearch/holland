@@ -84,21 +84,26 @@ class BackupController:
     def release(self, path):
         """Allow a backup plugin to cleanup after a previous backup"""
         path = os.path.realpath(path)
-        config = Config.from_path(os.path.join(path, '.holland', 'config'))
-        plugin, config = util.validate(config)
-        namespace = os.path.basename(os.path.dirname(path))
-        name = os.path.basename(path)
-        node = self.spool.load_node(namespace, name)
-        # load from backup catalog db 
-        # or generate a fake backup instance
-        backup = self.catalog.load_backup_from_node(node)
-        context = util.BackupContext(backup=backup,
-                                     config=config,
-                                     node=node,
-                                     plugin=plugin,
-                                     controller=self)
-        plugin.bind(context)
-        plugin.release()
+        try:
+            config = Config.from_path(os.path.join(path, '.holland', 'config'))
+        except IOError as exc:
+            LOG.info("Unable to load backup config for %s. Skipping release",
+                     path)
+        else:
+            plugin, config = util.validate(config)
+            namespace = os.path.basename(os.path.dirname(path))
+            name = os.path.basename(path)
+            node = self.spool.load_node(namespace, name)
+            # load from backup catalog db 
+            # or generate a fake backup instance
+            backup = self.catalog.load_backup_from_node(node)
+            context = util.BackupContext(backup=backup,
+                                         config=config,
+                                         node=node,
+                                         plugin=plugin,
+                                         controller=self)
+            plugin.bind(context)
+            plugin.release()
         
     def purge_set(self, name, purge_options=None, exclude=()):
         if not purge_options:
