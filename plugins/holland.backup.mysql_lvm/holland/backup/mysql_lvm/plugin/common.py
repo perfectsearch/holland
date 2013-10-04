@@ -46,7 +46,7 @@ def validate_snapshot_name(name):
                            "Only the following character are valid: "
                            "a-z A-Z 0-9 + _ . -") % name)
 
-    for prefix in RESERVE_LV_PREFIXES:
+    for prefix in RESERVED_LV_PREFIXES:
         if name.startswith(prefix):
             raise BackupError(("Names starting with '%s' are reserved by "
                                "LVM. Please choose a different "
