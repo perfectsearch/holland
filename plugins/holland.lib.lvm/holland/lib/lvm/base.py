@@ -189,7 +189,7 @@ class LogicalVolume(Volume):
         """Reload the data for this LogicalVolume"""
         self.attributes, = lvs(self.device_name())
 
-    def snapshot(self, name, size):
+    def snapshot(self, name, size, create_options=()):
         """Snapshot the current LogicalVolume instance and create a snapshot
         volume with the requested volume name and size
 
@@ -200,7 +200,7 @@ class LogicalVolume(Volume):
         """
 
         try:
-            lvsnapshot(self.device_name(), name, size)
+            lvsnapshot(self.device_name(), name, size, options=create_options)
         except LVMCommandError, exc:
             for line in exc.error.splitlines():
                 LOG.error("%s", line)

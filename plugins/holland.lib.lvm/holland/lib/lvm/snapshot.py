@@ -15,10 +15,15 @@ __all__ = [
 
 class Snapshot(object):
     """Snapshot state machine"""
-    def __init__(self, name, size, mountpoint):
+    def __init__(self,
+                 name,
+                 size,
+                 mountpoint,
+                 create_options=()):
         self.name = name
         self.size = size
         self.mountpoint = mountpoint
+        self.create_options = create_options
         self.callbacks = {}
         self.sigmgr = SignalManager()
 
@@ -41,7 +46,7 @@ class Snapshot(object):
 
         try:
             self._apply_callbacks('pre-snapshot', self, None)
-            snapshot = logical_volume.snapshot(self.name, self.size)
+            snapshot = logical_volume.snapshot(self.name, self.size, self.create_options)
             LOG.info("Created snapshot volume %s", snapshot.device_name())
         except (LVMCommandError, CallbackFailuresError), exc:
             return self.error(None, exc)

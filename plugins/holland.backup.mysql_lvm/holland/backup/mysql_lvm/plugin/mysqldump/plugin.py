@@ -27,6 +27,8 @@ snapshot-size = string(default=None)
 # default: temporary directory
 snapshot-mountpoint = string(default=None)
 
+snapshot-create-options = string(default='')
+
 # default: flush tables with read lock by default
 lock-tables = boolean(default=yes)
 

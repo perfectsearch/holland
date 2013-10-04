@@ -3,6 +3,7 @@
 import os
 import errno
 import shutil
+import shlex
 import tempfile
 import logging
 from holland.core.exceptions import BackupError
@@ -74,6 +75,16 @@ def build_snapshot(config, logical_volume, suppress_tmpdir=False):
         except ValueError, exc:
             raise BackupError("Problem parsing snapshot-size %s" % exc)
 
+    try:
+        snapshot_create_options = config['snapshot-create-options'].encode('utf8')
+        snapshot_create_options = shlex.split(snapshot_create_options)
+    except UnicodeEncodeError, exc:
+        raise BackupError("Error encoding snapshot-create-options: %s" % exc)
+    except ValueError, exc:
+        LOG.error("Invalid snapshot-create-options '%s': %s",
+                  config['snapshot-create-options'], exc)
+        raise BackupError("Error parsing snapshot-create-options: %s" % exc)
+
     mountpoint = config['snapshot-mountpoint']
     tempdir = False
     if not mountpoint:
@@ -89,7 +100,12 @@ def build_snapshot(config, logical_volume, suppress_tmpdir=False):
             if exc.errno != errno.EEXIST:
                 raise BackupError("Failure creating snapshot mountpoint: %s" %
                                   str(exc))
-    snapshot = Snapshot(snapshot_name, int(snapshot_size), mountpoint)
+
+
+    snapshot = Snapshot(snapshot_name,
+                        int(snapshot_size), 
+                        mountpoint,
+                        snapshot_create_options)
     if tempdir:
         snapshot.register('finish',
                           lambda *args, **kwargs: cleanup_tempdir(mountpoint))

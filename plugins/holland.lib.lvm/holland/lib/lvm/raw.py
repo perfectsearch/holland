@@ -77,16 +77,18 @@ def lvs(*volume_groups):
     :param volume_groups: volumes to report on
     :returns: list of dicts of lvs parameters
     """
+    separator = ';'
     lvs_args = [
         'lvs',
         '--unbuffered',
         '--noheadings',
         '--nosuffix',
         '--units=b',
-        '--separator=,',
+        '--separator=%s' % separator,
         '--options=%s' % ','.join(LVS_ATTR),
     ]
     lvs_args.extend(list(volume_groups))
+    LOG.debug("%s", list2cmdline(lvs_args))
     process = Popen(lvs_args,
                     stdout=PIPE,
                     stderr=PIPE,
@@ -97,16 +99,20 @@ def lvs(*volume_groups):
     if process.returncode != 0:
         raise LVMCommandError('lvs', process.returncode, stderr)
 
-    return parse_lvm_format(LVS_ATTR, stdout)
+    return parse_lvm_format(LVS_ATTR, stdout, delimiter=separator)
 
 
-def parse_lvm_format(keys, values):
+def parse_lvm_format(keys, values, delimiter=','):
     """Convert LVM tool output into a dictionary"""
     stream = StringIO(values)
-    for row in csv.reader(stream, delimiter=',', skipinitialspace=True):
+    for row in csv.reader(stream, delimiter=delimiter, skipinitialspace=True):
         yield dict(zip(keys, row))
 
-def lvsnapshot(orig_lv_path, snapshot_name, snapshot_extents, chunksize=None):
+def lvsnapshot(orig_lv_path,
+               snapshot_name,
+               snapshot_extents,
+               chunksize=None,
+               options=()):
     """Create a snapshot of an existing logical volume
 
     :param snapshot_lv_name: name of the snapshot
@@ -119,14 +125,18 @@ def lvsnapshot(orig_lv_path, snapshot_name, snapshot_extents, chunksize=None):
         '--snapshot',
         '--name', snapshot_name,
         '--extents', "%d" % snapshot_extents,
-        orig_lv_path,
     ]
 
     if chunksize:
         lvcreate_args.insert(-1, '--chunksize')
         lvcreate_args.insert(-1, chunksize)
 
-    LOG.debug("%s", list2cmdline(lvcreate_args))
+    # inject user options right before the logical volume
+    lvcreate_args.extend(list(options))
+
+    lvcreate_args.append(orig_lv_path)
+
+    LOG.info("%s", list2cmdline(lvcreate_args))
     process = Popen(lvcreate_args,
                     stdout=PIPE,
                     stderr=PIPE,
