@@ -30,12 +30,44 @@ def cleanup_tempdir(path):
     LOG.info("Removing temporary mountpoint %s", path)
     shutil.rmtree(path)
 
+RESERVED_LV_NAMES = '.', '..'
+RESERVED_LV_PREFIXES = 'snapshot', 'pvmove',
+RESERVED_LV_STRINGS = '_mlog', '_mimage', '_rimage', '_tdata'
+
+def validate_snapshot_name(name):
+    """Ensure a snapshot name will be acceptable for LVM
+
+    :param name: requested snapshot-name to be passed to lvcreate --name
+    :raises: BackupError on failure
+    """
+    if not re.match(r'^[a-zA-Z0-9+_.-]+$', name):
+        raise BackupError(("Invalid snapshot name '%s'. "
+                           "Only the following character are valid: "
+                           "a-z A-Z 0-9 + _ . -") % name)
+
+    for prefix in RESERVE_LV_PREFIXES:
+        if name.startswith(prefix):
+            raise BackupError(("Names starting with '%s' are reserved by "
+                               "LVM. Please choose a different "
+                               "snapshot-name.") % prefix)
+
+    if name in RESERVED_LV_NAMES:
+        raise BackupError("Snapshot name '%s' is invalid." % name)
+
+    for reserved_str in RESERVED_LV_STRINGS:
+        if reserved_str in name:
+            raise BackupError("Snapshot names include '%s' are reserved by "
+                             "LVM. Please choose a different snapshot-name" %
+                             reserved_str)
+
+
 def build_snapshot(config, logical_volume, suppress_tmpdir=False):
     """Create a snapshot process for running through the various steps
     of creating, mounting, unmounting and removing a snapshot
     """
     snapshot_name = config['snapshot-name'] or \
                     logical_volume.lv_name + '_snapshot'
+    validate_snapshot_name(snapshot_name)
     extent_size = int(logical_volume.vg_extent_size)
     snapshot_size = config['snapshot-size']
     if not snapshot_size:
