@@ -10,7 +10,8 @@ from holland.core.exceptions import BackupError
 from holland.core.util.fmt import format_bytes
 from holland.lib.mysql import PassiveMySQLClient, MySQLError, \
                               build_mysql_config, connect
-from holland.lib.lvm import Snapshot, parse_bytes
+from holland.lib.lvm import Snapshot, parse_bytes, \
+                            LVMCommandError, LogicalVolume
 
 LOG = logging.getLogger(__name__)
 
@@ -31,7 +32,56 @@ def cleanup_tempdir(path):
     LOG.info("Removing temporary mountpoint %s", path)
     shutil.rmtree(path)
 
-def build_snapshot(config, logical_volume, suppress_tmpdir=False):
+def remove_stale_snapshot(snapshot_device):
+    """Remove a stale LVM snapshot
+
+    Unmount and remove a snapshot volume referenced by
+    ``snapshot_device``.  If ``snapshot_device`` does
+    not reference a snapshot volume, that volume does
+    not exist or the volume is otherwise busy this
+    method will fail with an LVMCommandError
+
+    Otherwise, the volume is removed and the backup
+    may proceed.
+
+    :param snapshot_device: string path to the snapshot device
+                            e.g. '/dev/vg/holland_snapshot'
+    :raises: LVMCommandError
+
+    """
+    LOG.info("Checking for old active snapshot")
+    try:
+        snapshot = LogicalVolume.lookup(snapshot_device)
+    except LookupError:
+        LOG.info("No old snapshots found")
+    else:
+        snapshot_size = int(float(snapshot.lv_size) *
+                            float(snapshot.snap_percent or snapshot.lv_size))
+        LOG.info("Found '%s' (lv_attr=%s size=%s)",
+                 snapshot.device_name(),
+                 snapshot.lv_attr, format_bytes(snapshot_size))
+
+        if snapshot.lv_attr[0] != 's':
+            LOG.error("Volume '%s' does not appear to be a snapshot. Aborting.",
+                      snapshot.device_name())
+            raise BackupError("Volume '%s' does not appear to be a snapshot. Aborting." %
+                              snapshot.device_name())
+        # Best effort attempt to remove the snapshot
+        # We do not jump through hoops if the snapshot volume is busy
+        # and simply fail early
+        if snapshot.is_mounted():
+            LOG.info("Unmounting '%s'", snapshot.device_name())
+            snapshot.unmount()
+        else:
+            LOG.info("Snapshot is not mounted")
+        if snapshot.exists():
+            LOG.info("Removing '%s'", snapshot.device_name())
+            snapshot.remove()
+        else:
+            LOG.info("Snapshot appearss to be already gone - not removing.")
+
+
+def build_snapshot(config, logical_volume, dryrun=False):
     """Create a snapshot process for running through the various steps
     of creating, mounting, unmounting and removing a snapshot
     """
@@ -39,6 +89,24 @@ def build_snapshot(config, logical_volume, suppress_tmpdir=False):
                     logical_volume.lv_name + '_snapshot'
     extent_size = int(logical_volume.vg_extent_size)
     snapshot_size = config['snapshot-size']
+
+    # When not in a dryrun mode, attempt to remove the snapshot
+    snapshot_device = os.path.join('/dev',
+                                   logical_volume.vg_name,
+                                   snapshot_name)
+
+    if config['remove-stale-snapshot']:
+        if not dryrun:
+            remove_stale_snapshot(snapshot_device)
+        else:
+            # Warn about an existing snapshot name during dryrun
+            if os.path.exists(snapshot_device):
+                LOG.warn("LVM snapshot volume with name '%s' exists: %s",
+                         snapshot_name, snapshot_device)
+                LOG.warn("Holland will try to remove this during a normal backup")
+    else:
+        LOG.info("remove-stale-snapshot option is disabled. Not checking for conflicting snapshot")
+
     if not snapshot_size:
         snapshot_size = min(int(logical_volume.vg_free_count),
                             (int(logical_volume.lv_size)*0.2) / extent_size,
@@ -89,7 +157,7 @@ def build_snapshot(config, logical_volume, suppress_tmpdir=False):
     tempdir = False
     if not mountpoint:
         tempdir = True
-        if not suppress_tmpdir:
+        if not dryrun:
             mountpoint = tempfile.mkdtemp()
     else:
         try:

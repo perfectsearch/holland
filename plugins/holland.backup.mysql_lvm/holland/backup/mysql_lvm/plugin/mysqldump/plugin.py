@@ -29,6 +29,10 @@ snapshot-mountpoint = string(default=None)
 
 snapshot-create-options = string(default='')
 
+# toggle behavior of removing a conflicting snapshot
+# name priorto starting backup
+remove-stale-snapshot = boolean(default=yes)
+
 # default: flush tables with read lock by default
 lock-tables = boolean(default=yes)
 
@@ -93,7 +97,7 @@ class MysqlDumpLVMBackup(object):
 
         # create a snapshot manager
         snapshot = build_snapshot(self.config['mysql-lvm'], volume,
-                                  suppress_tmpdir=self.dry_run)
+                                  dryrun=self.dry_run)
         # calculate where the datadirectory on the snapshot will be located
         rpath = relpath(datadir, getmount(datadir))
         snap_datadir = os.path.abspath(os.path.join(snapshot.mountpoint or

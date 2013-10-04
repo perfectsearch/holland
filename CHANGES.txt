@@ -8,6 +8,18 @@ http://bugs.launchpad.net/holland-backup
 GH# referes to the deprecated github bug tracker here:
 https://github.com/holland-backup/holland/issues
 
+1.0.11 - Sept 25, 2013
+----------------------
+
+holland-mysqllvm
++++++++++++++++++
+- Holland now puts forth a best-effort attempt to remove old snapshots.
+  If remove-old-snapshots is enabled, holland will now check if a
+  snapshot volume with the same snapshot-name exists.  If so, holland
+  will attempt to unmount and remove the volume as necessary.
+  [mysql-lvm] -> remove-old-snapshots defaults to on but may be
+  disabled if this behavior is not desired.
+
 1.0.10 - Jul 29, 2013
 ---------------------
 
