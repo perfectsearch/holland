@@ -43,7 +43,7 @@ def validate_snapshot_name(name):
     """
     if not re.match(r'^[a-zA-Z0-9+_.-]+$', name):
         raise BackupError(("Invalid snapshot name '%s'. "
-                           "Only the following character are valid: "
+                           "Only the following characters are valid: "
                            "a-z A-Z 0-9 + _ . -") % name)
 
     for prefix in RESERVED_LV_PREFIXES:
