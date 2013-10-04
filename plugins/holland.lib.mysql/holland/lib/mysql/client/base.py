@@ -324,6 +324,25 @@ class MySQLClient(object):
             return cursor.fetchone()[1]
         cursor.close()
 
+    def is_engine_enabled(self, name):
+        """Check if a storage engine is supported in server
+
+        :param name: name of the storage engine to check
+        :returns: True if storage engine is enabled, False if disabled or not found
+        """
+        sql = "SHOW STORAGE ENGINES"
+        cursor = self.cursor()
+        try:
+            if cursor.execute(sql):
+                for info in cursor.fetchall():
+                    engine, support = info[0:1]
+                    if engine.lower() == name.lower():
+                        return support in ('DEFAULT', 'YES')
+                return False
+        finally:
+            cursor.close()
+        return False
+
     def show_slave_status(self):
         """Fetch MySQL slave status
 
