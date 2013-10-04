@@ -25,7 +25,7 @@ def setup_actions(snapshot, config, client, snap_datadir, spooldir):
         * Recording MySQL replication
     """
     mysql = connect_simple(config['mysql:client'])
-    if mysql.show_variable('have_innodb') == 'YES':
+    if mysql.is_engine_enabled('InnoDB'):
         try:
             pathinfo = MySQLPathInfo.from_mysql(mysql)
         finally:
