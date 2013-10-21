@@ -103,6 +103,7 @@ def generate_server_config(config, path):
     print >>conf_data, "# not used for --bootstrap but here for completeness"
     print >>conf_data, "port = 3307"
     print >>conf_data, "loose-skip-ndbcluster"
+    print >>conf_data, "loose-federated"
     print >>conf_data, "skip-networking"
     print >>conf_data, "skip-slave-start"
     print >>conf_data, "skip-log-bin"
