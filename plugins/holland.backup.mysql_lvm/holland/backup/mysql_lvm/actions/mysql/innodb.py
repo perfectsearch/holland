@@ -29,7 +29,9 @@ class InnodbRecoveryAction(object):
         my_conf = generate_server_config(self.mysqld_config,
                                          mycnf_path)
         
-        mysqld = MySQLServer(mysqld_exe, my_conf)
+        my_opts = self.mysqld_config['mysqld-options']
+
+        mysqld = MySQLServer(mysqld_exe, my_conf, my_opts)
         mysqld.start(bootstrap=True)
 
         while mysqld.poll() is None:

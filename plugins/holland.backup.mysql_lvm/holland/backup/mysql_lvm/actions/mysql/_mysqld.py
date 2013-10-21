@@ -27,11 +27,12 @@ def locate_mysqld_exe(config):
     raise BackupError("Failed to find mysqld binary")
 
 class MySQLServer(object):
-    def __init__(self, mysqld_exe, defaults_file):
+    def __init__(self, mysqld_exe, defaults_file, options=()):
         self.mysqld_exe = mysqld_exe
         self.defaults_file = defaults_file
         self.returncode = None
         self.process = None
+        self.options = options
 
     def start(self, bootstrap=False):
         args = [
@@ -40,6 +41,8 @@ class MySQLServer(object):
         ]
         if bootstrap:
             args += ['--bootstrap']
+        if self.options:
+            args.extend(self.options)
         self.returncode = None
         LOG.info("Starting %s", list2cmdline(args))
         self.process = Popen(args,
