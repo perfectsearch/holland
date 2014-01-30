@@ -448,6 +448,7 @@ class MySQL(object):
 
 def quote_mysql_option(value):
     """Quote a value inside a my.cnf file"""
+    value = str(value)
     return '"' + value.replace('"', '\\"') + '"'
 
 def generate_defaults_file(defaults_file, include=(), **kwargs):
