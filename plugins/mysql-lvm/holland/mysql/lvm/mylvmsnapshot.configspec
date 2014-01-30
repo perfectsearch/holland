@@ -19,7 +19,7 @@ archive-method = archive_method(default=tar)
 
 innodb-recovery = boolean(default=no)
 lock-tables = boolean(default=yes)
-extra-flush = boolean(default=yes)
+extra-flush-tables = boolean(default=yes)
 flush-logs  = boolean(default=no)
 
 [mysqld]

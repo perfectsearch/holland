@@ -36,7 +36,7 @@ class MyLVMSnapshot(LVMSnapshot):
         try:
             self.lvm_config.target_path = self.mysql.var('datadir')
         except self.mysql.DatabaseError as exc:
-            self.fail("Error discovering datadir: [%d] %s" % exc.args)
+            self.fail("Error discovering datadir: [%d] %s" % exc.orig.args)
         LOG.info("Set target-path to datadir: %s",
                  self.lvm_config.target_path)
         return super(MyLVMSnapshot, self).load_volume()
@@ -53,7 +53,7 @@ class MyLVMSnapshot(LVMSnapshot):
             self.fail("Error calculating size of '%s': [%d] %s" %
                       (datadir, exc.errno, exc.strerror))
         except self.mysql.DatabaseError as exc:
-            self.fail("Error discovering datadir: [%d] %s" % exc.args)
+            self.fail("Error discovering datadir: [%d] %s" % exc.orig.args)
 
     def setup(self):
         defaults_file = os.path.join(self.backup_directory,
@@ -68,7 +68,11 @@ class MyLVMSnapshot(LVMSnapshot):
 
     @contextmanager
     def create_snapshot(self, volume):
-        with MySQLFlushLock(self.mysql) as lock:
+        preflush_tables = self.lvm_config.extra_flush_tables
+        lock_tables = self.lvm_config.lock_tables
+        with MySQLFlushLock(self.mysql,
+                            preflush_tables=preflush_tables,
+                            lock_tables=lock_tables) as lock:
             start_time = time.time()
             LOG.info("Acquiring replication info")
             if self.lvm_config.flush_logs:
