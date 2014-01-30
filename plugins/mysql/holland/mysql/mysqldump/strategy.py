@@ -50,7 +50,6 @@ def lock_options(schema, databases, config):
     elif config.lock_method == 'none':
         return ['--skip-lock-tables']
     elif config.lock_method == 'auto-detect':
-        LOG.info("lock-method = auto-detect - determining lock option to use")
         for name in databases:
             # ignore system databases
             if name in ('mysql', 'information_schema', 'performance_schema'):
@@ -58,12 +57,12 @@ def lock_options(schema, databases, config):
             # if at least one table is non-transactional
             tables = schema.transactional_database(name)
             if tables:
-                LOG.info("%d non-transactional tables detected", len(tables))
+                LOG.info("Auto-detected lock-method: --lock-tables")
+                LOG.info("  Found %d non-transactional tables", len(tables))
                 for tbl, engine in tables:
-                    LOG.info("%s.%s engine=%s", name, tbl, engine)
-                LOG.info("Using --lock-tables")
+                    LOG.info("  - %s.%s engine=%s", name, tbl, engine)
                 return ['--lock-tables']
-        LOG.info("Using --single-transaction")
+        LOG.info("Auto-detected lock-method: --single-transaction")
         return ['--single-transaction']
     else:
         return []
