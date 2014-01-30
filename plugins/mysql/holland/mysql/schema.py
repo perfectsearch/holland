@@ -167,7 +167,7 @@ class InformationSchema(object):
         for schema, table in query.filter_by(table_schema=schema_name).all():
             yield schema, table
 
-    def transactional_database(self, name):
+    def transactional_database(self, name, limit=5):
         table_schema = self.Table.table_schema
         table_name = self.Table.table_name
         table_type = self.Table.table_type
@@ -188,7 +188,7 @@ class InformationSchema(object):
                 )
         # find at least one table without a transactional engine
         #results = query.filter(table_schema == name).all()
-        tables = query.filter(table_schema == name).limit(5).all()
+        tables = query.filter(table_schema == name).limit(limit).all()
         if not tables:
             return []
 
