@@ -89,7 +89,8 @@ class SchemaVersion(DeclarativeBase):
 class Job(DeclarativeBase):
     """Backup job consisting of one or more backups"""
     __tablename__ = 'job'
-    __table_args__ = {'mysql_engine':'InnoDB'}
+    __table_args__ = dict(mysql_engine="InnoDB",
+                          mysql_charset="utf8")
 
     ## Database attributes
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -97,9 +98,30 @@ class Job(DeclarativeBase):
     cmdline = Column(Text, default=list2cmdline(sys.argv))
     start_time = Column(DateTime, default=datetime.now)
     stop_time = Column(DateTime)
-    status = Column(String, default='initialized')
     external_id = Column(String(128), index=True)
     is_dryrun = False
+
+    @property
+    def status(self):
+        backup_count = len(self.backups)
+        completed_count = len([b for b in self.backups
+                               if b.status == 'completed'])
+        if completed_count == 0:
+            return 'failed'
+        elif completed_count < backup_count:
+            return 'partially-completed'
+        else:
+            return 'completed'
+
+    @property
+    def duration(self):
+        start_time = self.start_time
+        stop_time = self.stop_time
+        if start_time and stop_time:
+            delta = stop_time - start_time
+            return delta.days*86400 + delta.seconds + delta.microseconds*10**-6
+        else:
+            return None
 
     def __enter__(self):
         self.start_time = datetime.now()
@@ -111,7 +133,8 @@ class Job(DeclarativeBase):
 class Backup(DeclarativeBase):
     """Backup run mapping to a single backup strategy"""
     __tablename__ = 'backup'
-    __table_args__ = {'mysql_engine':'InnoDB'}
+    __table_args__ = dict(mysql_engine="InnoDB",
+                          mysql_charset="utf8")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     job_id = Column(Integer, ForeignKey("job.id"))
@@ -135,6 +158,7 @@ class Backup(DeclarativeBase):
     def __exit__(self, exctype, exc, traceback):
         self.stop_time = datetime.now()
 
+    @property
     def duration(self):
         start_time = self.start_time
         stop_time = self.stop_time
