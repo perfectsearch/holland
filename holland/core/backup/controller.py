@@ -41,19 +41,13 @@ class BackupController:
                 yield job
             finally:
                 job.stop_time = datetime.now()
-                backup_count = len(job.backups)
-                completed_count = len([b for b in job.backups
-                                       if b.status == 'completed'])
-                if completed_count == 0:
-                    job.status = 'failed'
-                elif completed_count < backup_count:
-                    job.status = 'partially-completed'
-                else:
-                    job.status = 'completed'
-                LOG.info("Job executed with %d backups in %s", backup_count,
-                        format_interval(time.time() - start_time))
+                job_count = len(job.backups)
+                completed_count = sum(1 for backup in job.backups
+                                        if backup.status == 'completed')
+                LOG.info("Job executed with %d backups in %s",
+                         job_count, format_interval(job.duration))
                 LOG.info("--- Ending backup job (%d backups; %d successful) ---",
-                         backup_count, completed_count)
+                         job_count, completed_count)
                 self.jobs.pop()
 
     def current_job(self):
