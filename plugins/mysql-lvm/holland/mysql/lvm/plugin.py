@@ -136,7 +136,7 @@ class MyLVMSnapshot(LVMSnapshot):
             cpath = os.path.join(mountpoint, path)
             rpath = relpath(cpath, basedir)
             self.lvm_config.relative_paths.add(rpath)
-        LOG.info("Relative paths: %r", self.lvm_config.relative_paths)
+        LOG.info("Relative paths: %s", ','.join(self.lvm_config.relative_paths))
         # close any outstanding pooled connections before we archive
         self.mysql.dispose()
         super(MyLVMSnapshot, self).archive(basedir)
