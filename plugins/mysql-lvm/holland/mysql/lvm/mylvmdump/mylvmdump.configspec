@@ -12,7 +12,7 @@ snapshot-create-options = cmdline(default="")
 snapshot-mount-options = cmdline(default="")
 
 lock-tables = boolean(default=yes)
-extra-flush = boolean(default=yes)
+extra-flush-tables = boolean(default=yes)
 
 flush-logs = boolean(default=no)
 synchronize-binlogs = boolean(default=no)
