@@ -50,9 +50,10 @@ class MyLVMSnapshot(LVMSnapshot):
             datadir = self.mysql.var('datadir')
             return directory_size(self.mysql.var('datadir'))
         except OSError as exc:
-            self.fail("Error calculating size of '%s'", datadir)
+            self.fail("Error calculating size of '%s': [%d] %s" %
+                      (datadir, exc.errno, exc.strerror))
         except self.mysql.DatabaseError as exc:
-            self.fail("Error discovering datadir: [%d] %s", *exc.args)
+            self.fail("Error discovering datadir: [%d] %s" % exc.args)
 
     def setup(self):
         defaults_file = os.path.join(self.backup_directory,
