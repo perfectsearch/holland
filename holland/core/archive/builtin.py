@@ -177,7 +177,7 @@ class RsyncArchiver(ArchiverBase):
                 try:
                     LOG.info("%s", list2cmdline(argv))
                     check_call(argv,
-                               # stdout=stdout, stderr=STDOUT,
+                               stdout=stdout, stderr=STDOUT,
                                close_fds=True)
                 except CalledProcessError as exc:
                     raise ArchiveError()
