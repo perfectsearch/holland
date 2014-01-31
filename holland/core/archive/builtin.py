@@ -187,7 +187,7 @@ class RsyncArchiver(ArchiverBase):
         additional-args = cmdline(default='')
         """
 
-@plugin_registry.register
+#@plugin_registry.register
 class ShellCmdArchiver(ArchiverBase):
     name = 'shell'
 
