@@ -59,12 +59,6 @@ class MySQLFlushLock(object):
         self.lock_tables = lock_tables
 
     def lock(self):
-        if self.preflush_tables:
-            LOG.info("Executing FLUSH TABLES")
-            flush_start = time.time()
-            self.mysql.flush_tables()
-            flush_stop = time.time()
-            LOG.info("FLUSH TABLES completed in %s", format_interval(flush_stop - flush_start))
         self.lock_start = time.time()
         LOG.info("Executing FLUSH TABLES WITH READ LOCK")
         self.mysql.flush_tables_with_read_lock()
