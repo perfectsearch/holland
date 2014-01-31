@@ -69,7 +69,7 @@ class ArchiveValidator(AbstractValidator):
             msg = "Invalid archiving method '%s'. Available methods %s" % (
                     value, ','.join(available)
                   )
-            raise ValidationError(msg, value)
+            raise ValidatorError(msg, value)
         return value
 
     def format(self, value):
