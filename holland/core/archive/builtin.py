@@ -231,9 +231,9 @@ class DirCopyArchiver(ArchiverBase):
         LOG.info("Using compression method '%s'", zconfig['method'])
         stream = load_stream_plugin(zconfig)
         for rpath, parent in self.paths:
-            LOG.info("* Archiving %s/%s", parent, rpath)
             srcpath = normpath(join(parent, rpath))
             dstpath = normpath(join(dstdir, rpath))
+            LOG.info("* Archiving %s to %s", srcpath, dstpath)
             if not os.path.isdir(srcpath):
                 os.makedirs(dirname(dstpath))
                 LOG.debug("Copy requested file %s -> %s", srcpath, dstpath)
@@ -258,9 +258,9 @@ class DirCopyArchiver(ArchiverBase):
                     cdstpath = join(target_base_path, name)
                     # skip non-regular files
                     if not os.path.isfile(csrcpath):
-                        LOG.info("- Skipping '%s' - not a regular file.", rpath)
+                        LOG.info("- Skipping '%s' - not a regular file.", join(rpath, name))
                         continue
                     # copy (dirpath, name) -> (dstpath, relpath(
                     with stream.open(cdstpath, 'wb') as fileobj:
-                        LOG.info("+ Copying '%s'", rpath)
+                        LOG.info("+ Copying '%s'", join(rpath, name))
                         check_call(['/bin/cat', csrcpath], stdout=fileobj, close_fds=True)
