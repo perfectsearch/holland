@@ -10,6 +10,9 @@ candidate configs
 """
 
 import logging
+
+from holland.core.exc import HollandError
+
 from .config import Config, BaseFormatter
 from .util import missing
 from .checks import Check, CheckError
@@ -17,7 +20,7 @@ from .validators import load_validator, ValidatorError
 
 LOG = logging.getLogger(__name__)
 
-class ValidateError(ValueError):
+class ValidateError(ValueError, HollandError):
     """Raised when one or more errors are encountered during
     Configspec.validate()
 
