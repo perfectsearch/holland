@@ -112,6 +112,7 @@ class MyLVMSnapshot(LVMSnapshot):
             options['user'] = 'mysql'
             options['skip_slave_start'] = True
             options['bootstrap'] = False
+            options['innodb_buffer_pool_size'] = '128M'
             #options['log_error'] = normpath(join(options['datadir'],
             #                                     'holland-backup-error.log'))
             # remove master.info to avoid replication accidentally starting
@@ -121,7 +122,11 @@ class MyLVMSnapshot(LVMSnapshot):
             except OSError as exc:
                 if exc.errno != errno.ENOENT:
                     raise
-            with MySQLServer(options, mysqld='/usr/sbin/mysqld') as server:
+
+            mysqld = util.find_mysqld(self.config.mysqld.mysqld_exe)
+            LOG.info("Using mysqld binary '%s'", mysqld)
+
+            with MySQLServer(options, mysqld=mysqld) as server:
                 LOG.info("Running innodb-recovery")
             with open(server.error_log, 'rb') as fileobj:
                 LOG.info("Reading entries from error log: %s",
