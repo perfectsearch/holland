@@ -236,8 +236,7 @@ class DirCopyArchiver(ArchiverBase):
             LOG.info("* Archiving %s to %s", srcpath, dstpath)
             if not os.path.isdir(srcpath):
                 os.makedirs(dirname(dstpath))
-                LOG.debug("Copy requested file %s -> %s", srcpath, dstpath)
-                LOG.info("  + Creating directory %s", dirname(dstpath))
+                LOG.debug("+ Creating directory %s", dirname(dstpath))
                 with stream.open(dstpath, 'wb') as fileobj:
                     check_call(['/bin/cat', srcpath], stdout=fileobj, close_fds=True)
                 continue
@@ -246,12 +245,10 @@ class DirCopyArchiver(ArchiverBase):
                 rpath = relpath(dirpath, srcpath)
                 target_base_path = normpath(join(dstpath, rpath))
                 if not os.path.exists(target_base_path):
-                    LOG.debug("Creating directory '%s'", target_base_path)
-                    LOG.info("+ Creating directory '%s'", rpath)
+                    LOG.debug("+ Creating directory '%s'", rpath)
                     os.makedirs(target_base_path)
                 for name in dirnames:
-                    LOG.debug("Creating directory '%s'", join(target_base_path, name))
-                    LOG.info("+ Creating directory '%s'", join(rpath, name))
+                    LOG.debug("+ Creating directory '%s'", join(rpath, name))
                     os.makedirs(join(target_base_path, name))
                 for name in filenames:
                     csrcpath = join(dirpath, name)
@@ -262,5 +259,5 @@ class DirCopyArchiver(ArchiverBase):
                         continue
                     # copy (dirpath, name) -> (dstpath, relpath(
                     with stream.open(cdstpath, 'wb') as fileobj:
-                        LOG.info("+ Copying '%s'", join(rpath, name))
+                        LOG.debug("+ Copying '%s'", join(rpath, name))
                         check_call(['/bin/cat', csrcpath], stdout=fileobj, close_fds=True)
