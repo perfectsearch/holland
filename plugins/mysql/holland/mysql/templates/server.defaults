@@ -50,6 +50,10 @@ innodb_log_file_size        = {{innodb_log_file_size|default('128M')}}
 {{ innodb_flush_method if innodb_flush_method}}
 {%- endif %}
 
+{%- if 'PERFORMANCE_SCHEMA' in engines %}
+performance_schema          = 0
+{%- endif %}
+
 {% for key, value in extra_options %}
 {{key}}                     = {{value}}
 {% endfor %}
