@@ -143,7 +143,7 @@ class LVMSnapshot(BackupPlugin):
 
     def dryrun(self):
         volume = self.load_volume()
-        LOG.info("Source volume: %s", volume.device)
+        LOG.info("Would snapshot source volume: %s", volume.device)
         snapshot_size = self.lvm_config.snapshot_size
         volume.parse_snapshot_size(snapshot_size)
         if not self.lvm_config.snapshot_name:
@@ -152,11 +152,13 @@ class LVMSnapshot(BackupPlugin):
         snapshot_mountpoint = self.lvm_config.snapshot_mountpoint
         if not snapshot_mountpoint:
             snapshot_mountpoint = tempfile.gettempdir()
-        LOG.info("Mountpoint under %s", snapshot_mountpoint)
-        LOG.info("Archive method '%s'", self.lvm_config.archive_method)
-        target_path = self.lvm_config.target_path
-        archive_paths = [os.path.join(target_path, rpath) for rpath in self.lvm_config.relative_paths]
-        LOG.info("Archive paths: %s", ','.join(archive_paths))
+        LOG.info("Would mount under %s", snapshot_mountpoint)
+        if 'archive_method' in self.lvm_config:
+            LOG.info("Archive method '%s'", self.lvm_config.archive_method)
+        if 'relative_paths' in self.lvm_config:
+            target_path = self.lvm_config.target_path
+            archive_paths = [os.path.join(target_path, rpath) for rpath in self.lvm_config.relative_paths]
+            LOG.info("Archive paths: %s", ','.join(archive_paths))
 
     def backup(self):
         volume = self.load_volume()
