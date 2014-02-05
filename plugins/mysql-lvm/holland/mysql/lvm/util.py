@@ -77,6 +77,10 @@ def remap_options(mysql, basedir):
     else:
         LOG.debug("Not remapping innodb-log-group-home-dir = ./")
     paths['user'] = 'mysql'
+    # ensure innodb_buffer_pool_size is not inherited from main instance
+    paths.pop('innodb_buffer_pool_size', None)
+    # ensure key_buffer_size is not inherited from main instance
+    paths.pop('key_buffer_size', None)
     return paths
 
 def discover_mysql_datafiles(mysql, mountpoint):
