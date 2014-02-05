@@ -17,15 +17,17 @@ class Purge(ArgparseCommand):
 
     arguments = [
         argument('--all', const=0,
+                 help="Purge all backups",
                  action='store_const',
                  dest='retention_count'),
         argument('--retention-count', default=None,
+                 dest='retention_count',
                  type=int),
         argument('--dry-run', '-n', dest='dry_run', default=True),
         argument('--force', action='store_false', dest='dry_run'),
         argument('--execute', dest='dry_run', action='store_false'),
         argument('--backup-directory', '-d'),
-        argument('backups', nargs='*'),
+        argument('backupset', nargs='*'),
     ]
 
     def create_parser(self):
@@ -52,22 +54,7 @@ class Purge(ArgparseCommand):
 
         dry_run = namespace.dry_run
         for name in namespace.backups:
-            retention_count = self._retention_count(name)
+            retention_count = namespace.retention_count
             purge_opts = PurgeOptions(retention_count, dry_run)
-            controller.purge_set(name)
+            controller.purge_set(name, purge_opts)
         return 0
-
-    def _retention_count(self, backupset):
-        """Calculate the retention count for the backupset
-
-        If the existing backupset configuration is not available this
-        method currently assumes 1.
-        """
-        try:
-            config = self.config.load_backupset(backupset)['holland:backup']
-            return config['retention-count']
-        except ConfigError:
-            self.stderr("Failed to load backupset config for %s. "
-                        "Defaulting to retention-count = 1", backupset)
-            return 1
-
