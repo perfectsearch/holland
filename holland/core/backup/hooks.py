@@ -3,6 +3,7 @@ import os
 from os.path import join
 import time
 import logging
+from holland.core.exc import HollandError
 from holland.core.backup.exc import BackupError
 from holland.core.config import Config
 from holland.core.util import relpath, format_interval
@@ -258,7 +259,10 @@ class RemoveFailureHook(HookPlugin):
     def after_backup(self):
         if self.context.backup.job.is_dryrun:
             LOG.info("Removing dry-run temporary files in '%s'", self.context.node.path)
-            self.context.node.purge()
+            try:
+                self.context.node.purge()
+            except HollandError as exc:
+                LOG.debug("Purging dry-run files failed: %s", exc)
 
 @hook_registry.register
 class RotateBackupsHook(HookPlugin):
