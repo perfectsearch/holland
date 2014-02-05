@@ -112,7 +112,7 @@ class MyLVMSnapshot(LVMSnapshot):
             # set a user (this needs to be configurable)
             options['user'] = 'mysql'
             options['skip_slave_start'] = True
-            options['bootstrap'] = False
+            options['bootstrap'] = True
             options['innodb_buffer_pool_size'] = self.config.mysqld.innodb_buffer_pool_size
             #options['log_error'] = normpath(join(options['datadir'],
             #                                     'holland-backup-error.log'))
