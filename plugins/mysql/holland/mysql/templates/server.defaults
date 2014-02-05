@@ -17,6 +17,10 @@ skip-networking
 pid-file                    = {{pid_file}}
 socket                      = {{socket}}
 {% endif %}
+query-cache-size            = 0
+query-cache-type            = 0
+tmp-table-size              = 1024
+max-heap-table-size         = 16384
 
 ## Logging
 log-error                   = {{log_error}}
@@ -41,13 +45,16 @@ plugin-load                 = {{plugin_load}}
 {%- if engines.InnoDB.is_enabled %}
 
 ## InnoDB
+innodb-log-buffer-size      = 262144
 innodb-buffer-pool-size     = {{innodb_buffer_pool_size|default('128M')}}
 innodb-data-home-dir        = {{innodb_data_home_dir}}
 innodb-data-file-path       = {{innodb_data_file_path|default('ibdata1:10M:autoextend')}}
 innodb-log-group-home-dir   = {{innodb_log_group_home_dir|default('./')}}
 innodb-log-files-in-group   = {{innodb_log_files_in_group|default(2)}}
 innodb_log_file_size        = {{innodb_log_file_size|default('128M')}}
-{{ innodb_flush_method if innodb_flush_method}}
+{% if innodb_flush_method %}
+innodb-flush-method         = {{innodb_flush_method}}
+{% endif %}
 {%- endif %}
 
 {%- if 'PERFORMANCE_SCHEMA' in engines %}
