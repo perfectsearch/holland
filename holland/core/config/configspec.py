@@ -248,7 +248,7 @@ class Configspec(Config):
                     if ignore_unknown_sections:
                         continue
                     source  = config.source.get(key)
-                    LOG.warn("Unknown section[%s]", key)
+                    LOG.debug("Unknown section [%s]", key)
                 else:
                     #source, start, end = config.source[key]
                     source = config.source.get(key)
@@ -258,9 +258,9 @@ class Configspec(Config):
                             line_range = "line %d" % start
                         else:
                             line_range = "lines %d-%d" % (start, end)
-                        LOG.warn("Unknown option %s in [%s] from %s %s", key,
+                        LOG.debug("Unknown option %s in [%s] from %s %s", key,
                                 config.section, source, line_range)
                     else:
-                        LOG.warn("Unknown option %s in [%s]",
-                                 key, config.section)
+                        LOG.debug("Unknown option %s in [%s]",
+                                  key, config.section)
                 del config[key]
