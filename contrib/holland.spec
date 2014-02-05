@@ -13,7 +13,7 @@
 %bcond_without  pgsql 
 
 Name:           holland
-Version:        2.0.0
+Version:        2.0.1
 Release:        1%{?dist}
 Summary:        Holland backup manager
 
@@ -301,5 +301,8 @@ rm -rf %{buildroot}
 %endif
 
 %changelog
-* Mon Aug 05 2013 Andrew Garner <muzazzi@gmail.com> - 2.0.0-1
+* Thu Jan 30 2014 Andrew Garner <andrew.garner@rackspace.com> - 2.0.1-1
+- New release
+
+* Mon Aug 05 2013 Andrew Garner <andrew.garner@rackspace.com> - 2.0.0-1
 - Initial specfile for holland 2.0.0
