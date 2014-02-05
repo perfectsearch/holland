@@ -112,7 +112,7 @@ class MyLVMSnapshot(LVMSnapshot):
             options['user'] = 'mysql'
             options['skip_slave_start'] = True
             options['bootstrap'] = False
-            options['innodb_buffer_pool_size'] = '128M'
+            options['innodb_buffer_pool_size'] = self.config.mysqld.innodb_buffer_pool_size
             #options['log_error'] = normpath(join(options['datadir'],
             #                                     'holland-backup-error.log'))
             # remove master.info to avoid replication accidentally starting

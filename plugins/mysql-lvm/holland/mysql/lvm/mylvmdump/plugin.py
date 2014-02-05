@@ -77,6 +77,8 @@ class MyLVMDump(MyLVMSnapshot):
             else:
                 options['binlog_basename'] = None
 
+        options['innodb-buffer-pool-size'] = self.config.mysqld.innodb_buffer_pool_size
+
         mysqld = util.find_mysqld(self.config.mysqld.mysqld_exe)
         LOG.info("Using mysqld binary '%s'", mysqld)
         with MySQLServer(options, mysqld=mysqld) as server:
