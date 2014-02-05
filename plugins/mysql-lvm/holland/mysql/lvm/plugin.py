@@ -61,7 +61,7 @@ class MyLVMSnapshot(LVMSnapshot):
         mysql_cfg  = self.config['mysql:client']
         generate_defaults_file(defaults_file,
                                include=mysql_cfg.defaults_file,
-                               client_options=mysql_cfg)
+                               **mysql_cfg)
         LOG.info("Generated MySQL defaults file: %s", defaults_file)
         self.mysql = MySQL.from_defaults(defaults_file)
 
