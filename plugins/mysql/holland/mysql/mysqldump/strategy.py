@@ -120,8 +120,13 @@ def mysqldump_per_table(mysqldump, schema, config):
             if (table_schema, table_name) == ('mysql', 'slow_log'):
                 options.extend(['--no-data'])
             options.extend([schema_name, table_name])
-            yield (join(table_schema, table_name) + '.sql',
-                   mysqldump(*options))
+
+            basename = join(table_schema, table_name)
+            schema_options = ['--no-data', '--skip-triggers']
+            data_options = ['--no-create-info']
+            yield basename + '.schema.sql', mysqldump(*options +
+                                                       schema_options)
+            yield basename + '.data.sql', mysqldump(*options + data_options)
 
 def load_strategy(name):
     if name == 'all-databases':
