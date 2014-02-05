@@ -105,6 +105,7 @@ class MyLVMSnapshot(LVMSnapshot):
         mysql = self.mysql
         if self.lvm_config.innodb_recovery:
             options = util.remap_options(mysql, mountpoint)
+            options['engines'] = self.mysql.show_engines()
             # Twiddle some options specific for innodb recovery
             # disable the binary log for innodb recovery
             options['log_bin'] = False
