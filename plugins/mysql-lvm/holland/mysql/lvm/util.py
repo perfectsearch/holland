@@ -96,7 +96,8 @@ def find_mysqld(candidates):
         except OSError as exc:
             continue
     else:
-        raise HollandError("Failed to find suitable mysqld process")
+        raise HollandError("Failed to find suitable mysqld process in path. "
+                           "You can adjust the search path by setting the [mysqld] -> mysqld-exe option")
 
 def write_slave_status(path, status):
     if not status:
