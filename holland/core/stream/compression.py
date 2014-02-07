@@ -107,7 +107,9 @@ class BaseCompressionPlugin(StreamPlugin):
         try:
             cmd = which(cfg['method'])
         except OSError as exc:
-            raise HollandError("Could not find '%s' on path" % cfg['method'])
+            msg = "Could not find '%s' on path" % cfg['method']
+            LOG.error(msg)
+            raise HollandError(msg)
 
         args = [ cmd ]
 
