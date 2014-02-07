@@ -12,6 +12,7 @@ import errno
 import logging
 from tempfile import TemporaryFile
 from subprocess import Popen, PIPE, STDOUT, list2cmdline
+from holland.core.exc import HollandError
 from holland.core.plugin import plugin_registry
 from holland.core.util.path import which
 from holland.core.stream.plugin import StreamPlugin, FileDescriptorStream
@@ -106,12 +107,9 @@ class BaseCompressionPlugin(StreamPlugin):
         try:
             cmd = which(cfg['method'])
         except OSError as exc:
-            raise IOError(errno.ENOENT,
-                          "Could not find '%s' on path" %
-                          cfg['method'])
-        args = [
-            cmd
-        ]
+            raise HollandError("Could not find '%s' on path" % cfg['method'])
+
+        args = [ cmd ]
 
         if cfg.get('options'):
             args.extend(cfg['options'])
