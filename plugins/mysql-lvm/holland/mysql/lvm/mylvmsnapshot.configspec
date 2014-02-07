@@ -44,7 +44,8 @@ skip-compress = force_list(default=list())
 method = compression(default='gzip')
 level = integer(min=0, max=9, default=1)
 inline = boolean(default=True)
-additional-args = cmdline(default='')
+options = cmdline(default='')
+additional-args = cmdline(default='', aliasof='options')
 
 [mysql:client]
 user = string(default=None)
