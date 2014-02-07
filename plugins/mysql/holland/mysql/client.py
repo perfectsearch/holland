@@ -84,7 +84,7 @@ class MySQLFlushLock(object):
             self.mysql.flush_tables()
             LOG.info("FLUSH /*!40101 LOCAL */TABLES took %s",
                      format_interval(time.time() - start))
-        self.lock()
+            self.lock()
         return self
 
     def __exit__(self, exc_type, value, traceback):
