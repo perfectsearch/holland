@@ -1,0 +1,9 @@
+[component dependencies]
+buildscripts: code
+
+[build tools]
+python: 2.6,windows|linux,python -V,Download from activestate.com
+
+[test tools]
+
+[run tools]
