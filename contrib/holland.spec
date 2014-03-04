@@ -126,6 +126,18 @@ Requires: lvm2 MySQL-python tar
 This plugin allows holland to perform LVM snapshot backups of a MySQL database
 and to generate a tar archive of the raw data directory.
 
+%package filelvm
+Summary: Holland LVM snapshot backup plugin for files and directories 
+License: GPLv2
+Group: Development/Libraries
+Requires: %{name} = %{version}-%{release} %{name}-common = %{version}-%{release}
+Requires: %{name}-mysqllvm = %{version}-%{release}
+Requires: lvm2 MySQL-python tar
+
+%description filelvm
+This plugin allows holland to perform LVM snapshot backups of files and
+directories and to generate a tar archive of the raw data.
+
 %if %{with pgdump}
 %package    pgdump
 Summary: Holland LVM snapshot backup plugin for MySQL 
@@ -230,6 +242,11 @@ cd plugins/holland.backup.mysql_lvm
 %{__python} setup.py build
 cd -
 
+# plugin : holland.backup.file
+cd plugins/holland.backup.file
+%{__python} setup.py build
+cd -
+
 %if %{with pgdump}
 cd plugins/holland.backup.pgdump
 %{__python} setup.py build
@@ -323,6 +340,11 @@ cd plugins/holland.backup.mysql_lvm
 cd -
 install -m 0640 config/providers/mysql-lvm.conf %{buildroot}%{_sysconfdir}/holland/providers/
 install -m 0640 config/providers/mysqldump-lvm.conf %{buildroot}%{_sysconfdir}/holland/providers/
+
+# plugin : holland.backup.file
+cd plugins/holland.backup.file
+%{__python} setup.py install -O1 --skip-build --root %{buildroot}
+cd -
 
 # plugin : holland.backup.pgdump
 %if %{with pgdump}
@@ -459,6 +481,15 @@ rm -rf %{buildroot}
 %{python_sitelib}/holland.lib.lvm-%{version}-*.egg-info
 %config(noreplace) %{_sysconfdir}/holland/providers/mysql-lvm.conf
 %config(noreplace) %{_sysconfdir}/holland/providers/mysqldump-lvm.conf
+
+%files filelvm
+%defattr(-,root,root,-)
+%doc plugins/holland.backup.mysql_lvm/{README,LICENSE}
+%{python_sitelib}/holland/backup/file/
+%{python_sitelib}/holland.backup.file-%{version}-*-nspkg.pth
+%{python_sitelib}/holland.backup.file-%{version}-*.egg-info
+#%config(noreplace) %{_sysconfdir}/holland/providers/mysql-lvm.conf
+#%config(noreplace) %{_sysconfdir}/holland/providers/mysqldump-lvm.conf
 
 %if %{with mysqlhotcopy}
 %files mysqlhotcopy
