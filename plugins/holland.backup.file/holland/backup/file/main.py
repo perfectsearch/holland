@@ -1,12 +1,12 @@
 import logging
 import subprocess
 import os
-from holland.core.util.path import directory_size, format_bytes
+from holland.core.util.path import directory_size
 from holland.backup.mysql_lvm.plugin.common import build_snapshot
 from holland.core.exceptions import BackupError
 from holland.backup.file.common import setup_actions
 from holland.lib.lvm import LogicalVolume, CallbackFailuresError, \
-                            LVMCommandError, relpath, getmount
+    LVMCommandError, relpath
 
 LOG = logging.getLogger(__name__)
 
@@ -31,8 +31,13 @@ quiesce-script = string(default=None)
 
 [FileBackup]
 
-directories = string(default=None)
-files = string(default=None)
+# The files and directories that you would like to
+# recursively backup
+directories = coerced_list(default=None)
+files = coerced_list(default=None)
+
+# Create symlinks or follow them?
+follow_symlinks = boolean(default=no)
 
 [tar]
 # Mode for opening the archive
@@ -44,6 +49,7 @@ method = option('none', 'gzip', 'gzip-rsyncable', 'pigz', 'bzip2', 'pbzip2', 'lz
 options = string(default="")
 level = integer(min=0, max=9, default=1)
 """.splitlines()
+
 
 class FileBackup(object):
     """An example backup plugin for holland"""
@@ -76,13 +82,13 @@ class FileBackup(object):
         """
         size = 0
         if self.config['FileBackup']['directories'] is not None:
-            for i in self.config['FileBackup']['directories'].split(","):
+            for i in self.config['FileBackup']['directories']:
                 if os.path.exists(i):
                     size += directory_size(i)
                 else:
                     LOG.warn('Not backing up %s because it doesn\'t exist!' % i)
         if self.config['FileBackup']['files'] is not None:
-            for i in self.config['FileBackup']['files'].split(","):
+            for i in self.config['FileBackup']['files']:
                 if os.path.exists(i):
                     size += os.path.getsize(i)
                 else:
@@ -96,13 +102,13 @@ class FileBackup(object):
             raise Exception('loop_through_dirs(): Success is not a function!')
 
         if self.config['FileBackup']['directories'] is not None:
-            for i in self.config['FileBackup']['directories'].split(","):
+            for i in self.config['FileBackup']['directories']:
                 if os.path.exists(i):
                     success(i)
                 else:
                     failure(i)
         if self.config['FileBackup']['files'] is not None:
-            for i in self.config['FileBackup']['files'].split(","):
+            for i in self.config['FileBackup']['files']:
                 if os.path.exists(i):
                     success(i)
                 elif failure is not None and hasattr(failure, '__call__'):
@@ -126,7 +132,7 @@ class FileBackup(object):
             if len(parts) > 2:
                 mounts[parts[2]] = parts[0]
 
-        nmounts = mounts.items()
+        # nmounts = mounts.items()
         mounts = sorted(mounts.items(), key=lambda s: len(s[0]), reverse=True)
 
         lvmvolumes = {}
@@ -137,14 +143,19 @@ class FileBackup(object):
                 if filename.startswith(i[0]):
                     if i[0] not in lvmvolumes.keys():
                         try:
-                            lvmvolumes[i[0]] = LogicalVolume.lookup_from_fspath(os.path.dirname(filename))
+                            lvmvolumes[i[0]] = LogicalVolume.lookup_from_fspath(
+                                os.path.dirname(filename))
                         except LookupError, exc:
-                            raise BackupError("Failed to lookup logical volume for %s: %s" %
-                                              (os.path.dirname(filename), str(exc)))
+                            raise BackupError("Failed to lookup logical" +
+                                              " volume for %s: %s" %
+                                              (os.path.dirname(filename),
+                                               str(exc)))
+
                     if i[0] not in filelist.keys():
                         filelist[i[0]] = []
+
                     filelist[i[0]].append(filename)
-                    return LOG.debug("File %s is located in %s" % (filename,i))
+                    return LOG.debug("File %s is located in %s" % (filename, i))
             LOG.error("File %s is not located in any local mount point")
 
         def error(filename):
@@ -152,6 +163,11 @@ class FileBackup(object):
 
         self.loop_through_dirs(success, error)
 
+        with open(os.path.join(self.target_directory, 'mount_points.txt'),
+                  'w+') as f:
+            f.write('Mount Path,Volume Name\n')
+            for volume_pair in lvmvolumes.items():
+                f.write('%s,%s' % (volume_pair[0], volume_pair[1].lv_name))
         LOG.debug('Backup LVM volumes:')
         for volume_pair in lvmvolumes.items():
             LOG.debug('==>%r' % repr(volume_pair))
@@ -194,7 +210,8 @@ class FileBackup(object):
                     # XXX: one of our actions failed.  Log this better
                     for callback, error in exc.errors:
                         LOG.error("%s", error)
-                    raise BackupError("Error occurred during snapshot process. Aborting.")
+                    raise BackupError("Error occurred during snapshot" +
+                                      " process. Aborting.")
                 except LVMCommandError, exc:
                     # Something failed in the snapshot process
                     raise BackupError(str(exc))
