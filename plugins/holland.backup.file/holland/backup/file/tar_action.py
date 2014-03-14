@@ -122,7 +122,7 @@ class TarArchiveAction(object):
         self.snap_datadir = snap_datadir
         self.archive_func = archive_func
         self.archive = DirTar(archive_stream, config['tar']['mode'],
-                              config['FileBackup']['follow_symlinks'])
+                              config['FileBackup']['follow-symlinks'])
 
     def __call__(self, event, snapshot_fsm, snapshot_vol):
         # LOG.info('We would archive here >_>')
@@ -134,8 +134,8 @@ class TarArchiveAction(object):
     def _archive_callback(self, path, rpath):
         # LOG.info(repr(path))
         if os.path.isdir(path):
-            LOG.debug('Archiving Dir %s' % path)
+            LOG.debug('Archiving Dir %s => %s' % (path, rpath))
             self.archive.add_dir(path, rpath)
         else:
-            LOG.debug('Archiving File %s' % path)
+            LOG.debug('Archiving File %s => %s' % (path, rpath))
             self.archive.add_file(path, rpath)

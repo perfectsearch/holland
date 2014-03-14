@@ -37,7 +37,10 @@ directories = coerced_list(default=None)
 files = coerced_list(default=None)
 
 # Create symlinks or follow them?
-follow_symlinks = boolean(default=no)
+follow-symlinks = boolean(default=no)
+
+# absolute or relative (to the mount point) paths
+absolute-paths = boolean(default=no)
 
 [tar]
 # Mode for opening the archive
@@ -167,7 +170,7 @@ class FileBackup(object):
                   'w+') as f:
             f.write('Mount Path,Volume Name\n')
             for volume_pair in lvmvolumes.items():
-                f.write('%s,%s' % (volume_pair[0], volume_pair[1].lv_name))
+                f.write('%s,%s\n' % (volume_pair[0], volume_pair[1].lv_name))
         LOG.debug('Backup LVM volumes:')
         for volume_pair in lvmvolumes.items():
             LOG.debug('==>%r' % repr(volume_pair))
@@ -186,6 +189,8 @@ class FileBackup(object):
                     rpath = relpath(my_file, volume_pair[0])
                     snap_datadir = os.path.abspath(
                         os.path.join(snapshot.mountpoint, rpath))
+                    if self.config['FileBackup']['absolute-paths']:
+                        return callback(snap_datadir, my_file)
                     return callback(snap_datadir, rpath)
                 # new_folders = os.path.abspath(
                 #     os.path.join(self.target_directory, rpath))
