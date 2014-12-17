@@ -1,6 +1,7 @@
 import os
 import pwd
 import grp
+import stat
 import time
 import tarfile
 import logging
@@ -67,6 +68,8 @@ class DirTar(tar_archive.TarArchive):
         path -- Path to file for which to add to archive.
         name -- Name of file (for tarinfo)
         """
+        if stat.S_ISSOCK(os.stat(os.path.join(path, name))):
+            return
         if os.path.islink(path) and self.symlinks:
             tarinfo = _make_sym_tarinfo(path, name, os.readlink(path))
             self.archive.addfile(tarinfo)
