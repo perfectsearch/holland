@@ -4,7 +4,7 @@ import os
 import sys
 from setuptools import setup, find_packages
 
-version = '1.0.10'
+version = '1.0.11'
 
 setup(name="holland.backup.file",
       version=version,
