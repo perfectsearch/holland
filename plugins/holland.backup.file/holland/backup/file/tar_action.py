@@ -68,7 +68,7 @@ class DirTar(tar_archive.TarArchive):
         path -- Path to file for which to add to archive.
         name -- Name of file (for tarinfo)
         """
-        if stat.S_ISSOCK(os.stat(os.path.join(path, name))):
+        if stat.S_ISSOCK(os.stat(os.path.join(path, name)).st_mode):
             return
         if os.path.islink(path) and self.symlinks:
             tarinfo = _make_sym_tarinfo(path, name, os.readlink(path))
