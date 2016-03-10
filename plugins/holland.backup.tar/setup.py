@@ -2,13 +2,13 @@ from setuptools import setup, find_packages
 
 version = '1.0.12'
 
-setup(name='holland.backup.xtrabackup',
+setup(name='holland.backup.tar',
       version=version,
-      description="Holland plugin for Percona XtraBackup",
+      description="Tar Plugin for Holland",
       long_description="""\
-      Holland plugin for Percona XtraBackup
+      Tar plugin for the Holland backup framework
       """,
-      author='Rackspace',
+      author='Cashstar',
       author_email='holland-devel@googlegroups.com',
       url='http://www.hollandbackup.org/',
       license='GPLv2',
@@ -22,7 +22,7 @@ setup(name='holland.backup.xtrabackup',
       ],
       entry_points="""
       [holland.backup]
-      xtrabackup = holland.backup.xtrabackup:XtrabackupPlugin
+      tar = holland.backup.tar:TarPlugin
       """,
       namespace_packages=['holland', 'holland.backup'],
     )

@@ -3,7 +3,7 @@
 # el4 also... which doesn't support it
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 
-%{!?holland_version: %global holland_version 1.0.11}
+%{!?holland_version: %global holland_version 1.0.12}
 
 # default %%rhel to make things easier to build
 %{!?rhel: %global rhel %%(%{__sed} 's/^[^0-9]*\\([0-9]\\+\\).*/\\1/' /etc/redhat-release)}
@@ -22,26 +22,27 @@
 %endif
 
 %bcond_with     tests
-%bcond_with     example 
+%bcond_with     example
 %bcond_with     sphinxdocs
 %bcond_with     mysqlhotcopy
 %bcond_with     maatkit
+%bcond_with     tar
 %bcond_without  pgdump
 %bcond_without  sqlite
 %bcond_without  xtrabackup
 
 Name:           holland
 Version:        %{holland_version}
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Pluggable Backup Framework
 Group:          Applications/Archiving
-License:        BSD 
+License:        BSD
 URL:            http://hollandbackup.org
-Source0:        http://hollandbackup.org/releases/stable/1.0/%{name}-%{version}.tar.gz 
+Source0:        http://hollandbackup.org/releases/stable/1.0/%{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:      noarch
-BuildRequires:  python2-devel python-setuptools 
+BuildRequires:  python2-devel python-setuptools
 %if %{with sphinxdocs}
 BuildRequires:  python-sphinx
 %endif
@@ -86,7 +87,7 @@ Requires: %{name} = %{version}-%{release}, %{name}-common = %{version}-%{release
 Requires: maatkit
 
 %description maatkit
-This plugin provides support for holland to perform MySQL backups using the 
+This plugin provides support for holland to perform MySQL backups using the
 mk-parallel-dump script from the Maatkit toolkit.
 %endif
 
@@ -108,13 +109,13 @@ Group: Development/Libraries
 Requires: %{name} = %{version}-%{release} %{name}-common = %{version}-%{release}
 
 %description mysqlhotcopy
-This plugin allows holland to perform backups of MyISAM and other 
+This plugin allows holland to perform backups of MyISAM and other
 non-transactional table types in MySQL by issuing a table lock and copying the
 raw files from the data directory.
 %endif
 
 %package mysqllvm
-Summary: Holland LVM snapshot backup plugin for MySQL 
+Summary: Holland LVM snapshot backup plugin for MySQL
 License: GPLv2
 Group: Development/Libraries
 Requires: %{name} = %{version}-%{release} %{name}-common = %{version}-%{release}
@@ -140,7 +141,7 @@ directories and to generate a tar archive of the raw data.
 
 %if %{with pgdump}
 %package    pgdump
-Summary: Holland LVM snapshot backup plugin for MySQL 
+Summary: Holland LVM snapshot backup plugin for MySQL
 License: GPLv2
 Group: Development/Libraries
 Provides: %{name}-pgdump = %{version}-%{release}
@@ -158,29 +159,43 @@ Group: Development/Libraries
 Requires: %{name} = %{version}-%{release}
 Requires: %{name}-common = %{version}-%{release}
 
-%description sqlite 
+%description sqlite
 SQLite Backup Provider Plugin for Holland
 %endif
 
 %if %{with xtrabackup}
 %package xtrabackup
-Summary: Xtrabackup plugin for Holland
+Summary: Holland plugin for Percona XtraBackup
 License: GPLv2
 Group: Development/Libraries
 Requires: %{name} = %{version}-%{release}
 Requires: %{name}-common = %{version}-%{release}
-Requires: xtrabackup >= 1.2
+Requires: percona-xtrabackup
 
 %description xtrabackup
-This package provides a Holland plugin for the Percona Xtrabackup 
-backup tool for InnoDB and XtraDB engines for MySQL
+This package provides a Holland plugin for Percona Xtrabackup. This
+plugin requires Percona XtraBackup and runs the provided
+/usr/bin/innobackupex script.
+%endif
+
+%if %{with tar}
+%package tar
+Summary: tar plugin for Holland
+License: GPLv2
+Group: Development/Libraries
+Requires: %{name} = %{version}-%{release}
+Requires: %{name}-common = %{version}-%{release}
+Requires: tar
+
+%description tar
+This package provides a Holland plugin for creating tar files
 %endif
 
 %prep
 %setup -q
 find ./ -name setup.cfg -exec rm -f {} \;
 mv plugins/README README.plugins
-mv config/providers/README README.providers 
+mv config/providers/README README.providers
 
 # cleanup, will be removed upstream at some point
 rm plugins/ACTIVE
@@ -200,7 +215,7 @@ popd
 cd plugins/holland.lib.common
 %{__python} setup.py build
 cd -
-    
+
 # library : holland.lib.mysql
 cd plugins/holland.lib.mysql
 %{__python} setup.py build
@@ -271,6 +286,12 @@ cd plugins/holland.backup.xtrabackup
 cd -
 %endif
 
+%if %{with tar}
+cd plugins/holland.backup.tar
+%{__python} setup.py build
+cd -
+%endif
+
 %install
 rm -rf %{buildroot}
 
@@ -291,7 +312,7 @@ install -m 0644 docs/man/holland.1 %{buildroot}%{_mandir}/man1
 cd plugins/holland.lib.common
 %{__python} setup.py install -O1 --skip-build --root %{buildroot}
 cd -
-    
+
 # library : holland.lib.mysql
 cd plugins/holland.lib.mysql
 %{__python} setup.py install -O1 --skip-build --root %{buildroot}
@@ -376,6 +397,14 @@ cd -
 install -m 0640 config/providers/xtrabackup.conf %{buildroot}%{_sysconfdir}/holland/providers/
 %endif
 
+%if %{with tar}
+# plugin : holland.backup.tar
+cd plugins/holland.backup.tar
+%{__python} setup.py install -O1 --skip-build --root %{buildroot}
+cd -
+install -m 0640 config/providers/tar.conf %{buildroot}%{_sysconfdir}/holland/providers/
+%endif
+
 # logrotate
 %{__mkdir} -p %{buildroot}%{_sysconfdir}/logrotate.d
 cat > %{buildroot}%{_sysconfdir}/logrotate.d/holland <<EOF
@@ -395,8 +424,8 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc CHANGES.rst README README.plugins README.providers 
-%doc INSTALL LICENSE config/backupsets/examples/ 
+%doc CHANGES.rst README README.plugins README.providers
+%doc INSTALL LICENSE config/backupsets/examples/
 %if %{with sphinxdocs}
 %doc docs/build/html/
 %endif
@@ -513,7 +542,7 @@ rm -rf %{buildroot}
 %endif
 
 %if %{with sqlite}
-%files sqlite 
+%files sqlite
 %defattr(-,root,root,-)
 %doc plugins/holland.backup.sqlite/{README,LICENSE}
 %{python_sitelib}/holland/backup/sqlite.py*
@@ -532,7 +561,20 @@ rm -rf %{buildroot}
 %config(noreplace) %{_sysconfdir}/holland/providers/xtrabackup.conf
 %endif
 
+%if %{with tar}
+%files tar
+%defattr(-,root,root,-)
+%doc plugins/holland.backup.tar/{README,LICENSE}
+%{python_sitelib}/holland/backup/tar.py*
+%{python_sitelib}/holland.backup.tar-%{version}-*-nspkg.pth
+%{python_sitelib}/holland.backup.tar-%{version}-*.egg-info
+%config(noreplace) %{_sysconfdir}/holland/providers/tar.conf
+%endif
+
 %changelog
+* Mon Feb 08 2016 Andrew Garner <andrew.garner@rackspace.com> - 1.0.12-2
+- Latest sources from upstream
+
 * Mon Jul 29 2013 Andrew Garner <andrew.garner@rackspace.com> - 1.0.10-1
 - Latest sources from upstream
 
@@ -579,10 +621,10 @@ rm -rf %{buildroot}
 * Thu Jul 01 2010 Andrew Garner <andrew.garner@rackspace.com> - 1.0.0-3.rc3
 - Source updated to rc3
 
-* Tue Jun 28 2010 Andrew Garner <andrew.garner@rackspace.com> - 1.0.0-2.rc2
+* Mon Jun 28 2010 Andrew Garner <andrew.garner@rackspace.com> - 1.0.0-2.rc2
 - Source updated to rc2
 
-* Thu Jun 11 2010 Andrew Garner <andrew.garner@rackspace.com> - 1.0.0-1.rc1
+* Fri Jun 11 2010 Andrew Garner <andrew.garner@rackspace.com> - 1.0.0-1.rc1
 - Repackaging for release candidate
 - Using conditional builds to exclude experimental plugins
 
@@ -598,7 +640,7 @@ rm -rf %{buildroot}
 * Thu May 27 2010 BJ Dierkes <wdierkes@rackspace.com> - 0.9.9-9
 - Move plugins/README to README.plugins and install via %%doc
 
-* Mon May 25 2010 BJ Dierkes <wdierkes@rackspace.com> - 0.9.9-8
+* Tue May 25 2010 BJ Dierkes <wdierkes@rackspace.com> - 0.9.9-8
 - Adding holland.lib.lvm under -common subpackage
 
 * Wed May 19 2010 BJ Dierkes <wdierkes@rackspace.com> - 0.9.9-7
@@ -637,7 +679,7 @@ rm -rf %{buildroot}
 - No longer package plugins as eggs
 - Conditionally BuildRequire: python-nose and run nose tests if _with_tests
 
-* Thu Apr 07 2010 BJ Dierkes <wdierkes@rackspace.com> - 0.9.8-2.rs
+* Wed Apr 07 2010 BJ Dierkes <wdierkes@rackspace.com> - 0.9.8-2.rs
 - Rename holland-lvm to holland-mysqllvm, Obsoletes: holland-lvm
 - Manually install mysql-lvm.conf provider config (fixed in 0.9.9)
 - Install man files to _mandir
@@ -659,7 +701,7 @@ rm -rf %{buildroot}
 
 * Thu Oct 08 2009 BJ Dierkes <wdierkes@rackspace.com> - 0.9.4-1.1.rs
 - BuildRequires: python-dev
-- Rebuilding for Fedora Core 
+- Rebuilding for Fedora Core
 
 * Tue Sep 15 2009 BJ Dierkes <wdierkes@rackspace.com> - 0.9.4-1.rs
 - Latest sources.
@@ -690,12 +732,12 @@ rm -rf %{buildroot}
 - Rebuild from trunk
 - Adding commvault addon package.
 - Removing Patch2: holland-0.3-config.patch
-- Disable backupsets by default 
+- Disable backupsets by default
 
 * Sat May 02 2009 BJ Dierkes <wdierkes@rackspace.com> - 0.3.1-1.2.rs
 - Build as noarch.
 
-* Tue Apr 29 2009 BJ Dierkes <wdierkes@rackspace.com> - 0.3.1-1.rs
+* Wed Apr 29 2009 BJ Dierkes <wdierkes@rackspace.com> - 0.3.1-1.rs
 - Latest sources.
 
 * Tue Apr 28 2009 BJ Dierkes <wdierkes@rackspace.com> - 0.3-1.rs

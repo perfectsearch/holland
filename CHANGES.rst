@@ -8,8 +8,8 @@ http://bugs.launchpad.net/holland-backup
 GH# referes to the deprecated github bug tracker here:
 https://github.com/holland-backup/holland/issues
 
-1.0.12 - unreleased
--------------------
+1.0.12 - Feb 8, 2016
+--------------------
 
 holland
 +++++++
@@ -19,6 +19,12 @@ holland
   Now the "holland --quiet" option must be used to suppress output or output
   can be redirected via standard shell stdio facilities.
   (Fixes GH#98)
+- Hooks are no longer run during a dry-run (Fixes GH#121; Thanks Mike Griffin!)
+- Holland now supports gpg as a compression option for all backup
+  plugins (Thanks to Ryan Cleere for the contribution and Tim Soderstrom
+  for documenting the improvement) GH#95
+- Added contrib/holland-commvault; See contrib/holland-commvault/README
+  for a description of this module.
 
 holland-mysqldump
 +++++++++++++++++
@@ -36,7 +42,12 @@ holland-mysqldump
   (LP #1262352)
 - invalid strings in show slave status are now handled more
   gracefully (LP #1220841)
-
+- Estimating the size of a backup would fail under MariaDB 10.1
+  due to the numeric value being returned as a Decimal rather
+  than an int object, primarily causing later formatting of
+  the estimated values to fail due to mixing decimal and
+  integer arithemetic.  holland now ensures these values
+  are integers.  (GH#125)
 
 holland-pgdump
 ++++++++++++++
@@ -44,12 +55,17 @@ holland-pgdump
   (LP #1206202)
 - The connection used for discovering databases to backup is now
   closed before pg_dump commands are run (LP #1236618)
+- special characters in the provided password are escaped when
+  generating PGPASSFILE. (GH#116)
 
 holland-xtrabackup
 ++++++++++++++++++
 - holland-xtrabackup now uses innobackupex as innobackupex binary
   as innobackupex-1.5.1 has been deprecated upstream for several
   releases
+- holland-xtrabackup previously failed to compress xbstream
+  archives regardless of the [compression] configuration for
+  the backupset.  (LP#1246562)
 
 1.0.10 - Jul 29, 2013
 ---------------------
