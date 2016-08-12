@@ -70,7 +70,7 @@ class DirTar(tar_archive.TarArchive):
         """
         if stat.S_ISSOCK(os.stat(path).st_mode):
             return
-        if os.path.islink(path) and self.symlinks:
+        if os.path.islink(path) and not self.symlinks:
             tarinfo = _make_sym_tarinfo(path, name, os.readlink(path))
             self.archive.addfile(tarinfo)
         else:
@@ -89,13 +89,18 @@ class DirTar(tar_archive.TarArchive):
         path -- Path to directory for which to add to archive.
         name -- Name of the directory, prefix for the files.
         """
-        for root, dirs, files in os.walk(path, topdown=False):
+        for root, dirs, files in os.walk(path, topdown=False, followlinks=self.symlinks):
             relDir = os.path.relpath(root, path)
             for d in dirs:
                 src = os.path.join(root, d)
                 dir_name = os.path.join(name, relDir, d)
                 stat = os.stat(src)
                 selinux = getfilecon(src.encode('ascii'))
+
+                if os.path.islink(src) and not self.symlinks:
+                    tarinfo = _make_sym_tarinfo(src, dir_name, os.readlink(src))
+                    self.archive.addfile(tarinfo)
+                    continue
 
                 tinfo = tarfile.TarInfo(dir_name)
                 tinfo.type = tarfile.DIRTYPE
